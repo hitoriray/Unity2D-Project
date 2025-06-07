@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: SnowDirt
+  m_EditorClassIdentifier: 
+  tileName: SnowDirt
+  itemName: "\u96EA\u5757"
+  atlasName: Tiles_116
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: -1647138437, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 750462032, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1675786954, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1770978928, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1790765558, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -731085269, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 119554642, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -489164425, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 903115343, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1915655481, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1130541387, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 94512136, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 577953235, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1380030793, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1700835378, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1919148497, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 623916717, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 1803031032, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1165401812, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -2145571696, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1455467428, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1954981407, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -2080933988, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1111572320, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -993106277, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: -1090274874, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 623710217, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  - {fileID: 183177191, guid: b6c4d8634d185ea4e93426d1f85b1818, type: 3}
+  itemSprite: {fileID: 21300000, guid: a590a87e44798d94e8ef83baac6647fc, type: 3}
+  inBackground: 0

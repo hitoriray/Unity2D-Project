@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4141de2002c3a445ab8ed18c55dde42, type: 3}
+  m_Name: Desert
+  m_EditorClassIdentifier: 
+  grass: {fileID: 11400000, guid: baa05b91a6edf9643b47503acc7dfce6, type: 2}
+  dirt: {fileID: 11400000, guid: 6e9c929ede9cc4d4e95361172ed1bf0b, type: 2}
+  stone: {fileID: 11400000, guid: d7ac21b73dd20df47b606d0a274f5ecb, type: 2}
+  treeBottom: {fileID: 11400000, guid: 0af9b5a0ec427574782927fb03514baf, type: 2}
+  treeMid: {fileID: 11400000, guid: ffa59c1906ea06743990721b344a227d, type: 2}
+  treeBranches_Left: {fileID: 11400000, guid: af69e53930d16ef42be834e65cf925c2, type: 2}
+  treeBranches_Right: {fileID: 11400000, guid: feabaf8b8a66f154b80cff0797b0d140, type: 2}
+  treeTop: {fileID: 11400000, guid: 8a4ded26abf98ee449d4d2f1daf1e907, type: 2}
+  copper: {fileID: 11400000, guid: dd219098711390046938feb45110dd63, type: 2}
+  iron: {fileID: 11400000, guid: 138a06512a80c6b468991ababfdf3cf2, type: 2}
+  gold: {fileID: 11400000, guid: f6026d44b76e45b41b1d6381f46f6943, type: 2}
+  ruby: {fileID: 11400000, guid: 1176fd21524fe4d4782b53233ebe7136, type: 2}
+  emerald: {fileID: 11400000, guid: e0d1c149313db34459076756b03d9c62, type: 2}
+  sapphire: {fileID: 11400000, guid: b2ca0e0e2ecb9074ca0818c60b4ce0e1, type: 2}
+  smallGrass: {fileID: 0}
+  smallTree: {fileID: 0}
+  flower: {fileID: 0}
+  sunflower: {fileID: 0}
+  wall: {fileID: 11400000, guid: 327705e42faa9db43b8248383a32c5fe, type: 2}

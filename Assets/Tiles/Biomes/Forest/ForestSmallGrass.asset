@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: ForestSmallGrass
+  m_EditorClassIdentifier: 
+  tileName: ForestSmallGrass
+  itemName: "\u4E1B\u6797\u5C0F\u8349"
+  atlasName: Tiles_
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: -529186244, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -529186244, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 453939017, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -874781565, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 819252393, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 767128622, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1964715103, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 655126, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 1106299359, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1829451195, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 1656583642, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1283358834, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1536983745, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -670561792, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 549822778, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -961846556, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 712561053, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1124609207, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1109288298, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 1103150235, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1487714879, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 1604727208, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: -1454632252, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  - {fileID: 1497367685, guid: 3385f7d87f5a132439c4b58a4b197221, type: 3}
+  itemSprite: {fileID: 0}
+  inBackground: 1

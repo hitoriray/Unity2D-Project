@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: SnowWall
+  m_EditorClassIdentifier: 
+  tileName: SnowWall
+  itemName: "\u96EA\u5899"
+  atlasName: SnowWall
+  spriteIndices: 300000002d000000070000000c000000090000001200000039000000340000003300000028000000270000001b00000001000000040000000d0000000a0000000b0000000e0000000f0000001000000013000000140000001500000017000000180000002000000021000000220000002400000025000000
+  tileSprites:
+  - {fileID: 1648720379, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -505790442, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 66341113, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -705068157, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -482712177, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -1018231597, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 599159834, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1369712490, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -664293770, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -746195358, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -840622869, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -283917710, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -308270688, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1296486269, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1986375972, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 59476815, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1395956761, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1416199921, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 966360836, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -962968801, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -1355641854, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 308333415, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -67767300, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 141051818, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -844743926, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1054603309, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 234937210, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 1248048018, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: 306783425, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  - {fileID: -438381240, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  itemSprite: {fileID: 1665940137, guid: 37765a125a3c06b43b8ced041a521011, type: 3}
+  inBackground: 1

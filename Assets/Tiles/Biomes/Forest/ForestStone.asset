@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: ForestStone
+  m_EditorClassIdentifier: 
+  tileName: ForestStone
+  itemName: "\u77F3\u5757"
+  atlasName: Tiles_
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: 1751923727, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 886915763, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -579298720, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -2138058644, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1714472792, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1261507074, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -2117702022, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 613640824, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -776916718, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -1987616411, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1327701798, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1260219765, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -1580496883, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1689653957, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 330628791, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -285913118, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -314046025, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1759420731, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -680369390, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 743325926, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -2105958718, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1483372456, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -1242203032, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -1963738737, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -267676630, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 1935514631, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: -8960811, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  - {fileID: 805188887, guid: c4e466deef5537a43bb53764ac57547a, type: 3}
+  itemSprite: {fileID: 21300000, guid: c7548a08926f51c44bed4e9413d1d8f7, type: 3}
+  inBackground: 0

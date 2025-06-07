@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: Snowland
+  m_EditorClassIdentifier: 
+  tileName: Snowland
+  itemName: "\u96EA\u5757"
+  atlasName: Tiles_147
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: -446453031, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 564887782, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 81895709, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1118161672, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 184781120, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 958188357, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1266108991, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 831391209, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -109434856, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 1085387403, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1621794425, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1607497523, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 600192638, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 688960869, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1187576240, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -187420340, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1153480397, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 251916142, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -272760174, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -513521951, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1393955466, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -592440801, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1188941804, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 975809310, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 1657060512, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -238456652, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: 593805239, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  - {fileID: -1850431765, guid: f9c723c741bece74da90a18d401989e4, type: 3}
+  itemSprite: {fileID: 21300000, guid: a590a87e44798d94e8ef83baac6647fc, type: 3}
+  inBackground: 0

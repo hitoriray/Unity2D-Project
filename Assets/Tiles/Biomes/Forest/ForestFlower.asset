@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: ForestFlower
+  m_EditorClassIdentifier: 
+  tileName: ForestSmallGrass
+  itemName: "\u4E1B\u6797\u5C0F\u82B1"
+  atlasName: Tiles_
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: -2106088479, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 1783982774, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 1061670752, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: -1779476380, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 420095996, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 2146546496, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: -382829462, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 479934817, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: -2095811982, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: -1656666126, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 1733921243, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 264364197, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 1369340770, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 641908119, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: 602088387, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  - {fileID: -595356006, guid: d4779a48b67ec8741884d91efa0c66a6, type: 3}
+  itemSprite: {fileID: 0}
+  inBackground: 1

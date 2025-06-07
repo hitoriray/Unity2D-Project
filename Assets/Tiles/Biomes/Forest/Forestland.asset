@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: Forestland
+  m_EditorClassIdentifier: 
+  tileName: Forestland
+  itemName: "\u6CE5\u5757"
+  atlasName: Tiles_60
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: 1946674099, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1714348256, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 1710573068, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 162317755, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 1497116769, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -742902752, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 898787093, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1971140128, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -521731361, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 661200228, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 1414415749, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1500809150, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -2000079088, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1211719645, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1837153400, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1530268735, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: 1860377516, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  - {fileID: -1968771079, guid: cad04e3781f4673409b812fa412b120c, type: 3}
+  itemSprite: {fileID: 21300000, guid: e6c1e0d4366e7414fa733cafe894c2ba, type: 3}
+  inBackground: 0

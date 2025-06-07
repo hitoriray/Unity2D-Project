@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: DesertStone
+  m_EditorClassIdentifier: 
+  tileName: Sand
+  itemName: "\u6C99\u5CA9\u5757"
+  atlasName: Tiles_151
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: 782204831, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -1102614126, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1432463810, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -692867820, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1404919368, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1011435963, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -1248743163, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1671393255, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -570343853, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 2130329384, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 319741422, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 969327845, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -236491704, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -1132962125, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1894754245, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -1867079903, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1351917061, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -2040445925, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -763473275, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1910083241, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 387252443, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1627314496, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 2035483868, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -7335087, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1571226595, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: -198372848, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 1955891240, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  - {fileID: 2044203021, guid: 56b284117e6674d4f97713cda4e8d80e, type: 3}
+  itemSprite: {fileID: 21300000, guid: b71dba50e1c7daa409f52b6859bb09cc, type: 3}
+  inBackground: 0

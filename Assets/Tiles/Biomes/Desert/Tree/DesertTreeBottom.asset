@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08e3d1bed2a39154ea5cdadb3d4c875a, type: 3}
+  m_Name: DesertTreeBottom
+  m_EditorClassIdentifier: 
+  tileName: DesertTreeBottom
+  itemName: "\u4ED9\u4EBA\u638C"
+  atlasName: Tiles_
+  spriteIndices: 3900000037000000070000001c00000019000000150000004600000042000000410000003300000032000000220000000200000024000000200000000a0000000b0000001100000012000000130000001600000017000000180000001a0000001b000000260000002700000028000000
+  tileSprites:
+  - {fileID: -1395198501, guid: f556171954eb3e94f9d3a4062ab0243c, type: 3}
+  - {fileID: 61842784, guid: f556171954eb3e94f9d3a4062ab0243c, type: 3}
+  - {fileID: -409567090, guid: f556171954eb3e94f9d3a4062ab0243c, type: 3}
+  - {fileID: 1342669624, guid: f556171954eb3e94f9d3a4062ab0243c, type: 3}
+  itemSprite: {fileID: 21300000, guid: 47da09a7cfa004c419257e87fd993dd7, type: 3}
+  inBackground: 1
