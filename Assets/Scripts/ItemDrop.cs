@@ -99,26 +99,14 @@ public class ItemDrop : MonoBehaviour
     void CheckForPlayer()
     {
         if (playerController == null)
-        {
             FindPlayerController();
-        }
 
-        // 如果没有找到PlayerController，直接返回
         if (playerController == null) return;
 
-        // 计算到玩家的距离
         float distance = Vector2.Distance(transform.position, playerController.transform.position);
-
-        // 如果玩家不在检测范围内，直接返回
         if (distance > pickupRange) return;
-
-        // 检查拾取范围
         if (distance <= playerController.currentPickupRange)
-        {
-            Debug.Log("开始移动到玩家：distance:" + distance);
-            // 开始移动到玩家
             StartMovingToPlayer(playerController.transform);
-        }
     }
 
     void FindPlayerController()
@@ -131,10 +119,8 @@ public class ItemDrop : MonoBehaviour
             playerController = playerObj.GetComponentInParent<PlayerController>();
         if (playerController == null)
             playerController = playerObj.GetComponentInChildren<PlayerController>();
-
-        if (playerController == null) {
+        if (playerController == null)
             Debug.LogWarning($"[{gameObject.name}] 未找到PlayerController组件");
-        }
     }
 
     void StartMovingToPlayer(Transform player)
@@ -153,27 +139,18 @@ public class ItemDrop : MonoBehaviour
                 rb.bodyType = RigidbodyType2D.Kinematic; // 设置为运动学刚体，不受物理影响
             }
 
-            // 根据配置决定是否禁用碰撞器
             if (passThroughTerrain)
             {
-                // 禁用所有碰撞器，让掉落物能够穿过所有地形直接移动到玩家
                 Collider2D[] colliders = GetComponents<Collider2D>();
                 foreach (Collider2D collider in colliders)
-                {
                     collider.enabled = false; // 禁用所有碰撞器，让掉落物穿过地形
-                }
             }
             else
             {
-                // 只禁用触发器碰撞器，保留物理碰撞器
                 Collider2D[] colliders = GetComponents<Collider2D>();
                 foreach (Collider2D collider in colliders)
-                {
                     if (collider.isTrigger && (collider.name == triggerColliderName || collider.name.Contains("Trigger")))
-                    {
                         collider.enabled = false; // 禁用触发器，避免重复拾取
-                    }
-                }
             }
         }
     }
@@ -182,22 +159,12 @@ public class ItemDrop : MonoBehaviour
     {
         if (playerTransform == null) return;
 
-        // 计算到玩家的距离
         float distance = Vector2.Distance(transform.position, playerTransform.position);
-
-        // 加速移动
         currentMoveSpeed += accelerationRate * Time.deltaTime;
         currentMoveSpeed = Mathf.Min(currentMoveSpeed, moveSpeed);
-
-        // 直接通过Transform移动到玩家，不受任何物理影响
         transform.position = Vector2.MoveTowards(transform.position, playerTransform.position, currentMoveSpeed * Time.deltaTime);
-
-        // 如果足够接近玩家，执行拾取
-        if (distance < 0.8f) // 拾取距离阈值
-        {
-            Debug.Log($"ItemDrop到达拾取距离({distance:F2})，开始拾取: {gameObject.name}");
+        if (distance < 0.8f)
             PickupItem();
-        }
     }
     
     void PickupItem()
@@ -205,16 +172,6 @@ public class ItemDrop : MonoBehaviour
         // TODO: 添加到玩家背包
         // if (player.inventory.TryAddItem(item))
         // {
-            if (item != null)
-            {
-                Debug.Log($"拾取了 {item.quantity} 个 {item.itemName}");
-            }
-            else
-            {
-                Debug.Log($"拾取了物品: {gameObject.name}");
-            }
-
-            // 显示拾取信息
             ShowPickupText();
 
             // 播放拾取音效
@@ -230,22 +187,17 @@ public class ItemDrop : MonoBehaviour
         {
             string displayText = item != null ? $"{item.itemName}({item.quantity})" : gameObject.name;
 
-            // 使用SimplePickupText（3D文本）
+            // 使用3D文本
             if (PickupText3DManager.Instance != null)
-            {
                 PickupText3DManager.Instance.ShowPickupText(playerTransform.position, displayText);
-            }
             else
-            {
                 Debug.LogWarning("没有找到文本管理器，无法显示拾取信息");
-            }
         }
     }
     
     public void SetItem(Item newItem)
     {
         item = new Item(newItem);
-        
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();            
         if (spriteRenderer != null && item.itemSprite != null)
@@ -253,36 +205,35 @@ public class ItemDrop : MonoBehaviour
         gameObject.name = $"ItemDrop_{item.itemName}";
     }
     
-    void OnDrawGizmosSelected()
-    {
-        // 在Scene视图中显示拾取范围
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, pickupRange);
-        // 显示玩家检测范围
-        if (playerController != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(playerController.transform.position, playerController.currentPickupRange);
+    // void OnDrawGizmosSelected()
+    // {
+    //     // 在Scene视图中显示拾取范围
+    //     Gizmos.color = Color.yellow;
+    //     Gizmos.DrawWireSphere(transform.position, pickupRange);
+    //     // 显示玩家检测范围
+    //     if (playerController != null)
+    //     {
+    //         Gizmos.color = Color.green;
+    //         Gizmos.DrawWireSphere(playerController.transform.position, playerController.currentPickupRange);
 
-            // 显示连线
-            float distance = Vector2.Distance(transform.position, playerController.transform.position);
-            if (distance <= playerController.currentPickupRange)
-            {
-                Gizmos.color = Color.green;
-            }
-            else
-            {
-                Gizmos.color = Color.red;
-            }
-            Gizmos.DrawLine(transform.position, playerController.transform.position);
-        }
-    }
+    //         // 显示连线
+    //         float distance = Vector2.Distance(transform.position, playerController.transform.position);
+    //         if (distance <= playerController.currentPickupRange)
+    //         {
+    //             Gizmos.color = Color.green;
+    //         }
+    //         else
+    //         {
+    //             Gizmos.color = Color.red;
+    //         }
+    //         Gizmos.DrawLine(transform.position, playerController.transform.position);
+    //     }
+    // }
 
-    void OnDrawGizmos()
-    {
-        if (!canBePickedUp) return;
-        // 显示拾取范围
-        Gizmos.color = new Color(1, 1, 0, 0.3f); // 半透明黄色
-        Gizmos.DrawSphere(transform.position, pickupRange);
-    }
+    // void OnDrawGizmos()
+    // {
+    //     if (!canBePickedUp) return;
+    //     Gizmos.color = new Color(1, 1, 0, 0.3f); // 半透明黄色
+    //     Gizmos.DrawSphere(transform.position, pickupRange);
+    // }
 }

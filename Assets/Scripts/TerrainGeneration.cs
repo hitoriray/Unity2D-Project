@@ -1,9 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TerrainGeneration : MonoBehaviour
 {
+    [Header("Lighting")]
+    public Texture2D worldTilesMap;
+    public Material lightShader;
+    public float lightThreshold;
+    public float lightRadius;
+    public HashSet<Vector2Int> unlitBlocks = new();
+
+    [Header("Player")]
     public PlayerController player;
     public CameraController cameraController;
     public GameObject item_TileDrop;
@@ -34,7 +43,7 @@ public class TerrainGeneration : MonoBehaviour
 
     private Dictionary<Vector2, TileInfo> worldTileInfo = new();
     private float lastTreeX = -Mathf.Infinity;
-    private int[,] terrainMap;
+    private TileType[,] terrainMap;
     private Dictionary<int, int> tileBitmaskMap;
     private GameObject[] worldChunks;
     private Biome curBiome;
@@ -43,6 +52,16 @@ public class TerrainGeneration : MonoBehaviour
 
     private void Start()
     {
+        // initialize light
+        worldTilesMap = new Texture2D(worldSize, worldSize);
+        worldTilesMap.filterMode = FilterMode.Bilinear;
+        lightShader.SetTexture("_ShadowTex", worldTilesMap);
+        for (int x = 0; x < worldSize; ++x)
+            for (int y = 0; y < worldSize; ++y)
+                worldTilesMap.SetPixel(x, y, Color.white);
+        worldTilesMap.Apply();
+
+        // generate terrain stuff
         seed = Random.Range(-10000, 10000);
 
         for (int i = 0; i < ores.Length; ++i)
@@ -61,6 +80,12 @@ public class TerrainGeneration : MonoBehaviour
 
         CreateChunks();
         GenerateTerrain();
+
+        for (int x = 0; x < worldSize; ++x)
+            for (int y = 0; y < worldSize; ++y)
+                if (worldTilesMap.GetPixel(x, y) == Color.white)
+                    LightBlock(x, y, 1f, 0);
+        worldTilesMap.Apply();
 
         cameraController.Spawn(new Vector3(player.spawnPos.x, player.spawnPos.y, cameraController.transform.position.z));
         cameraController.worldSize = worldSize;
@@ -157,7 +182,6 @@ public class TerrainGeneration : MonoBehaviour
     {
         tileBitmaskMap = new Dictionary<int, int>
         {
-            // --- 核心位值 ---
             // 上方: 1
             // 下方: 2
             // 左方: 4
@@ -167,13 +191,8 @@ public class TerrainGeneration : MonoBehaviour
             // 左下方 (内角): 64 (仅当 下和左 同时存在时激活)
             // 右下方 (内角): 128 (仅当 下和右 同时存在时激活)
 
-            // --- 映射表示例 ---
-            // 您需要根据您的 dirtTiles Sprite 数组的实际内容和顺序来调整等号右边的索引值。
-            // 下面的索引值 (0, 1, 2...) 只是示例。
-
             // **情况：孤立瓦片 (周围都没有相同类型)**
             // Bitmask: 0
-            // 描述: 一个单独的泥土块，不与 任何其他泥土块相邻。
             [0] = 0, // 假设 dirtTiles[0] 是孤立瓦片 Sprite
 
             // **情况：单边连接**
@@ -204,18 +223,18 @@ public class TerrainGeneration : MonoBehaviour
             // TODO: **情况：包含对角线的内角 (需要对应的 Sprite 支持)**
             // Bitmask: 21 (上、左、左上内角) (1 Up + 4 Left + 16 UpLeft)
             // [21] = 16, // 假设 dirtTiles[16] 是左上内角 Sprite
-            //            // Bitmask: 41 (上、右、右上内角) (1 Up + 8 Right + 32 UpRight)
+            // Bitmask: 41 (上、右、右上内角) (1 Up + 8 Right + 32 UpRight)
             // [41] = 17, // 假设 dirtTiles[17] 是右上内角 Sprite
-            //            // Bitmask: 70 (下、左、左下内角) (2 Down + 4 Left + 64 DownLeft)
+            // Bitmask: 70 (下、左、左下内角) (2 Down + 4 Left + 64 DownLeft)
             // [70] = 18, // 假设 dirtTiles[18] 是左下内角 Sprite
-            //            // Bitmask: 138 (下、右、右下内角) (2 Down + 8 Right + 128 DownRight)
+            // Bitmask: 138 (下、右、右下内角) (2 Down + 8 Right + 128 DownRight)
             // [138] = 19, // 假设 dirtTiles[19] 是右下内角 Sprite
 
             // // **情况：全连接 (所有8个方向，包括所有内角填充)**
-            // // Bitmask: 255 (1+2+4+8+16+32+64+128)
+            // Bitmask: 255 (1+2+4+8+16+32+64+128)
             // [255] = 20 // 假设 dirtTiles[20] 是全连接的 Sprite (可能与 dirtTiles[15] 相同或更复杂)
         };
-        // index在15及以上的都是中间的tile
+        // 目前index在15及以上的都是中间的tile
     }
 
     public void UpdateCurrentBiome(int x, int y)
@@ -230,7 +249,7 @@ public class TerrainGeneration : MonoBehaviour
     {
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize)
             return TileType.Air;
-        return (TileType)terrainMap[x, y];
+        return terrainMap[x, y];
     }
 
     public Biome GetCurrentBiome(int x, int y)
@@ -244,7 +263,6 @@ public class TerrainGeneration : MonoBehaviour
         biomeHashMap = new Dictionary<int, Biome>();
         foreach (Biome biome in biomes)
         {
-            // 将Color转换为整数哈希
             Color32 color32 = biome.biomeColor;
             int colorHash = (color32.r << 24) | (color32.g << 16) | (color32.b << 8) | color32.a;
             biomeHashMap[colorHash] = biome;
@@ -253,17 +271,17 @@ public class TerrainGeneration : MonoBehaviour
 
     private void GenerateTerrain()
     {
-        terrainMap = new int[worldSize, worldSize]; // 初始化地形图
+        terrainMap = new TileType[worldSize, worldSize]; // 初始化地形图
         for (int x = 0; x < worldSize; ++x)
         {
             float height;
-            for (int y = 0; y < worldSize; ++y) // 遍历整个世界高度，确保所有可能的瓦片位置都被考虑
+            for (int y = 0; y < worldSize; ++y)
             {
                 UpdateCurrentBiome(x, y);
                 height = Mathf.PerlinNoise((x + seed) * terrainFreq, seed * terrainFreq) * curBiome.heightMultiplier + curBiome.heightAddition;
                 if (player.spawnPos == Vector2.zero && x == worldSize / 2)
                 {
-                    player.spawnPos.Set(x, height + 1);
+                    player.spawnPos.Set(x, height + 5);
                 }
                 if (y >= height)
                     break;
@@ -295,12 +313,12 @@ public class TerrainGeneration : MonoBehaviour
                 if (curBiome.generateCave)
                 {
                     if (caveNoiseTexture.GetPixel(x, y).r > curBiome.surfaceValue)
-                        terrainMap[x, y] = (int)tileType;
+                        terrainMap[x, y] = tileType;
                     else
-                        terrainMap[x, y] = (int)TileType.Air;
+                        terrainMap[x, y] = TileType.Wall;
                 }
                 else
-                    terrainMap[x, y] = (int)tileType;
+                    terrainMap[x, y] = tileType;
             }
         }
 
@@ -309,19 +327,22 @@ public class TerrainGeneration : MonoBehaviour
             for (int y = 0; y < worldSize; ++y)
             {
                 UpdateCurrentBiome(x, y);
-                if (terrainMap[x, y] != (int)TileType.Air) // 如果不是空瓦片
+                if (terrainMap[x, y] != TileType.Air)
                 {
-                    TileType currentTileType = (TileType)terrainMap[x, y];
+                    TileType currentTileType = terrainMap[x, y];
                     Sprite finalTileSprite = GetCorrectTileSprite(x, y, currentTileType);
                     if (finalTileSprite != null)
                     {
-                        GenerateTile(finalTileSprite, x, y, false, "Ground", currentTileType, false);
+                        if (currentTileType != TileType.Grass)
+                            GenerateTile(GetCorrectTileSprite(x, y, TileType.Wall), x, y, true, "Wall", TileType.Wall, false);
+                        if (currentTileType != TileType.Wall)
+                            GenerateTile(finalTileSprite, x, y, false, "Ground", currentTileType, false);
                     }
                 }
 
                 // 只有在泥土和草地的表面才生成花草树木
-                if ((terrainMap[x, y] == (int)TileType.Grass/* || terrainMap[x, y] == (int)TileType.Dirt*/) &&
-                    (y + 1 < worldSize && terrainMap[x, y + 1] == (int)TileType.Air)) // 确保 y+1 不越界
+                if ((terrainMap[x, y] == TileType.Grass/* || terrainMap[x, y] == TileType.Dirt*/) &&
+                    (y + 1 < worldSize && terrainMap[x, y + 1] == TileType.Air)) // 确保 y+1 不越界
                 {
                     float randomPick = Random.value;
                     float cumulativeProbability = 0f;
@@ -395,6 +416,8 @@ public class TerrainGeneration : MonoBehaviour
                     // else: No decoration placed
                 }
             }
+
+        worldTilesMap.Apply();
     }
 
 
@@ -412,7 +435,6 @@ public class TerrainGeneration : MonoBehaviour
 
         int bitmask = 0;
 
-        // 检查主方向邻居
         if (IsTileOfType(x, y + 1, tileType)) bitmask |= 1; // 上
         if (IsTileOfType(x, y - 1, tileType)) bitmask |= 2; // 下
         if (IsTileOfType(x - 1, y, tileType)) bitmask |= 4; // 左
@@ -469,7 +491,6 @@ public class TerrainGeneration : MonoBehaviour
         return targetTiles.Length > 0 ? targetTiles[0] : null;
     }
 
-    // player放置时调用
     public Sprite GetCorrectTileSprite_Player(int x, int y, Tile tile, TileType tileType)
     {
         int bitmask = 0;
@@ -480,17 +501,17 @@ public class TerrainGeneration : MonoBehaviour
 
         if (tileType == TileType.Grass)
         {
-            if (IsTileOfType(x, y + 1, TileType.Dirt)) bitmask |= 1; // 上
-            if (IsTileOfType(x, y - 1, TileType.Dirt)) bitmask |= 2; // 下
-            if (IsTileOfType(x - 1, y, TileType.Dirt)) bitmask |= 4; // 左
-            if (IsTileOfType(x + 1, y, TileType.Dirt)) bitmask |= 8; // 右
+            if (IsTileOfType(x, y + 1, TileType.Dirt)) bitmask |= 1;
+            if (IsTileOfType(x, y - 1, TileType.Dirt)) bitmask |= 2;
+            if (IsTileOfType(x - 1, y, TileType.Dirt)) bitmask |= 4;
+            if (IsTileOfType(x + 1, y, TileType.Dirt)) bitmask |= 8;
         }
         if (tileType == TileType.Dirt)
         {
-            if (IsTileOfType(x, y + 1, TileType.Grass)) bitmask |= 1; // 上
-            if (IsTileOfType(x, y - 1, TileType.Grass)) bitmask |= 2; // 下
-            if (IsTileOfType(x - 1, y, TileType.Grass)) bitmask |= 4; // 左
-            if (IsTileOfType(x + 1, y, TileType.Grass)) bitmask |= 8; // 右
+            if (IsTileOfType(x, y + 1, TileType.Grass)) bitmask |= 1;
+            if (IsTileOfType(x, y - 1, TileType.Grass)) bitmask |= 2;
+            if (IsTileOfType(x - 1, y, TileType.Grass)) bitmask |= 4;
+            if (IsTileOfType(x + 1, y, TileType.Grass)) bitmask |= 8;
         }
 
         Sprite[] targetTiles;
@@ -526,7 +547,7 @@ public class TerrainGeneration : MonoBehaviour
     {
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize)
             return false;
-        return (TileType)terrainMap[x, y] == type;
+        return terrainMap[x, y] == type;
     }
 
     private void GenerateLeftBranch(int x, int y, int branchLength, bool isBottomSection = false, TileType tileType = TileType.Tree)
@@ -545,7 +566,6 @@ public class TerrainGeneration : MonoBehaviour
                 GenerateTile(curBiome.tileAtlas.treeBranches_Left.tileSprites[3], x - 1, y + j, curBiome.tileAtlas.treeBranches_Left.inBackground, "Plant");
                 SetTerrainMap(x - 1, y + j, tileType);
             }
-            // 保持原有逻辑：底部分支不减0.5f，中间分支减0.5f
             float yOffset = isBottomSection ? 0f : -0.5f;
             GenerateTile(curBiome.tileAtlas.treeBranches_Left.tileSprites[4], x - 1, y + branchLength + yOffset, curBiome.tileAtlas.treeBranches_Left.inBackground, "Plant");
         }
@@ -567,7 +587,6 @@ public class TerrainGeneration : MonoBehaviour
                 GenerateTile(curBiome.tileAtlas.treeBranches_Right.tileSprites[3], x + 1, y + j, curBiome.tileAtlas.treeBranches_Right.inBackground, "Plant");
                 SetTerrainMap(x + 1, y + j, tileType);
             }
-            // 保持原有逻辑：底部分支不减0.5f，中间分支减0.5f
             float yOffset = isBottomSection ? 0f : -0.5f;
             GenerateTile(curBiome.tileAtlas.treeBranches_Right.tileSprites[4], x + 1, y + branchLength + yOffset, curBiome.tileAtlas.treeBranches_Right.inBackground, "Plant");
         }
@@ -804,6 +823,9 @@ public class TerrainGeneration : MonoBehaviour
             GenerateItemDrop(x, y, currentTileType);
 
             GameObject.Destroy(tileObject);
+            worldTilesMap.SetPixel(x, y, Color.white);
+            LightBlock(x, y, 1f, 0);
+
             worldTiles.RemoveAt(index);
             worldTileObjects.RemoveAt(index);
 
@@ -841,6 +863,7 @@ public class TerrainGeneration : MonoBehaviour
                 }
             }
             UpdateSurroundingTiles(x, y);
+
         }
         else if (worldWalls.Contains(tilePos))
         {
@@ -850,11 +873,15 @@ public class TerrainGeneration : MonoBehaviour
             GenerateItemDrop(x, y, TileType.Wall);
 
             GameObject.Destroy(wallObject);
+            worldTilesMap.SetPixel(x, y, Color.white);
+            LightBlock(x, y, 1f, 0);
+
             worldWalls.RemoveAt(index);
             worldWallObjects.RemoveAt(index);
             SetTerrainMap(x, y, TileType.Air);
             UpdateSurroundingWalls(x, y);
         }
+        worldTilesMap.Apply();
     }
 
     private void RemoveTileDFS(int centerX, int centerY, bool allRemoved = false)
@@ -1034,7 +1061,6 @@ public class TerrainGeneration : MonoBehaviour
         GenerateTile(tileSprite, x, y, backGroundElement, tileTag, GetTileType((int)x, (int)y), false);
     }
 
-    // 重载版本，支持记录tile信息
     public void GenerateTile(Sprite tileSprite, float x, float y, bool backGroundElement, string tileTag, TileType tileType, bool isPlayerPlaced)
     {
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return;
@@ -1069,6 +1095,14 @@ public class TerrainGeneration : MonoBehaviour
             }
             newTile.GetComponent<SpriteRenderer>().sprite = tileSprite;
             newTile.GetComponent<SpriteRenderer>().sortingOrder = backGroundElement ? -10 : -5;
+
+            if (tileTag == "Wall") {
+                newTile.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
+                worldTilesMap.SetPixel((int)x, (int)y, Color.black);
+            } else if (!backGroundElement) {
+                worldTilesMap.SetPixel((int)x, (int)y, Color.black);
+            }
+
             newTile.name = tileSprite.name;
             newTile.tag = tileTag;
             newTile.transform.position = new Vector2(x + 0.5f, y + 0.5f);
@@ -1083,7 +1117,6 @@ public class TerrainGeneration : MonoBehaviour
                 worldTileObjects.Add(newTile);
             }
 
-            // 记录所有tile信息到placedTileInfo
             if (tileType != TileType.Air)
             {
                 Vector2 tilePos = new Vector2(x, y);
@@ -1100,7 +1133,7 @@ public class TerrainGeneration : MonoBehaviour
     public void SetTerrainMap(int x, int y, TileType tileType)
     {
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return;
-        terrainMap[x, y] = (int)tileType;
+        terrainMap[x, y] = tileType;
     }
 
     public Tile GetTileFromType(TileType tileType)
@@ -1127,7 +1160,6 @@ public class TerrainGeneration : MonoBehaviour
         }
     }
 
-    // 生成掉落物
     public void GenerateItemDrop(int x, int y, TileType tileType)
     {
         if (item_TileDrop == null) return;
@@ -1188,53 +1220,35 @@ public class TerrainGeneration : MonoBehaviour
 
     int FindQuantityDFS(int x, int y, TileType tileType)
     {
-        // 创建visited集合并开始DFS
-        HashSet<Vector2> visited = new HashSet<Vector2>();
+        HashSet<Vector2> visited = new();
         int totalCount = FindQuantityDFSRecursive(x, y, tileType, visited);
-
-        Debug.Log($"DFS搜索完成：在({x}, {y})找到{totalCount}个{tileType}类型的tile，访问了{visited.Count}个位置");
         return totalCount;
     }
 
     int FindQuantityDFSRecursive(int x, int y, TileType tileType, HashSet<Vector2> visited)
     {
         Vector2 currentPos = new Vector2(x, y);
-
-        // 如果已经访问过，直接返回0
         if (visited.Contains(currentPos))
             return 0;
-
-        // 边界检查
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize)
             return 0;
-
-        // 如果当前位置不存在tile或不是目标类型，返回0
         if (!worldTiles.Contains(currentPos) || GetTileType(x, y) != tileType)
             return 0;
 
-        // 标记当前位置为已访问
         visited.Add(currentPos);
-
-        int count = 1; // 当前tile计数
+        int count = 1;
         bool allRemoved = tileType == TileType.Cactus;
-
-        // 定义搜索方向（优化：避免浮点数运算）
         int[] directions = GetSearchDirections(allRemoved);
-
-        // 搜索相邻的tile
         for (int i = 0; i < directions.Length; i += 2)
         {
             int newX = x + directions[i];
             int newY = y + directions[i + 1];
-
-            // 递归搜索相邻位置
             count += FindQuantityDFSRecursive(newX, newY, tileType, visited);
         }
 
         return count;
     }
 
-    // 获取搜索方向的辅助方法
     int[] GetSearchDirections(bool allRemoved)
     {
         if (allRemoved) // Cactus类型：搜索所有方向
@@ -1261,5 +1275,73 @@ public class TerrainGeneration : MonoBehaviour
                 -2, 0,  2, 0
             };
         }
+    }
+
+    public void LightBlock(int x, int y, float intensity, int iteration)
+    {
+        if (iteration < lightRadius)
+        {
+            worldTilesMap.SetPixel(x, y, Color.white * intensity);
+            for (int dx = -1; dx <= 1; ++dx)
+                for (int dy = -1; dy <= 1; ++dy)
+                {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx == x && ny == y) continue;
+                    if (nx < 0 || nx >= worldSize || ny < 0 || ny >= worldSize) continue;
+                    float distance = Vector2.Distance(new Vector2(x, y), new Vector2(nx, ny));
+                    float targetIntensity = Mathf.Pow(0.9f, distance) * intensity;
+                    if (worldTilesMap.GetPixel(nx, ny) != null && worldTilesMap.GetPixel(nx, ny).r < targetIntensity)
+                        LightBlock(nx, ny, targetIntensity, iteration + 1);
+                }
+            worldTilesMap.Apply();
+        }
+    }
+
+    public void RemoveLightSource(int x, int y)
+    {
+        unlitBlocks.Clear();
+        UnlightBlock(x, y, x, y);
+
+        List<Vector2Int> toRelight = new();
+        foreach (Vector2Int block in unlitBlocks)
+        {
+            for (int dx = -1; dx <= 1; ++dx)
+                for (int dy = -1; dy <= 1; ++dy)
+                {
+                    int nx = block.x + dx, ny = block.y + dy;
+                    if (nx == block.x && ny == block.y) continue;
+                    if (nx < 0 || nx >= worldSize || ny < 0 || ny >= worldSize) continue;
+                    if (worldTilesMap.GetPixel(nx, ny) != null &&
+                        worldTilesMap.GetPixel(nx, ny).r > worldTilesMap.GetPixel(block.x, block.y).r)
+                    {
+                        if (!toRelight.Contains(new Vector2Int(nx, ny)))
+                            toRelight.Add(new Vector2Int(nx, ny));
+                    }
+                }
+        }
+
+        foreach (Vector2Int source in toRelight)
+            LightBlock(source.x, source.y, worldTilesMap.GetPixel(source.x, source.y).r, 0);
+
+        worldTilesMap.Apply();
+    }
+
+    public void UnlightBlock(int x, int y, int ix, int iy)
+    {
+        if (Mathf.Abs(x - ix) > lightRadius || Mathf.Abs(y - iy) > lightRadius || unlitBlocks.Contains(new Vector2Int(x, y))) 
+            return;
+        
+        for (int dx = -1; dx <= 1; ++dx)
+            for (int dy = -1; dy <= 1; ++dy)
+            {
+                int nx = x + dx, ny = y + dy;
+                if (nx == x && ny == y) continue;
+                if (nx < 0 || nx >= worldSize || ny < 0 || ny >= worldSize) continue;
+                if (worldTilesMap.GetPixel(nx, ny) != null && 
+                    worldTilesMap.GetPixel(nx, ny).r < worldTilesMap.GetPixel(x, y).r)
+                    UnlightBlock(nx, ny, ix, iy);
+            }
+        worldTilesMap.SetPixel(x, y, Color.black);
+        unlitBlocks.Add(new Vector2Int(x, y));
     }
 }

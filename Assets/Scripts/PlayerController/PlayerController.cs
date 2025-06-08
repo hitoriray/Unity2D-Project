@@ -182,10 +182,12 @@ public class PlayerController : MonoBehaviour
                 TileType tileType = terrainGenerator.GetTileType(x, y);
                 if (tileType == TileType.Air || tileType == TileType.Wall)
                 {
+                    terrainGenerator.RemoveLightSource(x, y);
                     terrainGenerator.PlaceTile(x, y, defaultTile, TileType.Dirt, "Ground");
                 }
                 else if (tileType == TileType.Flower)
                 {
+                    terrainGenerator.RemoveLightSource(x, y);
                     terrainGenerator.RemoveTile(x, y);
                     terrainGenerator.PlaceTile(x, y, defaultTile, TileType.Dirt, "Ground");
                 }
@@ -197,6 +199,7 @@ public class PlayerController : MonoBehaviour
                 defaultWallTile = curBiome.tileAtlas.wall;
                 if (terrainGenerator.GetTileType(x, y) != TileType.Wall)
                 {
+                    terrainGenerator.RemoveLightSource(x, y);
                     terrainGenerator.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall");
                 }
             }
