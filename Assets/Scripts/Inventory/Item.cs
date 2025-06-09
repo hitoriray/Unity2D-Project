@@ -7,7 +7,7 @@ public class Item
     public string itemName;
     public string description;
     public Sprite itemSprite;
-    public int maxStackSize = 64;
+    public int maxStackSize = 999;
     
     [Header("Tile信息")]
     public Tile tile;
@@ -17,6 +17,7 @@ public class Item
     [Header("物品属性")]
     public Tool tool;
     public ItemType itemType;
+    public ToolType toolType;
     public int quantity = 1;
     
     public Item()
@@ -40,6 +41,7 @@ public class Item
         itemSprite = _tool.toolSprite;
         tool = _tool;
         itemType = ItemType.Tool;
+        toolType = _tool.toolType;
         maxStackSize = 1;
         quantity = 1;
     }
@@ -78,11 +80,7 @@ public class Item
     public bool CanStackWith(Item other)
     {
         if (other == null) return false;
-        
-        return itemName == other.itemName &&
-               tileType == other.tileType &&
-               sourceBiome == other.sourceBiome &&
-               itemType == other.itemType;
+        return itemName == other.itemName;
     }
     
     // 尝试堆叠物品，返回剩余数量
