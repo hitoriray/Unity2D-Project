@@ -169,14 +169,16 @@ public class ItemDrop : MonoBehaviour
     
     void PickupItem()
     {
-        // TODO: 添加到玩家背包
-        playerController.GetComponent<Inventory>().Add(item);
+        // 显示文本信息
         ShowPickupText();
-
-        // 播放拾取音效
-        // AudioSource.PlayClipAtPoint(pickupSound, transform.position);
-
-        Destroy(gameObject);
+        // 添加到背包
+        if (playerController.GetComponent<Inventory>().Add(item))
+        {
+            // 播放拾取音效
+            // AudioSource.PlayClipAtPoint(pickupSound, transform.position);
+            // 销毁掉落物
+            Destroy(gameObject);
+        }
     }
 
     void ShowPickupText()

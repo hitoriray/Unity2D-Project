@@ -7,95 +7,68 @@ using UnityEngine.UI;
 public class Inventory : MonoBehaviour
 {
     public Tool tool;
-    public Vector2 offset;
+    public Vector2 inventoryOffset;
+    public Vector2 hotbarOffset;
     public Vector2 multiplier;
     public GameObject inventoryUI;
-    public GameObject inventorySlotsPrefab;
+    public GameObject hotbarUI;
+    public GameObject inventorySlotPrefab;
+    public GameObject hotbarSlotPrefab;
     public int inventoryWidth;
     public int inventoryHeight;
     public InventorySlot[,] inventorySlots;
-    public GameObject[,] uiSlots;
+    public InventorySlot[] hotbarSlots;
+    public GameObject[,] inventoryUISlots;
+    public GameObject[] hotbarUISlots;
 
     private void Start()
     {
         inventorySlots = new InventorySlot[inventoryWidth, inventoryHeight];
-        uiSlots = new GameObject[inventoryWidth, inventoryHeight];
-
-        // 检查必要的组件是否已配置
-        if (inventorySlotsPrefab == null)
-        {
-            Debug.LogError($"[{gameObject.name}] inventorySlotsPrefab 未配置！请在Inspector中设置Slot预制体。");
-            return;
-        }
-
-        if (inventoryUI == null)
-        {
-            Debug.LogError($"[{gameObject.name}] inventoryUI 未配置！请在Inspector中设置UI容器。");
-            return;
-        }
+        inventoryUISlots = new GameObject[inventoryWidth, inventoryHeight];
+        hotbarSlots = new InventorySlot[inventoryWidth];
+        hotbarUISlots = new GameObject[inventoryWidth];
 
         SetupUI();
         UpdateInventoryUI();
-
-        // 只有在tool不为null时才添加初始物品
-        if (tool != null)
-        {
-            Add(new Item(tool));
-            Add(new Item(tool));
-            Add(new Item(tool));
-        }
-        else
-        {
-            Debug.LogWarning($"[{gameObject.name}] tool 未配置，跳过添加初始物品。");
-        }
     }
 
     void SetupUI()
     {
-        if (inventorySlotsPrefab == null || inventoryUI == null)
-        {
-            Debug.LogError($"[{gameObject.name}] SetupUI失败：inventorySlotsPrefab或inventoryUI为null");
-            return;
-        }
-
-        Transform parentTransform = inventoryUI.transform.GetChild(0).transform;
-        if (parentTransform == null)
-        {
-            Debug.LogError($"[{gameObject.name}] inventoryUI的第一个子对象不存在！");
-            return;
-        }
-
+        // setup inventory
         for (int x = 0; x < inventoryWidth; ++x)
             for (int y = 0; y < inventoryHeight; ++y)
             {
-                GameObject inventorySlot = Instantiate(inventorySlotsPrefab, parentTransform);
-                inventorySlot.GetComponent<RectTransform>().localPosition = new Vector3((x * multiplier.x) + offset.x, (y * multiplier.y) + offset.y);
-                uiSlots[x, y] = inventorySlot;
+                GameObject inventorySlot = Instantiate(inventorySlotPrefab, inventoryUI.transform.GetChild(0).transform);
+                inventorySlot.GetComponent<RectTransform>().localPosition = new Vector3((x * multiplier.x) + inventoryOffset.x, (y * multiplier.y) + inventoryOffset.y);
+                inventoryUISlots[x, y] = inventorySlot;
                 inventorySlots[x, y] = null;
             }
+        // setup hotbar
+        for (int x = 0; x < inventoryWidth; ++x)
+        {
+            GameObject hotbarSlot = Instantiate(hotbarSlotPrefab, hotbarUI.transform.GetChild(0).transform);
+            hotbarSlot.GetComponent<RectTransform>().localPosition = new Vector3((x * multiplier.x) + hotbarOffset.x, hotbarOffset.y);
+            hotbarUISlots[x] = hotbarSlot;
+            hotbarSlots[x] = null;
+        }
     }
 
-    void UpdateInventoryUI()
+    public void UpdateInventoryUI()
     {
-        if (uiSlots == null)
-        {
-            Debug.LogError($"[{gameObject.name}] UpdateInventoryUI失败：uiSlots为null");
-            return;
-        }
-
+        // update inventory
         for (int x = 0; x < inventoryWidth; ++x)
             for (int y = 0; y < inventoryHeight; ++y)
             {
-                if (uiSlots[x, y] == null) continue;
+                if (inventoryUISlots[x, y] == null) continue;
                 if (inventorySlots[x, y] == null)
                 {
-                    var imageComponent = uiSlots[x, y].transform.GetChild(0).GetComponent<Image>();
+                    var imageComponent = inventoryUISlots[x, y].transform.GetChild(0).GetComponent<Image>();
                     if (imageComponent != null)
                     {
                         imageComponent.sprite = null;
                         imageComponent.enabled = false;
                     }
-                    var textComponent = uiSlots[x, y].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+                    var textComponent = inventoryUISlots[x, y].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
                     if (textComponent != null)
                     {
                         textComponent.text = "0";
@@ -104,54 +77,100 @@ public class Inventory : MonoBehaviour
                 }
                 else
                 {
-                    var imageComponent = uiSlots[x, y].transform.GetChild(0).GetComponent<Image>();
+                    var imageComponent = inventoryUISlots[x, y].transform.GetChild(0).GetComponent<Image>();
                     if (imageComponent != null && inventorySlots[x, y].item != null)
                     {
                         imageComponent.enabled = true;
                         imageComponent.sprite = inventorySlots[x, y].item.itemSprite;
                     }
-                    var textComponent = uiSlots[x, y].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+                    var textComponent = inventoryUISlots[x, y].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
                     if (textComponent != null)
                     {
                         textComponent.enabled = true;
-                        textComponent.text = inventorySlots[x, y].item.quantity.ToString();
+                        if (inventorySlots[x, y].item.quantity == 1) textComponent.text = "";
+                        else textComponent.text = inventorySlots[x, y].item.quantity.ToString();
                     }
                 }
             }
+
+        // update hotbar
+        int col = inventoryHeight - 1;
+        for (int x = 0; x < inventoryWidth; ++x)
+        {
+            if (inventoryUISlots[x, col] == null) continue;
+            if (inventorySlots[x, col] == null)
+            {
+                var imageComponent = hotbarUISlots[x].transform.GetChild(0).GetComponent<Image>();
+                if (imageComponent != null)
+                {
+                    imageComponent.sprite = null;
+                    imageComponent.enabled = false;
+                }
+                var textComponent = hotbarUISlots[x].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+                if (textComponent != null)
+                {
+                    textComponent.text = "0";
+                    textComponent.enabled = false;
+                }
+            }
+            else
+            {
+                var imageComponent = hotbarUISlots[x].transform.GetChild(0).GetComponent<Image>();
+                if (imageComponent != null && inventorySlots[x, col].item != null)
+                {
+                    imageComponent.enabled = true;
+                    imageComponent.sprite = inventorySlots[x, col].item.itemSprite;
+                }
+                var textComponent = hotbarUISlots[x].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+                if (textComponent != null)
+                {
+                    textComponent.enabled = true;
+                    if (inventorySlots[x, col].item.quantity == 1) textComponent.text = "";
+                    else textComponent.text = inventorySlots[x, col].item.quantity.ToString();
+                }
+            }
+        }
     }
 
-    public void Add(Item item)
+    public bool Add(Item item)
     {
-        if (item == null) return;
+        if (item == null || item.quantity <= 0) return false;
+        Vector2Int? firstEmptySlot = null;
         for (int y = inventoryHeight - 1; y >= 0; --y)
+        {
             for (int x = 0; x < inventoryWidth; ++x)
             {
-                if (inventorySlots[x, y] == null)
+                if (inventorySlots[x, y] != null && inventorySlots[x, y].item.CanStackWith(item))
                 {
-                    inventorySlots[x, y] = new InventorySlot
+                    int remain = inventorySlots[x, y].TryStack(item);
+                    item.quantity = remain;
+                    if (remain == 0)
                     {
-                        position = new Vector2Int(x, y),
-                        item = item,
-                    };
-                    UpdateInventoryUI();
-                    return;
-                }
-                else
-                {
-                    if (inventorySlots[x, y].item.CanStackWith(item))
-                    {
-                        int remaining = inventorySlots[x, y].item.TryStack(item);
-                        if (remaining == 0)
-                        {
-                            UpdateInventoryUI();
-                            return;
-                        }
-                        item.quantity = remaining;
-                        
+                        UpdateInventoryUI();
+                        return true;
                     }
                 }
+
+                if (inventorySlots[x, y] == null && !firstEmptySlot.HasValue)
+                {
+                    firstEmptySlot = new Vector2Int(x, y);
+                }
             }
-        Debug.LogWarning($"[{gameObject.name}] 背包已满，无法添加物品: {item.itemName}");
+        }
+
+        if (item.quantity > 0 && firstEmptySlot.HasValue)
+        {
+            Vector2Int pos = firstEmptySlot.Value;
+            inventorySlots[pos.x, pos.y] = new InventorySlot
+            {
+                position = pos,
+                item = new Item(item),
+            };
+            item.quantity = 0;
+            UpdateInventoryUI();
+            return true;
+        }
+        return false;
     }
 
     public void Remove()

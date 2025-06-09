@@ -7,12 +7,12 @@ public class Item
     public string itemName;
     public string description;
     public Sprite itemSprite;
-    public int maxStackSize = 999;
+    public int maxStackSize;
     
     [Header("Tile信息")]
     public Tile tile;
     public TileType tileType;
-    public string sourceBiome; // 来源biome名称
+    public string sourceBiome;
     
     [Header("物品属性")]
     public Tool tool;
@@ -81,18 +81,6 @@ public class Item
     {
         if (other == null) return false;
         return itemName == other.itemName;
-    }
-    
-    // 尝试堆叠物品，返回剩余数量
-    public int TryStack(Item other)
-    {
-        if (!CanStackWith(other)) return other.quantity;
-        
-        int availableSpace = maxStackSize - quantity;
-        int amountToAdd = Mathf.Min(availableSpace, other.quantity);
-        
-        quantity += amountToAdd;
-        return other.quantity - amountToAdd;
     }
 }
 
