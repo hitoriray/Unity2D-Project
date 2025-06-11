@@ -50,11 +50,9 @@ public class TerrainGeneration : MonoBehaviour
     private Biome curBiome;
     private Color[] biomeColors;
     private Dictionary<int, Biome> biomeHashMap;
-    private int[] surfaceHeight;
 
     private void Start()
     {
-        surfaceHeight = new int[worldSize];
         // initialize light
         worldTilesMap = new Texture2D(worldSize, worldSize);
         worldTilesMap.filterMode = FilterMode.Bilinear;
@@ -131,7 +129,7 @@ public class TerrainGeneration : MonoBehaviour
                     ores[i].spreadTexture.SetPixel(x, y, Color.black);
                     if (curBiome.ores.Length > i)
                     {
-                        o = Mathf.PerlinNoise(((x + i * 10) + seed) * curBiome.ores[i].frequency, ((y + i * 100) + seed) * curBiome.ores[i].frequency);
+                        o = Mathf.PerlinNoise((x + seed) * curBiome.ores[i].frequency, (y + seed) * curBiome.ores[i].frequency);
                         if (o > curBiome.ores[i].size)
                             ores[i].spreadTexture.SetPixel(x, y, Color.white);
                     }
@@ -295,17 +293,17 @@ public class TerrainGeneration : MonoBehaviour
                     if (curBiome.biomeName == "forest") tileType = TileType.Dirt; // 森林没有石头
                     else tileType = TileType.Stone;
 
-                    if (ores[0].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[0].maxSpawnHeight)
+                    if (curBiome.ores[0].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[0].maxSpawnHeight)
                         tileType = TileType.Copper;
-                    if (ores[1].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[1].maxSpawnHeight)
+                    if (curBiome.ores[1].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[1].maxSpawnHeight)
                         tileType = TileType.Iron;
-                    if (ores[2].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[2].maxSpawnHeight)
+                    if (curBiome.ores[2].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[2].maxSpawnHeight)
                         tileType = TileType.Gold;
-                    if (ores[3].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[3].maxSpawnHeight)
+                    if (curBiome.ores[3].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[3].maxSpawnHeight)
                         tileType = TileType.Ruby;
-                    if (ores[4].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[4].maxSpawnHeight)
+                    if (curBiome.ores[4].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[4].maxSpawnHeight)
                         tileType = TileType.Emerald;
-                    if (ores[5].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[5].maxSpawnHeight)
+                    if (curBiome.ores[5].spreadTexture.GetPixel(x, y).r > 0.5f && height - y > curBiome.ores[5].maxSpawnHeight)
                         tileType = TileType.Sapphire;
                 }
                 else if (y < height - curBiome.grassLayerHeight)
@@ -315,10 +313,8 @@ public class TerrainGeneration : MonoBehaviour
 
                 if (curBiome.generateCave)
                 {
-                    if (caveNoiseTexture.GetPixel(x, y).r > curBiome.surfaceValue) {
-                        surfaceHeight[x] = Mathf.Max(surfaceHeight[x], y);
+                    if (caveNoiseTexture.GetPixel(x, y).r > curBiome.surfaceValue)
                         terrainMap[x, y] = tileType;
-                    }
                     else
                         terrainMap[x, y] = TileType.Wall;
                 }
