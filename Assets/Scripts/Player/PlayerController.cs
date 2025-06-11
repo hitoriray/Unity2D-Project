@@ -5,7 +5,10 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public TerrainGeneration terrainGenerator;
+    public TerrainGeneration terrainGen;
+
+    #region 背包相关的变量
+
     [Header("Inventory")]
     public Inventory inventory;
     private bool inventoryShowing = false;
@@ -14,30 +17,44 @@ public class PlayerController : MonoBehaviour
     public GameObject hotbarSelector;
     public Item selectedItem;
 
+    #endregion
+
+    #region 范围相关的变量
+
     [Header("Range Setting")]
     public float miningRange = 5f;
     public float basePickupRange = 1.5f;  // 基础拾取范围
     public float currentPickupRange = 1.5f;  // 当前拾取范围（可被装备修改）
 
-    [HideInInspector]
-    public Vector2 spawnPos;
-    [HideInInspector]
-    public Vector2Int mousePos;
+    #endregion
+    
+    #region 角色属性相关的变量
 
-    [Header("Movement Settings")]
+    [Header("Player Attributes")]
     public float moveSpeed = 10f;
-    public bool onGround;
 
-    [Header("Jump Settings")]
     public float minJumpForce = 8f;      // 短按跳跃力度
     public float maxJumpForce = 15f;     // 最大跳跃力度
     public float jumpHoldTime = 0.5f;    // 最大按住时间
     public float jumpGraceTime = 0.1f;   // 跳跃缓冲时间
+    
+    #endregion
+
+    #region 角色动画相关的变量
 
     [Header("SPUM Animation")]
     public SPUM_Prefabs spumPrefabs; // SPUM角色预制体组件
 
     private Rigidbody2D rb;
+
+    #endregion
+   
+    #region 角色状态、位置相关的变量
+    [HideInInspector]
+    public Vector2 spawnPos;
+    [HideInInspector]
+    public Vector2Int mousePos;
+    private bool onGround;
     private bool isMoving = false;
     private bool wasMoving = false;
     private bool isMining = false;
@@ -46,23 +63,19 @@ public class PlayerController : MonoBehaviour
     private bool wasPlacing = false;
     private bool isPlacingWall = false;
 
-    [Header("Tile Placement")]
-    public Tile defaultTile;
-    public Tile defaultWallTile;
-
-
-    [Header("Jump Settings")]
     private bool isJumping = false;
     private bool jumpKeyPressed = false;
     private bool jumpKeyReleased = false;
     private float jumpKeyHoldTime = 0f;
     private float jumpStartTime = 0f;
 
-    private void Start()
-    {
-        rb = GetComponent<Rigidbody2D>();
-        inventory = GetComponent<Inventory>();
-    }
+    #endregion
+
+
+
+    /* 成员方法 */
+
+    #region 角色生成
 
     public void Spawn()
     {
@@ -80,7 +93,108 @@ public class PlayerController : MonoBehaviour
         currentPickupRange = basePickupRange;
     }
 
+    #endregion
 
+
+    #region 放置方块、墙
+
+    void PlacingTile()
+    {
+        int x = mousePos.x, y = mousePos.y;
+        Vector3 playerPos = transform.position;
+        int playerCenterX = Mathf.RoundToInt(playerPos.x - 0.5f);
+        int playerCenterY = Mathf.RoundToInt(playerPos.y - 0.5f);
+        // 玩家占据3*2的空间，检查目标位置是否在玩家身体范围内
+        bool inPlayerHorizontalRange = (x >= playerCenterX - 1 && x <= playerCenterX + 1);
+        bool inPlayerVerticalRange = (y >= playerCenterY && y <= playerCenterY + 3);
+        if (inPlayerHorizontalRange && inPlayerVerticalRange) return;
+
+        TileType itemTileType;
+        string biomeName;
+        Tile defaultTile;
+        if (selectedItem != null &&
+            selectedItem.tile != null && 
+            selectedItem.quantity > 0 && 
+            selectedItem.itemType == ItemType.Block)
+        {
+            defaultTile = selectedItem.tile;
+            itemTileType = selectedItem.tileType;
+            biomeName = selectedItem.sourceBiome;
+            --selectedItem.quantity;
+            inventory.UpdateInventoryUI();
+            if (selectedItem.quantity == 0)
+            {
+                inventory.Remove();
+                inventory.UpdateInventoryUI();
+                selectedItem = null;
+            }
+        }
+        else
+        {
+            return;
+        }
+
+
+        if (defaultTile.tileName.ToLower().Contains("tree")) {
+            Debug.LogWarning("暂不支持树的方块放置功能！");
+            return;
+        }
+
+        TileType tileType = terrainGen.GetTileType(x, y);
+        if (tileType == TileType.Air || tileType == TileType.Wall)
+        {
+            LightingManager.RemoveLightSource(terrainGen, x, y);
+            terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+        }
+        else if (tileType == TileType.Flower)
+        {
+            LightingManager.RemoveLightSource(terrainGen, x, y);
+            terrainGen.RemoveTile(x, y);
+            terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+        }
+    }
+
+    void PlacingWall()
+    {
+        int x = mousePos.x, y = mousePos.y;
+        Tile defaultWallTile;
+        string biomeName;
+        if (selectedItem != null && selectedItem.itemType == ItemType.Wall)
+        {
+            defaultWallTile = selectedItem.tile;
+            biomeName = selectedItem.sourceBiome;
+            --selectedItem.quantity;
+            inventory.UpdateInventoryUI();
+            if (selectedItem.quantity == 0)
+            {
+                inventory.Remove();
+                inventory.UpdateInventoryUI();
+                selectedItem = null;
+            }
+        }
+        else
+        {
+            defaultWallTile = terrainGen.GetCurrentBiome(x, y).tileAtlas.wall;
+            biomeName = terrainGen.GetCurrentBiome(x, y).biomeName;
+        }
+
+        if (terrainGen.GetTileType(x, y) != TileType.Wall)
+        {
+            LightingManager.RemoveLightSource(terrainGen, x, y);
+            terrainGen.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall", biomeName);
+        }
+    }
+
+    #endregion
+
+
+    #region 生命周期函数
+
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        inventory = GetComponent<Inventory>();
+    }
 
     private void Update()
     {
@@ -93,6 +207,7 @@ public class PlayerController : MonoBehaviour
             hotbarShowing = !hotbarShowing;
         }
 
+        // scoll through hotbar UI
         if (Input.GetAxis("Mouse ScrollWheel") < 0)
         {
             // scoll up
@@ -106,19 +221,14 @@ public class PlayerController : MonoBehaviour
             if (selectedSlotIndex > 0)
                 --selectedSlotIndex;
         }
-
+        // set selected slot UI
         hotbarSelector.transform.position = inventory.hotbarUISlots[selectedSlotIndex].transform.position;
+        // set selected item
+        selectedItem = inventory.inventorySlots[selectedSlotIndex, inventory.inventoryHeight - 1]?.item;
 
-        // 处理跳跃输入
         HandleJumpInput();
-
-        // 处理挖矿输入
         HandleMiningInput();
-
-        // 处理放置输入
         HandlePlacingTileInput();
-
-        // 处理背景墙放置输入
         HandlePlacingWallInput();
 
         inventory.inventoryUI.SetActive(inventoryShowing);
@@ -132,9 +242,9 @@ public class PlayerController : MonoBehaviour
         Vector3 currentPos = transform.position;
         Vector2 movement = new Vector2(horizontal * moveSpeed, rb.velocity.y);
         Vector3 targetPos = new Vector3(currentPos.x + movement.x * Time.fixedDeltaTime, currentPos.y, currentPos.z);
-
-        if (targetPos.x < 0 || targetPos.x > terrainGenerator.worldSize)
+        if (targetPos.x < 0 || targetPos.x > terrainGen.worldSize) {
             movement.x = 0;
+        }
 
         isMoving = Mathf.Abs(horizontal) > 0.1f;
 
@@ -155,62 +265,23 @@ public class PlayerController : MonoBehaviour
         {
             if (isMining)
             {
-                terrainGenerator.RemoveTile(mousePos.x, mousePos.y);
+                terrainGen.RemoveTile(mousePos.x, mousePos.y);
             }
-            else if (isPlacing && defaultTile != null)
+            else if (isPlacing)
             {
-                int x = mousePos.x, y = mousePos.y;
-                Vector3 playerPos = transform.position;
-                int playerCenterX = Mathf.RoundToInt(playerPos.x - 0.5f);
-                int playerCenterY = Mathf.RoundToInt(playerPos.y - 0.5f);
-                // 玩家占据3*2的空间，检查目标位置是否在玩家身体范围内
-                bool inPlayerHorizontalRange = (x >= playerCenterX - 1 && x <= playerCenterX + 1);
-                bool inPlayerVerticalRange = (y >= playerCenterY && y <= playerCenterY + 3);
-                if (inPlayerHorizontalRange && inPlayerVerticalRange) return;
-
-                // if (selectedItem != null && selectedItem.itemType == ItemType.Block)
-                // {
-                //     defaultTile = selectedItem.tile;
-                //     --selectedItem.quantity;
-                //     inventory.UpdateInventoryUI();
-                //     if (selectedItem.quantity == 0)
-                //     {
-                //         inventory.Remove();
-                //         inventory.UpdateInventoryUI();
-                //         selectedItem = null;
-                //     }
-                // }
-                // else
-                {
-                    defaultTile = terrainGenerator.GetCurrentBiome(x, y).tileAtlas.dirt;
-                }
-                TileType tileType = terrainGenerator.GetTileType(x, y);
-                if (tileType == TileType.Air || tileType == TileType.Wall)
-                {
-                    terrainGenerator.RemoveLightSource(x, y);
-                    terrainGenerator.PlaceTile(x, y, defaultTile, TileType.Dirt, "Ground");
-                }
-                else if (tileType == TileType.Flower)
-                {
-                    terrainGenerator.RemoveLightSource(x, y);
-                    terrainGenerator.RemoveTile(x, y);
-                    terrainGenerator.PlaceTile(x, y, defaultTile, TileType.Dirt, "Ground");
-                }
+                PlacingTile();
             }
-            else if (isPlacingWall && defaultWallTile != null)
+            else if (isPlacingWall)
             {
-                int x = mousePos.x, y = mousePos.y;
-                Biome curBiome = terrainGenerator.GetCurrentBiome(x, y);
-                defaultWallTile = curBiome.tileAtlas.wall;
-                if (terrainGenerator.GetTileType(x, y) != TileType.Wall)
-                {
-                    terrainGenerator.RemoveLightSource(x, y);
-                    terrainGenerator.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall");
-                }
+                PlacingWall();
             }
         }
     }
 
+    #endregion
+
+
+    #region 输入处理
     private void HandleJumpInput()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -231,6 +302,46 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void HandleMiningInput()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            isMining = true;
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            isMining = false;
+        }
+    }
+
+    private void HandlePlacingTileInput()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            isPlacing = true;
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            isPlacing = false;
+        }
+    }
+    private void HandlePlacingWallInput()
+    {
+        if (Input.GetMouseButtonDown(2))
+        {
+            isPlacingWall = true;
+        }
+        if (Input.GetMouseButtonUp(2))
+        {
+            isPlacingWall = false;
+        }
+    }
+    
+    #endregion
+
+
+    #region 处理跳跃
+    
     private void HandleJump()
     {
         // 开始跳跃
@@ -277,40 +388,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void HandleMiningInput()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            isMining = true;
-        }
-        if (Input.GetMouseButtonUp(0))
-        {
-            isMining = false;
-        }
-    }
+    #endregion
 
-    private void HandlePlacingTileInput()
-    {
-        if (Input.GetMouseButtonDown(1))
-        {
-            isPlacing = true;
-        }
-        if (Input.GetMouseButtonUp(1))
-        {
-            isPlacing = false;
-        }
-    }
-    private void HandlePlacingWallInput()
-    {
-        if (Input.GetMouseButtonDown(2))
-        {
-            isPlacingWall = true;
-        }
-        if (Input.GetMouseButtonUp(2))
-        {
-            isPlacingWall = false;
-        }
-    }
+
+    #region 处理SPUM动画
     private void HandleSPUMAnimation()
     {
         if (spumPrefabs == null) return;
@@ -340,7 +421,12 @@ public class PlayerController : MonoBehaviour
             wasMoving = isMoving;
         }
     }
-    
+
+    #endregion    
+
+
+    #region 处理拾取范围
+
     // 设置拾取范围（供装备系统调用）
     public void SetPickupRange(float range)
     {
@@ -358,6 +444,11 @@ public class PlayerController : MonoBehaviour
     {
         currentPickupRange = basePickupRange + additionalRange;
     }
+
+    #endregion
+
+
+    #region 处理碰撞检测
 
     private void OnTriggerStay2D(Collider2D col)
     {
@@ -390,4 +481,6 @@ public class PlayerController : MonoBehaviour
             onGround = false;
         }
     }
+
+    #endregion
 }

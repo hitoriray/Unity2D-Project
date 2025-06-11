@@ -87,6 +87,7 @@ public class Item
 public enum ItemType
 {
     Block,      // 可放置的块
+    Wall,
     Tool,       // 工具
     Consumable, // 消耗品
     Material    // 材料
