@@ -120,14 +120,6 @@ public class PlayerController : MonoBehaviour
             defaultTile = selectedItem.tile;
             itemTileType = selectedItem.tileType;
             biomeName = selectedItem.sourceBiome;
-            --selectedItem.quantity;
-            inventory.UpdateInventoryUI();
-            if (selectedItem.quantity == 0)
-            {
-                inventory.Remove();
-                inventory.UpdateInventoryUI();
-                selectedItem = null;
-            }
         }
         else
         {
@@ -145,12 +137,21 @@ public class PlayerController : MonoBehaviour
         {
             LightingManager.RemoveLightSource(terrainGen, x, y);
             terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+            --selectedItem.quantity;
         }
         else if (tileType == TileType.Flower)
         {
             LightingManager.RemoveLightSource(terrainGen, x, y);
-            terrainGen.RemoveTile(x, y);
+            terrainGen.RemoveTile(x, y, TileType.Dirt);
             terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+            --selectedItem.quantity;
+        }
+        inventory.UpdateInventoryUI();
+        if (selectedItem.quantity == 0)
+        {
+            inventory.Remove(selectedItem);
+            inventory.UpdateInventoryUI();
+            selectedItem = null;
         }
     }
 
@@ -167,7 +168,7 @@ public class PlayerController : MonoBehaviour
             inventory.UpdateInventoryUI();
             if (selectedItem.quantity == 0)
             {
-                inventory.Remove();
+                inventory.Remove(selectedItem);
                 inventory.UpdateInventoryUI();
                 selectedItem = null;
             }
@@ -183,6 +184,26 @@ public class PlayerController : MonoBehaviour
             LightingManager.RemoveLightSource(terrainGen, x, y);
             terrainGen.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall", biomeName);
         }
+    }
+
+    #endregion
+
+
+    #region 移除方块、墙
+    private void RemovingTile(Vector2Int pos)
+    {
+        if (selectedItem != null && selectedItem.itemType == ItemType.Tool)
+        {
+            // 移除方块
+            if (selectedItem.toolType == ToolType.PickAxe)
+                terrainGen.RemoveTile(pos.x, pos.y, TileType.Dirt);
+            else if (selectedItem.toolType == ToolType.Axe)
+                terrainGen.RemoveTile(pos.x, pos.y, TileType.Tree);
+            // 移除墙
+            else if (selectedItem.toolType == ToolType.Hammer)
+                terrainGen.RemoveTile(pos.x, pos.y, TileType.Wall);
+        }
+
     }
 
     #endregion
@@ -265,7 +286,7 @@ public class PlayerController : MonoBehaviour
         {
             if (isMining)
             {
-                terrainGen.RemoveTile(mousePos.x, mousePos.y);
+                RemovingTile(mousePos);
             }
             else if (isPlacing)
             {

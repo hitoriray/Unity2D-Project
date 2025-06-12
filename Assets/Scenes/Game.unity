@@ -370,7 +370,7 @@ MonoBehaviour:
   lightRadius: 5
   player: {fileID: 446130123}
   cameraController: {fileID: 519420033}
-  item_TileDrop: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
+  itemTileDrop: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
   seed: 0
   biomes:
   - biomeName: grassland
@@ -900,9 +900,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: Axe
+      value: 
+      objectReference: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
+    - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
       propertyPath: tool
       value: 
       objectReference: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
+    - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: tool2
+      value: 
+      objectReference: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
+    - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: Hammer
+      value: 
+      objectReference: {fileID: 11400000, guid: 29635c85cc244bc41897b0eac93d9a64, type: 2}
     - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
       propertyPath: hotbarUI
       value: 
@@ -915,6 +927,10 @@ PrefabInstance:
       propertyPath: offset.y
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: PickupAxe
+      value: 
+      objectReference: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
     - target: {fileID: 3456888401436643649, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
       propertyPath: inventoryUI
       value: 
@@ -963,6 +979,14 @@ PrefabInstance:
       propertyPath: inventorySlotsPrefab
       value: 
       objectReference: {fileID: 1441472296053433960, guid: 61ec2c7eccd2f174fbbf4220ede1bd58, type: 3}
+    - target: {fileID: 4292723228715428872, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: m_Offset.y
+      value: 0.62
+      objectReference: {fileID: 0}
+    - target: {fileID: 4292723228715428875, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: terrainGen
+      value: 
+      objectReference: {fileID: 1006789792}
     - target: {fileID: 4292723228715428875, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
       propertyPath: hotbarSelector
       value: 

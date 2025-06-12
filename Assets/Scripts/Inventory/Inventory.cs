@@ -6,7 +6,9 @@ using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
-    public Tool tool;
+    public Tool PickupAxe;  // 镐
+    public Tool Axe;        // 斧
+    public Tool Hammer;     // 锤
     public Vector2 inventoryOffset;
     public Vector2 hotbarOffset;
     public Vector2 multiplier;
@@ -21,6 +23,8 @@ public class Inventory : MonoBehaviour
     public GameObject[,] inventoryUISlots;
     public GameObject[] hotbarUISlots;
 
+
+    #region 生命周期函数
     private void Start()
     {
         inventorySlots = new InventorySlot[inventoryWidth, inventoryHeight];
@@ -28,9 +32,19 @@ public class Inventory : MonoBehaviour
         hotbarSlots = new InventorySlot[inventoryWidth];
         hotbarUISlots = new GameObject[inventoryWidth];
 
+
         SetupUI();
         UpdateInventoryUI();
+        
+        Add(new Item(PickupAxe));
+        Add(new Item(Axe));
+        Add(new Item(Hammer));
     }
+
+    #endregion
+
+
+    #region UI设置、更新
 
     void SetupUI()
     {
@@ -132,6 +146,10 @@ public class Inventory : MonoBehaviour
         }
     }
 
+    #endregion
+
+
+    #region 增、删、查
     public bool Add(Item item)
     {
         if (item == null || item.quantity <= 0) return false;
@@ -166,6 +184,7 @@ public class Inventory : MonoBehaviour
                 position = pos,
                 item = new Item(item),
             };
+
             item.quantity = 0;
             UpdateInventoryUI();
             return true;
@@ -173,8 +192,44 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    public void Remove()
+    public void Remove(Item item)
     {
-
+        Vector2Int pos = Contains(item);
+        if (pos != Vector2Int.one * -1)
+        {
+            inventorySlots[pos.x, pos.y] = null;
+            UpdateInventoryUI();
+        }
     }
+
+    public Vector2Int Contains(Item item) {
+        for (int y = inventoryHeight - 1; y >= 0; --y)
+        {
+            for (int x = 0; x < inventoryWidth; ++x)
+            {
+                if (inventorySlots[x, y] != null && 
+                    inventorySlots[x, y].item.itemName == item.itemName && 
+                    inventorySlots[x, y].item.quantity == item.quantity)
+                    return new Vector2Int(x, y);
+            }
+        }
+        return Vector2Int.one * -1;
+    }
+
+    public bool IsFull(Item item) {
+        for (int y = inventoryHeight - 1; y >= 0; --y)
+        {
+            for (int x = 0; x < inventoryWidth; ++x)
+            {
+                if (inventorySlots[x, y] == null) return false;
+                if (inventorySlots[x, y].item.itemName == item.itemName && 
+                    inventorySlots[x, y].item.quantity < inventorySlots[x, y].item.maxStackSize)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    #endregion
+
 }

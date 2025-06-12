@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -46,6 +47,7 @@ public class TerrainGeneration : MonoBehaviour
     private readonly List<GameObject> worldWallObjects = new();
     private Dictionary<Vector2, TileInfo> worldTileInfo = new();
     private TileType[,] terrainMap;
+    private bool[,] wallMap;
     private Dictionary<int, int> tileBitmaskMap;
     private GameObject[] worldChunks;
     private Biome curBiome;
@@ -191,6 +193,7 @@ public class TerrainGeneration : MonoBehaviour
     private void GenerateTerrain()
     {
         terrainMap = new TileType[worldSize, worldSize];
+        wallMap = new bool[worldSize, worldSize];
         float height;
         for (int x = 0; x < worldSize; ++x)
         {
@@ -233,11 +236,15 @@ public class TerrainGeneration : MonoBehaviour
                 {
                     if (caveNoiseTexture.GetPixel(x, y).r > curBiome.surfaceValue)
                         terrainMap[x, y] = tileType;
-                    else
-                        terrainMap[x, y] = TileType.Wall;
+                    else {
+                        terrainMap[x, y] = TileType.Wall; // 洞穴背景有Wall
+                        wallMap[x, y] = true;
+                    }
                 }
                 else
                     terrainMap[x, y] = tileType;
+
+                wallMap[x, y] = terrainMap[x, y] != TileType.Grass;
             }
         }
 
@@ -488,11 +495,11 @@ public class TerrainGeneration : MonoBehaviour
 
     #region 移除方块
 
-    public void RemoveTile(int x, int y)
+    public void RemoveTile(int x, int y, TileType tileType)
     {
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return;
         Vector2 tilePos = new(x, y);
-        if (worldTilePosition.Contains(tilePos))
+        if (worldTilePosition.Contains(tilePos) && tileType != TileType.Wall)
         {
             int index = worldTilePosition.IndexOf(tilePos);
             GameObject tileObject = worldTileObjects[index];
@@ -506,53 +513,58 @@ public class TerrainGeneration : MonoBehaviour
                 isCactus = spriteName.Contains("tiles_80");
             }
 
-            GenerateItemDrop(x, y, currentTileType);
-
-            GameObject.Destroy(tileObject);
-            worldTilesMap.SetPixel(x, y, Color.white);
-            LightingManager.LightBlock(this, x, y, 1f, 0);
-
-            worldTilePosition.RemoveAt(index);
-            worldTileObjects.RemoveAt(index);
-
-            if (worldTileInfo.ContainsKey(tilePos))
+            if (((isTree || isCactus) && tileType == TileType.Tree) ||
+                (!isPlant && !isTree && !isCactus && tileType != TileType.Tree))
             {
-                worldTileInfo.Remove(tilePos);
-            }
+                GenerateItemDrop(x, y, currentTileType);
 
-            if (worldWallPosition.Contains(tilePos)) {
-                SetTerrainMap(x, y, TileType.Wall);
-                worldTileInfo[tilePos] = new TileInfo(GetCurrentBiomeTileFromType(TileType.Wall), TileType.Wall, curBiome.biomeName, false);
-            }
-            else SetTerrainMap(x, y, TileType.Air);
+                GameObject.Destroy(tileObject);
+                worldTilesMap.SetPixel(x, y, Color.white);
+                LightingManager.LightBlock(this, x, y, 1f, 0);
 
-            if (isCactus)
-            {
-                RemoveTileDFS(x, y, true);
-            }
-            else if (isTree)
-            {
-                RemoveTileDFS(x, y);
-                tilePos.Set(x, y - 1);
-                if (worldTilePosition.Contains(tilePos))
+                worldTilePosition.RemoveAt(index);
+                worldTileObjects.RemoveAt(index);
+
+                if (worldTileInfo.ContainsKey(tilePos))
                 {
-                    index = worldTilePosition.IndexOf(tilePos);
-                    tileObject = worldTileObjects[index];
-                    string spriteName = tileObject.GetComponent<SpriteRenderer>().sprite.name.ToLower();
-                    isTree = spriteName.Contains("tiles_5");
-                    if (isTree)
+                    worldTileInfo.Remove(tilePos);
+                }
+
+                if (worldWallPosition.Contains(tilePos)) {
+                    wallMap[x, y] = true;
+                    SetTerrainMap(x, y, TileType.Wall);
+                    worldTileInfo[tilePos] = new TileInfo(GetCurrentBiomeTileFromType(TileType.Wall), TileType.Wall, curBiome.biomeName, false);
+                }
+                else SetTerrainMap(x, y, TileType.Air);
+
+                if (isCactus && tileType == TileType.Tree)
+                {
+                    RemoveTileDFS(x, y, true);
+                }
+                else if (isTree && tileType == TileType.Tree)
+                {
+                    RemoveTileDFS(x, y);
+                    tilePos.Set(x, y - 1);
+                    if (worldTilePosition.Contains(tilePos))
                     {
-                        GameObject.Destroy(tileObject);
-                        worldTilePosition.RemoveAt(index);
-                        worldTileObjects.RemoveAt(index);
-                        UpdateCurrentBiome(x, y - 1);
-                        GenerateTile(curBiome.tileAtlas.treeTop.tileSprites[Random.Range(2, curBiome.tileAtlas.treeTop.tileSprites.Length)], x, y - 1, curBiome.tileAtlas.treeTop.inBackground, "Plant", TileType.Tree, false);
+                        index = worldTilePosition.IndexOf(tilePos);
+                        tileObject = worldTileObjects[index];
+                        string spriteName = tileObject.GetComponent<SpriteRenderer>().sprite.name.ToLower();
+                        isTree = spriteName.Contains("tiles_5");
+                        if (isTree)
+                        {
+                            GameObject.Destroy(tileObject);
+                            worldTilePosition.RemoveAt(index);
+                            worldTileObjects.RemoveAt(index);
+                            UpdateCurrentBiome(x, y - 1);
+                            GenerateTile(curBiome.tileAtlas.treeTop.tileSprites[Random.Range(2, curBiome.tileAtlas.treeTop.tileSprites.Length)], x, y - 1, curBiome.tileAtlas.treeTop.inBackground, "Plant", TileType.Tree, false);
+                        }
                     }
                 }
+                UpdateSurroundingTiles(x, y);
             }
-            UpdateSurroundingTiles(x, y);
         }
-        else if (worldWallPosition.Contains(tilePos))
+        else if (!worldTilePosition.Contains(tilePos) && worldWallPosition.Contains(tilePos) && tileType == TileType.Wall)
         {
             int index = worldWallPosition.IndexOf(tilePos);
             GameObject wallObject = worldWallObjects[index];
@@ -565,6 +577,7 @@ public class TerrainGeneration : MonoBehaviour
 
             worldWallPosition.RemoveAt(index);
             worldWallObjects.RemoveAt(index);
+            wallMap[x, y] = false;
             SetTerrainMap(x, y, TileType.Air);
             UpdateSurroundingWalls(x, y);
         }
@@ -759,6 +772,7 @@ public class TerrainGeneration : MonoBehaviour
     {
         if (x < 0 || x >= worldSize || y < 0 || y >= worldSize)
             return false;
+        if (type == TileType.Wall) return terrainMap[x, y] == type || wallMap[x, y];
         return terrainMap[x, y] == type;
     }
 
@@ -846,7 +860,8 @@ public class TerrainGeneration : MonoBehaviour
         if (worldTileInfo.ContainsKey(tilePos))
         {
             TileInfo info = worldTileInfo[tilePos];
-            sourceTile = info.sourceTile;
+            // TODO:如果墙壁在方块后面，则会爆方块的itemDrop
+            sourceTile = info.sourceTile; 
             sourceBiome = info.sourceBiome;
         }
         else

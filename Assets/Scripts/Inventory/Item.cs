@@ -31,15 +31,15 @@ public class Item
         itemSprite = tile.itemSprite;
         tile = _tile;
         itemType = ItemType.Block;
-        maxStackSize = 64;
+        maxStackSize = 10;
         quantity = 1;
     }
 
     public Item(Tool _tool)
     {
+        tool = _tool;
         itemName = _tool.toolName;
         itemSprite = _tool.toolSprite;
-        tool = _tool;
         itemType = ItemType.Tool;
         toolType = _tool.toolType;
         maxStackSize = 1;
@@ -59,20 +59,22 @@ public class Item
         sourceBiome = biomeName;
         quantity = qty;
         itemType = ItemType.Block;
-        maxStackSize = 64;
+        maxStackSize = 5;
     }
     
     // 复制构造函数
     public Item(Item other)
     {
         itemName = other.itemName;
-        itemSprite = other.itemSprite;
         description = other.description;
+        itemSprite = other.itemSprite;
         maxStackSize = other.maxStackSize;
         tile = other.tile;
         tileType = other.tileType;
         sourceBiome = other.sourceBiome;
+        tool = other.tool;
         itemType = other.itemType;
+        toolType = other.toolType;
         quantity = other.quantity;
     }
     
