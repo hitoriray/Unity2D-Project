@@ -21,6 +21,10 @@ public class ItemDrop : MonoBehaviour
     public float bobSpeed = 2f;
     public float bobHeight = 0.1f;
 
+    [Header("拾取冷却设置")]
+    public float dropCooldownTime = 1.0f; // 丢弃后的冷却时间
+    public float exitDistance = 2.0f; // 玩家需要离开的距离
+
     private Vector3 startPosition;
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
@@ -29,6 +33,11 @@ public class ItemDrop : MonoBehaviour
     private Transform playerTransform;
     private float currentMoveSpeed = 0f;
     private PlayerController playerController;
+
+    // 拾取冷却相关
+    private bool isDroppedByPlayer = false; // 是否是玩家丢弃的
+    private bool playerHasExited = false; // 玩家是否已经离开过
+    private float dropTime; // 丢弃时间
 
     
 
@@ -86,6 +95,26 @@ public class ItemDrop : MonoBehaviour
         if (playerController == null) return;
 
         float distance = Vector2.Distance(transform.position, playerController.transform.position);
+
+        // 检查玩家是否已经离开过（如果是玩家丢弃的物品）
+        if (isDroppedByPlayer && !playerHasExited)
+        {
+            if (distance > exitDistance)
+            {
+                playerHasExited = true;
+            }
+            else
+            {
+                return; // 玩家还没有离开，不能拾取
+            }
+        }
+
+        // 检查基础冷却时间
+        if (isDroppedByPlayer && Time.time - dropTime < dropCooldownTime)
+        {
+            return; // 还在冷却时间内
+        }
+
         if (distance > pickupRange) return;
         if (distance <= playerController.currentPickupRange &&
             !playerController.GetComponent<Inventory>().IsFull(item))
@@ -206,14 +235,30 @@ public class ItemDrop : MonoBehaviour
             rb.angularDrag = 0.5f;
         }
     }
+
     public void SetItem(Item newItem)
     {
         item = new Item(newItem);
         if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();            
-        if (spriteRenderer != null && item.tile != null)
-            spriteRenderer.sprite = item.tile.itemSprite;
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            if (item.itemType == ItemType.Tool)
+                spriteRenderer.sprite = item.tool?.toolSprite;
+            else
+                spriteRenderer.sprite = item.tile?.itemSprite;
+        }
         gameObject.name = $"ItemDrop_{item.itemName}";
+    }
+
+    /// <summary>
+    /// 标记此物品为玩家丢弃的物品
+    /// </summary>
+    public void MarkAsPlayerDropped()
+    {
+        isDroppedByPlayer = true;
+        playerHasExited = false;
+        dropTime = Time.time;
     }
 
     #endregion

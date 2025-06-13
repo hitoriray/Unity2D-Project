@@ -3104,14 +3104,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7115978679671716916}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.86602545, w: 0.49999994}
+  m_LocalPosition: {x: 0.03100001, y: 0.23000005, z: 2.0281732e-10}
+  m_LocalScale: {x: 0.25, y: -0.25, z: 0.25}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8411841359551843442}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 120}
 --- !u!212 &1484956198222300188
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3153,15 +3153,15 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -15
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: f9203f4d939f9de4195e0baa6fb381b7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.375, y: 0.65625}
+  m_Size: {x: 2, y: 2}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &7164730622967485555
@@ -4020,7 +4020,7 @@ CapsuleCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.4}
+  m_Offset: {x: 0, y: 0.62}
   m_Size: {x: 1.2, y: 1.2}
   m_Direction: 0
 --- !u!70 &4292723228715428873
@@ -4051,21 +4051,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06b5fe2950c191749a617c7461997501, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainGenerator: {fileID: 0}
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 183
+  terrainGen: {fileID: 0}
+  weapon: {fileID: 7115978679671716916}
+  inventory: {fileID: 3456888401436643649}
+  hotbarSelector: {fileID: 0}
+  selectedItem:
+    itemName: 
+    description: 
+    itemSprite: {fileID: 0}
+    maxStackSize: 0
+    tile: {fileID: 0}
+    tileType: 0
+    sourceBiome: 
+    tool: {fileID: 0}
+    itemType: 0
+    toolType: 0
+    quantity: 1
   miningRange: 5
   basePickupRange: 5
   currentPickupRange: 5
-  spawnPos: {x: 0, y: 0}
-  mousePos: {x: 0, y: 0}
   moveSpeed: 10
-  onGround: 0
   minJumpForce: 12
   maxJumpForce: 20
   jumpHoldTime: 0.2
   jumpGraceTime: 0.01
   spumPrefabs: {fileID: 9063021166187635013}
-  defaultTile: {fileID: 11400000, guid: 58fd05aabd89ca140a69fe6e9d8f2f7f, type: 2}
-  defaultWallTile: {fileID: 11400000, guid: 39db019555bba914fb11537afdd64bed, type: 2}
+  spawnPos: {x: 0, y: 0}
+  mousePos: {x: 0, y: 0}
 --- !u!114 &3456888401436643649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4078,8 +4093,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 543cb441c65c4b3498b94fdaecafa1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryWidth: 9
-  inventoryHeight: 4
+  PickupAxe: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
+  Axe: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
+  Hammer: {fileID: 11400000, guid: 29635c85cc244bc41897b0eac93d9a64, type: 2}
+  inventoryOffset: {x: 25, y: -180}
+  hotbarOffset: {x: 25, y: -20}
+  multiplier: {x: 40, y: 40}
+  inventoryUI: {fileID: 0}
+  hotbarUI: {fileID: 0}
+  inventorySlotPrefab: {fileID: 1441472296053433960, guid: 61ec2c7eccd2f174fbbf4220ede1bd58, type: 3}
+  hotbarSlotPrefab: {fileID: 1441472296053433960, guid: d9fe191df57447444945c7175fd341a9, type: 3}
+  inventoryWidth: 8
+  inventoryHeight: 5
+  hotbarUISlots: []
 --- !u!1 &9076336075174239352
 GameObject:
   m_ObjectHideFlags: 0

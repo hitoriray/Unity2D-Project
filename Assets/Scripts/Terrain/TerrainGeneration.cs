@@ -1,11 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class TerrainGeneration : MonoBehaviour
 {
+
+    #region 公有变量
+
     [Header("Lighting")]
     public Texture2D worldTilesMap;
     public Material lightShader;
@@ -37,6 +37,8 @@ public class TerrainGeneration : MonoBehaviour
 
     [Header("Ores Settings")]
     public Ore[] ores;
+
+    #endregion
 
 
     #region 私有变量
@@ -490,7 +492,6 @@ public class TerrainGeneration : MonoBehaviour
     }
 
     #endregion
-
 
 
     #region 移除方块

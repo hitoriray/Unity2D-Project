@@ -56,8 +56,15 @@ public static class FeatureGenerator
 
         // generate tree top
         int topIndex = Random.Range(0, 3);
-        terrainGen.GenerateTile(curBiome.tileAtlas.treeTop.tileSprites[topIndex + (baldness ? 3 : 0)], x, y + treeHeight + (baldness ? 0 : 2), curBiome.tileAtlas.treeTop.inBackground, "Plant");
-        terrainGen.SetTerrainMap(x, y + treeHeight + (baldness ? 0 : 2), TileType.Tree);
+        if (topIndex + (baldness ? 3 : 0) < curBiome.tileAtlas.treeTop.tileSprites.Length)
+        {
+            terrainGen.GenerateTile(curBiome.tileAtlas.treeTop.tileSprites[topIndex + (baldness ? 3 : 0)], x, y + treeHeight + (baldness ? 0 : 2), curBiome.tileAtlas.treeTop.inBackground, "Plant");
+            terrainGen.SetTerrainMap(x, y + treeHeight + (baldness ? 0 : 2), TileType.Tree);
+        }
+        else
+        {
+            Debug.LogError("top index out of bound: " + topIndex + (baldness ? 3 : 0));
+        }
     }
 
     

@@ -5,7 +5,11 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public LayerMask layerMask;
+
     public TerrainGeneration terrainGen;
+
+    public GameObject weapon;
 
     #region 背包相关的变量
 
@@ -27,7 +31,7 @@ public class PlayerController : MonoBehaviour
     public float currentPickupRange = 1.5f;  // 当前拾取范围（可被装备修改）
 
     #endregion
-    
+
     #region 角色属性相关的变量
 
     [Header("Player Attributes")]
@@ -37,7 +41,7 @@ public class PlayerController : MonoBehaviour
     public float maxJumpForce = 15f;     // 最大跳跃力度
     public float jumpHoldTime = 0.5f;    // 最大按住时间
     public float jumpGraceTime = 0.1f;   // 跳跃缓冲时间
-    
+
     #endregion
 
     #region 角色动画相关的变量
@@ -47,8 +51,11 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
 
+    private float actionAnimationDuration = 0.5f;
+    private Coroutine _playActionCoroutine;
+
     #endregion
-   
+
     #region 角色状态、位置相关的变量
     [HideInInspector]
     public Vector2 spawnPos;
@@ -74,6 +81,120 @@ public class PlayerController : MonoBehaviour
 
 
     /* 成员方法 */
+
+
+    #region 生命周期函数
+
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        inventory = GetComponent<Inventory>();
+    }
+
+    private void Update()
+    {
+        mousePos.x = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).x - 0.5f);
+        mousePos.y = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).y - 0.5f);
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            inventoryShowing = !inventoryShowing;
+            hotbarShowing = !hotbarShowing;
+        }
+
+        // ESC键关闭库存界面
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (inventoryShowing)
+            {
+                inventoryShowing = false;
+                hotbarShowing = true;
+            }
+        }
+
+        // scoll through hotbar UI
+        if (Input.GetAxis("Mouse ScrollWheel") < 0)
+        {
+            // scoll up
+            if (selectedSlotIndex < inventory.inventoryWidth - 1)
+                ++selectedSlotIndex;
+
+        }
+        else if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        {
+            // scoll down
+            if (selectedSlotIndex > 0)
+                --selectedSlotIndex;
+        }
+
+        HandleNumberInput();
+
+        // set selected slot UI
+        hotbarSelector.transform.position = inventory.hotbarUISlots[selectedSlotIndex].transform.position;
+        // set selected item
+        selectedItem = inventory.inventorySlots[selectedSlotIndex, inventory.inventoryHeight - 1]?.item;
+        weapon.GetComponent<SpriteRenderer>().sprite = selectedItem?.itemSprite;
+
+        HandleJumpInput();
+        HandleActionInput();
+
+        inventory.inventoryUI.SetActive(inventoryShowing);
+        inventory.hotbarUI.SetActive(hotbarShowing);
+    }
+
+    private void FixedUpdate()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+
+        Vector3 currentPos = transform.position;
+        Vector2 movement = new Vector2(horizontal * moveSpeed, rb.velocity.y);
+        Vector3 targetPos = new Vector3(currentPos.x + movement.x * Time.fixedDeltaTime, currentPos.y, currentPos.z);
+        if (targetPos.x < 0 || targetPos.x > terrainGen.worldSize)
+        {
+            movement.x = 0;
+        }
+
+        isMoving = Mathf.Abs(horizontal) > 0.1f;
+
+        // 角色翻转
+        if (horizontal > 0) transform.localScale = new Vector3(-1.3f, 1.3f, 1.3f);
+        else if (horizontal < 0) transform.localScale = new Vector3(1.3f, 1.3f, 1.3f);
+
+        // 处理跳跃逻辑
+        HandleJump();
+
+        rb.velocity = new Vector2(movement.x, rb.velocity.y);
+
+
+        // 防止边缘滑落（可选）
+        // PreventEdgeSlipping();
+
+        // 处理SPUM动画
+        HandleSPUMAnimation();
+
+
+        // 检查是否正在拖拽库存物品或显示分割界面
+        if (!InventorySlotUI.isDragging &&
+            (ItemSplitUI.Instance == null || !ItemSplitUI.Instance.IsShowing()) &&
+            Vector2.Distance(currentPos, mousePos) <= miningRange)
+        {
+            if (isMining)
+            {
+                RemovingTile(mousePos);
+            }
+            else if (isPlacing)
+            {
+                PlacingTile();
+            }
+            else if (isPlacingWall)
+            {
+                PlacingWall();
+            }
+        }
+    }
+
+    #endregion
+
 
     #region 角色生成
 
@@ -113,8 +234,8 @@ public class PlayerController : MonoBehaviour
         string biomeName;
         Tile defaultTile;
         if (selectedItem != null &&
-            selectedItem.tile != null && 
-            selectedItem.quantity > 0 && 
+            selectedItem.tile != null &&
+            selectedItem.quantity > 0 &&
             selectedItem.itemType == ItemType.Block)
         {
             defaultTile = selectedItem.tile;
@@ -127,7 +248,8 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        if (defaultTile.tileName.ToLower().Contains("tree")) {
+        if (defaultTile.tileName.ToLower().Contains("tree"))
+        {
             Debug.LogWarning("暂不支持树的方块放置功能！");
             return;
         }
@@ -164,25 +286,25 @@ public class PlayerController : MonoBehaviour
         {
             defaultWallTile = selectedItem.tile;
             biomeName = selectedItem.sourceBiome;
-            --selectedItem.quantity;
-            inventory.UpdateInventoryUI();
-            if (selectedItem.quantity == 0)
-            {
-                inventory.Remove(selectedItem);
-                inventory.UpdateInventoryUI();
-                selectedItem = null;
-            }
         }
         else
         {
-            defaultWallTile = terrainGen.GetCurrentBiome(x, y).tileAtlas.wall;
-            biomeName = terrainGen.GetCurrentBiome(x, y).biomeName;
+            return;
         }
 
         if (terrainGen.GetTileType(x, y) != TileType.Wall)
         {
             LightingManager.RemoveLightSource(terrainGen, x, y);
             terrainGen.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall", biomeName);
+            --selectedItem.quantity;
+        }
+
+        inventory.UpdateInventoryUI();
+        if (selectedItem.quantity == 0)
+        {
+            inventory.Remove(selectedItem);
+            inventory.UpdateInventoryUI();
+            selectedItem = null;
         }
     }
 
@@ -209,169 +331,105 @@ public class PlayerController : MonoBehaviour
     #endregion
 
 
-    #region 生命周期函数
-
-    private void Start()
-    {
-        rb = GetComponent<Rigidbody2D>();
-        inventory = GetComponent<Inventory>();
-    }
-
-    private void Update()
-    {
-        mousePos.x = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).x - 0.5f);
-        mousePos.y = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).y - 0.5f);
-
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            inventoryShowing = !inventoryShowing;
-            hotbarShowing = !hotbarShowing;
-        }
-
-        // scoll through hotbar UI
-        if (Input.GetAxis("Mouse ScrollWheel") < 0)
-        {
-            // scoll up
-            if (selectedSlotIndex < inventory.inventoryWidth - 1)
-                ++selectedSlotIndex;
-
-        }
-        else if (Input.GetAxis("Mouse ScrollWheel") > 0)
-        {
-            // scoll down
-            if (selectedSlotIndex > 0)
-                --selectedSlotIndex;
-        }
-        // set selected slot UI
-        hotbarSelector.transform.position = inventory.hotbarUISlots[selectedSlotIndex].transform.position;
-        // set selected item
-        selectedItem = inventory.inventorySlots[selectedSlotIndex, inventory.inventoryHeight - 1]?.item;
-
-        HandleJumpInput();
-        HandleMiningInput();
-        HandlePlacingTileInput();
-        HandlePlacingWallInput();
-
-        inventory.inventoryUI.SetActive(inventoryShowing);
-        inventory.hotbarUI.SetActive(hotbarShowing);
-    }
-
-    private void FixedUpdate()
-    {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-
-        Vector3 currentPos = transform.position;
-        Vector2 movement = new Vector2(horizontal * moveSpeed, rb.velocity.y);
-        Vector3 targetPos = new Vector3(currentPos.x + movement.x * Time.fixedDeltaTime, currentPos.y, currentPos.z);
-        if (targetPos.x < 0 || targetPos.x > terrainGen.worldSize) {
-            movement.x = 0;
-        }
-
-        isMoving = Mathf.Abs(horizontal) > 0.1f;
-
-        // 角色翻转
-        if (horizontal > 0) transform.localScale = new Vector3(-1.3f, 1.3f, 1.3f);
-        else if (horizontal < 0) transform.localScale = new Vector3(1.3f, 1.3f, 1.3f);
-
-        // 处理跳跃逻辑
-        HandleJump();
-
-        rb.velocity = new Vector2(movement.x, rb.velocity.y);
-
-        // 处理SPUM动画
-        HandleSPUMAnimation();
-
-
-        if (Vector2.Distance(currentPos, mousePos) <= miningRange)
-        {
-            if (isMining)
-            {
-                RemovingTile(mousePos);
-            }
-            else if (isPlacing)
-            {
-                PlacingTile();
-            }
-            else if (isPlacingWall)
-            {
-                PlacingWall();
-            }
-        }
-    }
-
-    #endregion
-
-
     #region 输入处理
     private void HandleJumpInput()
     {
+        // 只有在按下空格键的瞬间才设置跳跃标志
         if (Input.GetKeyDown(KeyCode.Space))
         {
             jumpKeyPressed = true;
             jumpKeyReleased = false;
             jumpKeyHoldTime = 0f;
         }
+
+        // 松开空格键时设置释放标志
         if (Input.GetKeyUp(KeyCode.Space))
         {
             jumpKeyReleased = true;
         }
 
-        // 计算按键持续时间
+        // 计算按键持续时间（仅用于跳跃高度控制）
         if (Input.GetKey(KeyCode.Space) && !jumpKeyReleased)
         {
             jumpKeyHoldTime += Time.deltaTime;
         }
     }
 
-    private void HandleMiningInput()
+    private void HandleActionInput()
     {
+        // 检查是否正在拖拽库存物品
+        if (InventorySlotUI.isDragging)
+        {
+            return;
+        }
+
+        // 检查是否显示分割界面
+        if (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing())
+        {
+            return;
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
-            isMining = true;
+            if (selectedItem != null)
+            {
+                switch (selectedItem.itemType)
+                {
+                    case ItemType.Block:
+                        isPlacing = true;
+                        break;
+                    case ItemType.Wall:
+                        isPlacingWall = true;
+                        break;
+                    case ItemType.Tool:
+                    default:
+                        isMining = true;
+                        break;
+                }
+            }
+            else
+            {
+                // no item selected, default to mining
+                isMining = true;
+            }
         }
+
         if (Input.GetMouseButtonUp(0))
         {
             isMining = false;
-        }
-    }
-
-    private void HandlePlacingTileInput()
-    {
-        if (Input.GetMouseButtonDown(1))
-        {
-            isPlacing = true;
-        }
-        if (Input.GetMouseButtonUp(1))
-        {
             isPlacing = false;
-        }
-    }
-    private void HandlePlacingWallInput()
-    {
-        if (Input.GetMouseButtonDown(2))
-        {
-            isPlacingWall = true;
-        }
-        if (Input.GetMouseButtonUp(2))
-        {
             isPlacingWall = false;
         }
     }
-    
+
+    private void HandleNumberInput()
+    {
+        for (int i = 0; i < inventory.hotbarUISlots.Length; ++i)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            {
+                selectedSlotIndex = i;
+                break;
+            }
+        }
+    }
+
     #endregion
 
 
     #region 处理跳跃
-    
+
     private void HandleJump()
     {
         // 开始跳跃
-        if (jumpKeyPressed && onGround)
+        // 自动跳跃条件：正在移动 + 脚部有障碍 + 头部无障碍
+        bool autoJump = isMoving && FootRaycast() && !HeadRaycast();
+        if ((jumpKeyPressed || autoJump) && onGround && !isJumping)
         {
             isJumping = true;
             jumpStartTime = Time.time;
-            // 初始跳跃力度（最小跳跃）
-            rb.velocity = new Vector2(rb.velocity.x, minJumpForce);
+            float jumpForce = autoJump ? minJumpForce * 0.6f : minJumpForce;
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             jumpKeyPressed = false;
         }
 
@@ -405,7 +463,11 @@ public class PlayerController : MonoBehaviour
         if (onGround && rb.velocity.y <= 0)
         {
             isJumping = false;
-            jumpKeyReleased = false;
+            // 只有在松开空格键后才重置jumpKeyReleased，防止连跳
+            if (jumpKeyReleased || !Input.GetKey(KeyCode.Space))
+            {
+                jumpKeyReleased = false;
+            }
         }
     }
 
@@ -417,30 +479,62 @@ public class PlayerController : MonoBehaviour
     {
         if (spumPrefabs == null) return;
 
-        if (isMining != wasMining || isPlacing != wasPlacing || isMoving != wasMoving)
-        {
-            // 根据挖矿、放置和移动的组合状态播放相应动画
-            if ((isMining || isPlacing) && isMoving)
-            {
-                spumPrefabs.PlayAnimation("6_Mining_Run");
-            }
-            else if ((isMining || isPlacing) && !isMoving)
-            {
-                spumPrefabs.PlayAnimation("6_Mining_Idle");
-            }
-            else if (!isMining && !isPlacing && isMoving)
-            {
-                spumPrefabs.PlayAnimation("run");
-            }
-            else
-            {
-                spumPrefabs.PlayAnimation("idle");
-            }
+        // 拖拽时或分割界面显示时不播放动作动画
+        bool uiBlocking = InventorySlotUI.isDragging || (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
+        var isPerformingAction = !uiBlocking && (isMining || isPlacing || isPlacingWall);
+        var wasPerformingAction = wasMining || wasPlacing || wasPlacing;
 
-            wasMining = isMining;
-            wasPlacing = isPlacing;
-            wasMoving = isMoving;
+        if (isPerformingAction && !wasPerformingAction)
+        {
+            if (_playActionCoroutine != null) StopCoroutine(_playActionCoroutine);
+            _playActionCoroutine = StartCoroutine(PlayActionAnimation());
         }
+
+        // 拖拽时或分割界面显示时强制停止动作动画
+        if (uiBlocking && _playActionCoroutine != null)
+        {
+            StopCoroutine(_playActionCoroutine);
+            _playActionCoroutine = null;
+        }
+
+        if (_playActionCoroutine == null && !isPerformingAction)
+        {
+            if (isMoving)
+                spumPrefabs.PlayAnimation("run");
+            else
+                spumPrefabs.PlayAnimation("idle");
+        }
+
+        wasMining = isMining;
+        wasPlacing = isPlacing;
+        wasMoving = isMoving;
+    }
+
+    private IEnumerator PlayActionAnimation()
+    {
+        while ((isMining || isPlacing || isPlacingWall) &&
+               !InventorySlotUI.isDragging &&
+               (ItemSplitUI.Instance == null || !ItemSplitUI.Instance.IsShowing()))
+        {
+            if (isMoving)
+                spumPrefabs.PlayAnimation("6_Mining_Run");
+            else
+                spumPrefabs.PlayAnimation("6_Mining_Idle");
+
+            yield return new WaitForSeconds(actionAnimationDuration);
+        }
+
+        _playActionCoroutine = null;
+
+        if (isMoving)
+            spumPrefabs.PlayAnimation("run");
+        else
+            spumPrefabs.PlayAnimation("idle");
+    }
+
+    public SPUM_Prefabs GetSpumPrefabs()
+    {
+        return spumPrefabs;
     }
 
     #endregion    
@@ -486,7 +580,7 @@ public class PlayerController : MonoBehaviour
             onGround = false;
         }
     }
-    
+
     private void OnCollisionStay2D(Collision2D col)
     {
         if (col.gameObject.CompareTag("Ground"))
@@ -504,4 +598,86 @@ public class PlayerController : MonoBehaviour
     }
 
     #endregion
+
+
+    #region 处理射线检测
+
+    public bool FootRaycast()
+    {
+        Vector2 direction = transform.localScale.x < 0 ? Vector2.right : Vector2.left;
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + Vector3.up * 0.3f, direction, 1.2f, layerMask);
+        return hit;
+    }
+
+    public bool HeadRaycast()
+    {
+        Vector2 direction = transform.localScale.x < 0 ? Vector2.right : Vector2.left;
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + Vector3.up * 1.5f, direction, 1.2f, layerMask);
+        return hit;
+    }
+
+    // 防止边缘滑落
+    private void PreventEdgeSlipping()
+    {
+        if (!onGround || isMoving) return;
+
+        // 检测脚下是否有地面支撑
+        Vector3 leftFootPos = transform.position + Vector3.left * 0.4f - Vector3.down * 0.1f;
+        Vector3 rightFootPos = transform.position + Vector3.right * 0.4f - Vector3.down * 0.1f;
+
+        RaycastHit2D leftFootHit = Physics2D.Raycast(leftFootPos, Vector2.down, 0.5f, layerMask);
+        RaycastHit2D rightFootHit = Physics2D.Raycast(rightFootPos, Vector2.down, 0.5f, layerMask);
+
+        // 如果两只脚都没有支撑，停止水平移动
+        if (!leftFootHit && !rightFootHit)
+        {
+            rb.velocity = new Vector2(0, rb.velocity.y);
+        }
+        // 如果只有一只脚有支撑，轻微向有支撑的方向调整
+        else if (leftFootHit && !rightFootHit)
+        {
+            // 右脚悬空，轻微向左调整
+            rb.velocity = new Vector2(Mathf.Max(-0.5f, rb.velocity.x), rb.velocity.y);
+        }
+        else if (!leftFootHit && rightFootHit)
+        {
+            // 左脚悬空，轻微向右调整
+            rb.velocity = new Vector2(Mathf.Min(0.5f, rb.velocity.x), rb.velocity.y);
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Vector2 direction = transform.localScale.x < 0 ? Vector2.right : Vector2.left;
+
+        // 绘制脚部检测射线（红色）
+        Gizmos.color = Color.red;
+        Vector3 footPos = transform.position + Vector3.up * 0.3f;
+        Gizmos.DrawRay(footPos, direction * 1.2f);
+
+        // 绘制头部检测射线（蓝色）
+        Gizmos.color = Color.blue;
+        Vector3 headPos = transform.position + Vector3.up * 1.5f;
+        Gizmos.DrawRay(headPos, direction * 1.2f);
+
+        // 绘制边缘检测射线（绿色）
+        Gizmos.color = Color.green;
+        Vector3 leftFootPos = transform.position + Vector3.left * 0.4f - Vector3.down * 0.1f;
+        Vector3 rightFootPos = transform.position + Vector3.right * 0.4f - Vector3.down * 0.1f;
+        Gizmos.DrawRay(leftFootPos, Vector3.down * 0.5f);
+        Gizmos.DrawRay(rightFootPos, Vector3.down * 0.5f);
+
+        // 绘制起点
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(footPos, 0.1f);
+        Gizmos.DrawSphere(headPos, 0.1f);
+        Gizmos.DrawSphere(leftFootPos, 0.05f);
+        Gizmos.DrawSphere(rightFootPos, 0.05f);
+
+        Gizmos.color = Color.white;
+        Gizmos.DrawSphere(transform.position, 0.3f);
+    }
+
+    #endregion
+
 }

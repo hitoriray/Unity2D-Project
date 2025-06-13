@@ -31,7 +31,7 @@ public class Item
         itemSprite = tile.itemSprite;
         tile = _tile;
         itemType = ItemType.Block;
-        maxStackSize = 10;
+        maxStackSize = 64;
         quantity = 1;
     }
 
@@ -59,7 +59,7 @@ public class Item
         sourceBiome = biomeName;
         quantity = qty;
         itemType = ItemType.Block;
-        maxStackSize = 5;
+        maxStackSize = 64;
     }
     
     // 复制构造函数
@@ -89,7 +89,7 @@ public class Item
 public enum ItemType
 {
     Block,      // 可放置的块
-    Wall,
+    Wall,       // 可放置的墙
     Tool,       // 工具
     Consumable, // 消耗品
     Material    // 材料

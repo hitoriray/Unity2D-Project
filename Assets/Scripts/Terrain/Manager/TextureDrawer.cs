@@ -36,9 +36,9 @@ public static class TextureDrawer
                 {
                     terrainGen.ores[i].spreadTexture.SetPixel(x, y, Color.black);
                     Biome curBiome = terrainGen.GetCurrentBiome(x, y);
-                    if (curBiome.ores.Length > i)
+                    if (i < curBiome.ores.Length)
                     {
-                        o = Mathf.PerlinNoise((x + terrainGen.seed) * curBiome.ores[i].frequency, (y + terrainGen.seed) * curBiome.ores[i].frequency);
+                        o = Mathf.PerlinNoise((x * 10 + i + terrainGen.seed) * curBiome.ores[i].frequency, (y * 100 + i * 10 + terrainGen.seed) * curBiome.ores[i].frequency);
                         if (o > curBiome.ores[i].size)
                             terrainGen.ores[i].spreadTexture.SetPixel(x, y, Color.white);
                     }
