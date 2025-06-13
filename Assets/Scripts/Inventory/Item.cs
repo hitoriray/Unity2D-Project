@@ -16,6 +16,7 @@ public class Item
     
     [Header("物品属性")]
     public Tool tool;
+    public Weapon weapon;
     public ItemType itemType;
     public ToolType toolType;
     public int quantity = 1;
@@ -43,6 +44,16 @@ public class Item
         itemType = ItemType.Tool;
         toolType = _tool.toolType;
         maxStackSize = 1;
+        quantity = 1;
+    }
+
+    public Item(Weapon _weapon)
+    {
+        weapon = _weapon;
+        itemName = _weapon.weaponName;
+        itemSprite = _weapon.weaponSprite;
+        itemType = ItemType.Weapon;
+        maxStackSize = 1;  // 武器不可堆叠
         quantity = 1;
     }
     
@@ -73,6 +84,7 @@ public class Item
         tileType = other.tileType;
         sourceBiome = other.sourceBiome;
         tool = other.tool;
+        weapon = other.weapon;  // 添加武器字段复制
         itemType = other.itemType;
         toolType = other.toolType;
         quantity = other.quantity;
@@ -82,7 +94,13 @@ public class Item
     public bool CanStackWith(Item other)
     {
         if (other == null) return false;
-        return itemName == other.itemName;
+
+        // 武器和工具不可堆叠
+        if (itemType == ItemType.Weapon || itemType == ItemType.Tool) return false;
+        if (other.itemType == ItemType.Weapon || other.itemType == ItemType.Tool) return false;
+
+        // 其他物品按名称判断是否可堆叠
+        return itemName == other.itemName && itemType == other.itemType;
     }
 }
 
@@ -91,6 +109,7 @@ public enum ItemType
     Block,      // 可放置的块
     Wall,       // 可放置的墙
     Tool,       // 工具
+    Weapon,     // 武器
     Consumable, // 消耗品
     Material    // 材料
 }

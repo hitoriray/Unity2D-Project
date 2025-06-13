@@ -7,6 +7,8 @@ TagManager:
   - Ground
   - Plant
   - Wall
+  - Enemy
+  - MainCanvas
   layers:
   - Default
   - TransparentFX
@@ -16,7 +18,7 @@ TagManager:
   - UI
   - Player
   - Item
-  - 
+  - Enemy
   - 
   - 
   - 

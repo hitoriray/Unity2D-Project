@@ -3878,6 +3878,7 @@ GameObject:
   - component: {fileID: 4292723228715428873}
   - component: {fileID: 4292723228715428875}
   - component: {fileID: 3456888401436643649}
+  - component: {fileID: 981529729}
   m_Layer: 6
   m_Name: PlayerRoot
   m_TagString: Player
@@ -3893,7 +3894,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8572255946325881019}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.099, y: 0.406, z: 0}
   m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4053,7 +4054,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   layerMask:
     serializedVersion: 2
-    m_Bits: 183
+    m_Bits: 55
   terrainGen: {fileID: 0}
   weapon: {fileID: 7115978679671716916}
   inventory: {fileID: 3456888401436643649}
@@ -4103,9 +4104,24 @@ MonoBehaviour:
   hotbarUI: {fileID: 0}
   inventorySlotPrefab: {fileID: 1441472296053433960, guid: 61ec2c7eccd2f174fbbf4220ede1bd58, type: 3}
   hotbarSlotPrefab: {fileID: 1441472296053433960, guid: d9fe191df57447444945c7175fd341a9, type: 3}
+  itemDropPrefab: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
   inventoryWidth: 8
   inventoryHeight: 5
   hotbarUISlots: []
+--- !u!114 &981529729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8572255946325881019}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1716ca74b2169b34ab9275b7ff0fce4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableDebugLogs: 1
+  showSlotStates: 1
 --- !u!1 &9076336075174239352
 GameObject:
   m_ObjectHideFlags: 0

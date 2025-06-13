@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Combat.Weapons; // 新增：为了能引用 StarProjectile
+using Utility;        // 新增：为了能引用 ObjectPool
 
 public class PlayerController : MonoBehaviour
 {
@@ -20,6 +22,10 @@ public class PlayerController : MonoBehaviour
     private int selectedSlotIndex = 0;
     public GameObject hotbarSelector;
     public Item selectedItem;
+
+    [Header("Object Pools")]
+    [Tooltip("星星投射物的对象池")]
+    public ObjectPool starProjectilePool; // 新增星星对象池的引用
 
     // 公共属性用于外部访问库存状态
     public bool IsInventoryShowing => inventoryShowing;
@@ -72,6 +78,8 @@ public class PlayerController : MonoBehaviour
     private bool isPlacing = false;
     private bool wasPlacing = false;
     private bool isPlacingWall = false;
+    private bool isAttacking = false;
+    private bool wasAttacking = false;
 
     private bool isJumping = false;
     private bool jumpKeyPressed = false;
@@ -205,6 +213,7 @@ public class PlayerController : MonoBehaviour
             {
                 PlacingWall();
             }
+
         }
     }
 
@@ -272,15 +281,17 @@ public class PlayerController : MonoBehaviour
         TileType tileType = terrainGen.GetTileType(x, y);
         if (tileType == TileType.Air || tileType == TileType.Wall)
         {
-            LightingManager.RemoveLightSource(terrainGen, x, y);
             terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+            // 放置方块后移除该位置的光照
+            LightingManager.RemoveLightSource(terrainGen, x, y);
             --selectedItem.quantity;
         }
         else if (tileType == TileType.Flower)
         {
-            LightingManager.RemoveLightSource(terrainGen, x, y);
             terrainGen.RemoveTile(x, y, TileType.Dirt);
             terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+            // 放置方块后移除该位置的光照
+            LightingManager.RemoveLightSource(terrainGen, x, y);
             --selectedItem.quantity;
         }
         inventory.UpdateInventoryUI();
@@ -309,8 +320,9 @@ public class PlayerController : MonoBehaviour
 
         if (terrainGen.GetTileType(x, y) != TileType.Wall)
         {
-            LightingManager.RemoveLightSource(terrainGen, x, y);
             terrainGen.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall", biomeName);
+            // 放置背景墙后移除该位置的光照
+            LightingManager.RemoveLightSource(terrainGen, x, y);
             --selectedItem.quantity;
         }
 
@@ -396,6 +408,32 @@ public class PlayerController : MonoBehaviour
                     case ItemType.Wall:
                         isPlacingWall = true;
                         break;
+                    case ItemType.Weapon:
+                        if (selectedItem != null && selectedItem.weapon != null)
+                        {
+                            if (selectedItem.weapon.isStarfuryWeapon)
+                            {
+                                isAttacking = true;
+                            }
+                            else
+                            {
+                                isAttacking = true;
+                            }
+                        }
+                        else if (selectedItem != null && selectedItem.weapon == null)
+                        {
+                            Debug.LogWarning($"[PlayerController] HandleActionInput: Selected item '{selectedItem.itemName}' is ItemType.Weapon but has no Weapon scriptable object assigned.");
+                            isAttacking = true;
+                        }
+                        else if (selectedItem == null)
+                        {
+                             isAttacking = true; // Or handle as an error/no action
+                        }
+                        else // selectedItem is not null, but not a weapon, or some other case
+                        {
+                             isAttacking = true; // Default behavior if not handled by other cases like Block/Wall/Tool
+                        }
+                        break;
                     case ItemType.Tool:
                     default:
                         isMining = true;
@@ -414,6 +452,7 @@ public class PlayerController : MonoBehaviour
             isMining = false;
             isPlacing = false;
             isPlacingWall = false;
+            isAttacking = false;
         }
     }
 
@@ -496,8 +535,8 @@ public class PlayerController : MonoBehaviour
 
         // 拖拽时或分割界面显示时不播放动作动画
         bool uiBlocking = InventorySlotUI.isDragging || (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
-        var isPerformingAction = !uiBlocking && (isMining || isPlacing || isPlacingWall);
-        var wasPerformingAction = wasMining || wasPlacing || wasPlacing;
+        var isPerformingAction = !uiBlocking && (isMining || isPlacing || isPlacingWall || isAttacking);
+        var wasPerformingAction = wasMining || wasPlacing || wasAttacking;
 
         if (isPerformingAction && !wasPerformingAction)
         {
@@ -522,21 +561,52 @@ public class PlayerController : MonoBehaviour
 
         wasMining = isMining;
         wasPlacing = isPlacing;
+        wasAttacking = isAttacking;
         wasMoving = isMoving;
     }
 
     private IEnumerator PlayActionAnimation()
     {
-        while ((isMining || isPlacing || isPlacingWall) &&
+        while ((isMining || isPlacing || isPlacingWall || isAttacking) &&
                !InventorySlotUI.isDragging &&
                (ItemSplitUI.Instance == null || !ItemSplitUI.Instance.IsShowing()))
         {
-            if (isMoving)
-                spumPrefabs.PlayAnimation("6_Mining_Run");
-            else
-                spumPrefabs.PlayAnimation("6_Mining_Idle");
+            // 根据当前动作类型播放对应动画
+            if (isAttacking)
+            {
+                // 播放攻击动画
+                string attackAnim = GetAttackAnimationName();
+                if (isMoving)
+                    spumPrefabs.PlayAnimation(attackAnim); // 考虑移动时的攻击动画是否不同
+                else
+                    spumPrefabs.PlayAnimation(attackAnim);
 
-            yield return new WaitForSeconds(actionAnimationDuration);
+                // 如果是星怒，在播放攻击动画的同时（或紧随其后）生成星星
+                if (selectedItem != null && selectedItem.weapon != null && selectedItem.weapon.isStarfuryWeapon)
+                {
+                    PerformStarfuryAttack();
+                }
+            }
+            else if (isMining || isPlacing || isPlacingWall)
+            {
+                // 播放挖掘/建造动画
+                if (isMoving)
+                    spumPrefabs.PlayAnimation("6_Mining_Run");
+                else
+                    spumPrefabs.PlayAnimation("6_Mining_Idle");
+            }
+
+            // 根据动作类型使用不同的等待时间
+            if (isAttacking && selectedItem?.weapon != null)
+            {
+                // 武器攻击使用武器的攻击速度
+                yield return new WaitForSeconds(selectedItem.weapon.ActualAttackSpeed);
+            }
+            else
+            {
+                // 其他动作使用默认时间
+                yield return new WaitForSeconds(actionAnimationDuration);
+            }
         }
 
         _playActionCoroutine = null;
@@ -547,9 +617,17 @@ public class PlayerController : MonoBehaviour
             spumPrefabs.PlayAnimation("idle");
     }
 
-    public SPUM_Prefabs GetSpumPrefabs()
+    /// <summary>
+    /// 获取当前武器的攻击动画名称
+    /// </summary>
+    private string GetAttackAnimationName()
     {
-        return spumPrefabs;
+        if (selectedItem != null && selectedItem.itemType == ItemType.Weapon && selectedItem.weapon != null)
+        {
+            if (!string.IsNullOrEmpty(selectedItem.weapon.attackAnimationName))
+                return selectedItem.weapon.attackAnimationName;
+        }
+        return "6_Mining_Idle"; // 默认攻击动画
     }
 
     #endregion    
@@ -695,6 +773,7 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+
     #region 拖拽管理
 
     /// <summary>
@@ -721,4 +800,93 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+    #region 星怒攻击实现
+    // 将 PerformStarfuryAttack 方法移到 PlayerController 类的内部
+    void PerformStarfuryAttack()
+    {
+        if (selectedItem == null) { Debug.LogError("[PlayerController] PerformStarfuryAttack: selectedItem is NULL. Aborting."); return; }
+        if (selectedItem.weapon == null) { Debug.LogError($"[PlayerController] PerformStarfuryAttack: selectedItem '{selectedItem.itemName}' has no Weapon data. Aborting."); return; }
+        if (!selectedItem.weapon.isStarfuryWeapon) { Debug.LogError($"[PlayerController] PerformStarfuryAttack: Weapon '{selectedItem.weapon.weaponName}' is not marked as Starfury. Aborting."); return; }
+        if (selectedItem.weapon.starProjectilePrefab == null) { Debug.LogError($"[PlayerController] PerformStarfuryAttack: Weapon '{selectedItem.weapon.weaponName}' has no StarProjectilePrefab assigned. Aborting."); return; }
+        
+        Weapon starfuryWeapon = selectedItem.weapon;
+        Vector2 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        for (int i = 0; i < starfuryWeapon.numberOfStarsPerAttack; i++)
+        {
+            // 计算星星应该经过的瞄准点（鼠标位置 + 随机偏移）
+            Vector2 randomAimOffset = UnityEngine.Random.insideUnitCircle * starfuryWeapon.starTargetRandomRadius;
+            Vector2 aimThroughPoint = mouseWorldPos + randomAimOffset;
+
+            // 计算星星的起始生成位置 (屏幕顶部外侧，与瞄准点的X轴对齐)
+            float screenTopWorldY = Camera.main.ViewportToWorldPoint(new Vector3(0.5f, 1f)).y;
+            float spawnY = screenTopWorldY + starfuryWeapon.starSpawnVerticalOffset;
+            Vector2 spawnPos = new Vector2(aimThroughPoint.x, spawnY);
+
+            // 计算星星的最终飞行目标点 (在瞄准点正下方很远的位置)
+            // 确保星星是向下飞行的，即使瞄准点在生成点上方 (虽然一般不会这样)
+            float veryFarDistance = 200f; // 一个足够大的距离，确保星星会穿过整个屏幕
+            Vector2 projectileFinalTargetPos = new Vector2(aimThroughPoint.x, aimThroughPoint.y - veryFarDistance);
+            if (spawnPos.y < aimThroughPoint.y) // 如果生成点意外地在瞄准点下方，则反转方向确保向下
+            {
+                 projectileFinalTargetPos = new Vector2(aimThroughPoint.x, aimThroughPoint.y + veryFarDistance);
+            }
+
+
+            GameObject starInstance;
+            if (starProjectilePool != null)
+            {
+                starInstance = starProjectilePool.GetPooledObject();
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerController] PerformStarfuryAttack: StarProjectilePool is NULL. Falling back to Instantiate.");
+                starInstance = Instantiate(starfuryWeapon.starProjectilePrefab);
+            }
+
+            if (starInstance == null)
+            {
+                Debug.LogError("[PlayerController] PerformStarfuryAttack: Failed to get or instantiate StarProjectile. Skipping this star.");
+                continue;
+            }
+            
+            starInstance.transform.position = spawnPos;
+            starInstance.transform.rotation = Quaternion.identity;
+            starInstance.SetActive(true);
+
+            StarProjectile starProjectile = starInstance.GetComponent<StarProjectile>();
+
+            if (starProjectile != null)
+            {
+                // 伤害信息的 hitPoint 应该是玩家瞄准的点 (aimThroughPoint)
+                // hitDirection 应该是从生成点到最终目标点的方向
+                // 星星的 Initialize 方法接收的是最终的飞行目标点 (projectileFinalTargetPos)
+                DamageInfo damageInfo = starfuryWeapon.CreateDamageInfo(gameObject, aimThroughPoint, (projectileFinalTargetPos - spawnPos).normalized);
+                starProjectile.Initialize(projectileFinalTargetPos, damageInfo, starProjectilePool);
+            }
+            else
+            {
+                Debug.LogError($"[PlayerController] PerformStarfuryAttack: Star instance '{starInstance.name}' is missing StarProjectile script!");
+                if (starProjectilePool != null)
+                    starProjectilePool.ReturnObjectToPool(starInstance);
+                else
+                    Destroy(starInstance);
+            }
+        }
+
+        // 播放星怒武器自身的攻击动画和音效 (如果星怒武器有挥舞动作)
+        // if (!string.IsNullOrEmpty(starfuryWeapon.attackAnimationName))
+        // {
+        //     spumPrefabs?.PlayAnimation(starfuryWeapon.attackAnimationName);
+        // }
+        // if (starfuryWeapon.attackSound != null)
+        // {
+        //     AudioSource.PlayClipAtPoint(starfuryWeapon.attackSound, transform.position);
+        // }
+        
+        // 消耗魔法或弹药 (如果星怒武器需要)
+        // if (starfuryWeapon.RequiresMana) { /* 扣除魔法值 */ }
+        // if (starfuryWeapon.RequiresAmmo) { /* 扣除弹药 */ }
+    }
+    #endregion
 }

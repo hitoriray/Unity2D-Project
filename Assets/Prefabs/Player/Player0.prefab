@@ -603,7 +603,7 @@ GameObject:
   - component: {fileID: 1590196872}
   - component: {fileID: 1590196876}
   m_Layer: 0
-  m_Name: PlayerRoot
+  m_Name: Player0
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

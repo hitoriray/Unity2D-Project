@@ -55,7 +55,13 @@ public class ItemDrop : MonoBehaviour
 
     void Update()
     {
-        if (!canBePickedUp) return;
+        if (!canBePickedUp)
+        {
+            // Debug.Log($"[ItemDrop '{gameObject.name}'] Update: canBePickedUp is false. Time: {Time.time}");
+            return;
+        }
+
+        // Debug.Log($"[ItemDrop '{gameObject.name}'] Update: Processing. isMovingToPlayer: {isMovingToPlayer}, playerTransform: {(playerTransform != null ? playerTransform.name : "null")}");
 
         if (isMovingToPlayer && playerTransform != null)
         {
@@ -64,16 +70,16 @@ public class ItemDrop : MonoBehaviour
         else
         {
             // 上下浮动效果
-            if (rb.velocity.magnitude < 0.1f) // 只有在静止时才浮动
+            if (rb != null && rb.velocity.magnitude < 0.1f) // 只有在静止时才浮动
             {
                 float newY = startPosition.y + Mathf.Sin(Time.time * bobSpeed) * bobHeight;
                 transform.position = new Vector3(transform.position.x, newY, transform.position.z);
             }
-            else
+            else if (rb != null) // 只有当rb存在时才更新startPosition
             {
                 startPosition = transform.position; // 更新起始位置
             }
-
+            // Debug.Log($"[ItemDrop '{gameObject.name}'] Update: Calling CheckForPlayer(). Time: {Time.time}");
             CheckForPlayer();
         }
     }
@@ -89,12 +95,23 @@ public class ItemDrop : MonoBehaviour
     
     void CheckForPlayer()
     {
+        // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Entered. Time: {Time.time}");
         if (playerController == null)
+        {
+            // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: playerController is null, calling FindPlayerController().");
             FindPlayerController();
+        }
 
-        if (playerController == null) return;
+        if (playerController == null)
+        {
+            // Debug.LogWarning($"[ItemDrop '{gameObject.name}'] CheckForPlayer: playerController is still null after FindPlayerController(). Cannot check for player.");
+            return;
+        }
+        
+        // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: playerController found: {playerController.name}. Item: {(item != null ? item.itemName : "N/A")}");
 
         float distance = Vector2.Distance(transform.position, playerController.transform.position);
+        // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Distance to player: {distance:F2}. Player pickup range: {playerController.currentPickupRange}. ItemDrop pickupRange: {pickupRange}");
 
         // 检查玩家是否已经离开过（如果是玩家丢弃的物品）
         if (isDroppedByPlayer && !playerHasExited)
@@ -102,24 +119,47 @@ public class ItemDrop : MonoBehaviour
             if (distance > exitDistance)
             {
                 playerHasExited = true;
+                // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Player has exited pickup cooldown area.");
             }
             else
             {
-                return; // 玩家还没有离开，不能拾取
+                // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Player has not exited pickup cooldown area yet (Distance: {distance:F2} <= ExitDistance: {exitDistance}). Cannot pickup.");
+                return;
             }
         }
 
         // 检查基础冷却时间
         if (isDroppedByPlayer && Time.time - dropTime < dropCooldownTime)
         {
-            return; // 还在冷却时间内
+            // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Item is in drop cooldown (Time remaining: {dropCooldownTime - (Time.time - dropTime):F2}s). Cannot pickup.");
+            return;
+        }
+        
+        if (distance > pickupRange) // ItemDrop自身的检测范围，比玩家的拾取范围大，用于启动吸附
+        {
+            // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Player is outside item's general pickupRange (Distance: {distance:F2} > pickupRange: {pickupRange}). Not starting move.");
+            return;
         }
 
-        if (distance > pickupRange) return;
-        if (distance <= playerController.currentPickupRange &&
-            !playerController.GetComponent<Inventory>().IsFull(item))
+        // 只有当玩家在ItemDrop的pickupRange内，才进一步检查玩家的currentPickupRange
+        // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Player is within item's general pickupRange.");
+
+        bool canBeMagnetized = distance <= playerController.currentPickupRange; // 是否在玩家的“磁铁”范围内
+        bool inventoryNotFull = !playerController.GetComponent<Inventory>().IsFull(item);
+        // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: canBeMagnetized: {canBeMagnetized}, inventoryNotFull: {inventoryNotFull}");
+
+        if (canBeMagnetized && inventoryNotFull)
         {
+            // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Conditions met. Calling StartMovingToPlayer().");
             StartMovingToPlayer(playerController.transform);
+        }
+        else
+        {
+            // 之前的日志逻辑，现在只在未能启动移动时触发
+            string reason = "";
+            if (!canBeMagnetized) reason += $"不在玩家磁铁范围内 (玩家拾取范围: {playerController.currentPickupRange}, 实际距离: {distance:F2}). ";
+            if (!inventoryNotFull) reason += "玩家背包已满. ";
+            Debug.Log($"[ItemDrop '{(item != null ? item.itemName : gameObject.name)}'] CheckForPlayer: Cannot start moving to player. Reason: {reason}");
         }
     }
 

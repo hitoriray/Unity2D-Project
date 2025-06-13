@@ -409,6 +409,9 @@ public class TerrainGeneration : MonoBehaviour
             Vector2 tilePos = new Vector2(x, y);
             worldTileInfo[tilePos] = new TileInfo(tile, tileType, biomeName, true);
 
+            // 放置方块后移除该位置的光照（阻挡光线）
+            worldTilesMap.SetPixel(x, y, Color.black);
+
             if (tileType == TileType.Wall)
                 UpdateSurroundingWalls(x, y);
             else
@@ -521,7 +524,8 @@ public class TerrainGeneration : MonoBehaviour
 
                 GameObject.Destroy(tileObject);
                 worldTilesMap.SetPixel(x, y, Color.white);
-                LightingManager.LightBlock(this, x, y, 1f, 0);
+                // 使用队列机制更新光照，提升性能
+                LightingManager.QueueLightUpdate(this, x, y, 1f);
 
                 worldTilePosition.RemoveAt(index);
                 worldTileObjects.RemoveAt(index);
@@ -574,7 +578,8 @@ public class TerrainGeneration : MonoBehaviour
 
             GameObject.Destroy(wallObject);
             worldTilesMap.SetPixel(x, y, Color.white);
-            LightingManager.LightBlock(this, x, y, 1f, 0);
+            // 使用队列机制更新光照，提升性能
+            LightingManager.QueueLightUpdate(this, x, y, 1f);
 
             worldWallPosition.RemoveAt(index);
             worldWallObjects.RemoveAt(index);

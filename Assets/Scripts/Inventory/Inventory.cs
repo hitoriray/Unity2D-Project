@@ -7,9 +7,10 @@ using UnityEngine.UI;
 public class Inventory : MonoBehaviour
 {
     [Header("工具")]
-    public Tool PickupAxe;  // 镐
-    public Tool Axe;        // 斧
-    public Tool Hammer;     // 锤
+    public Weapon weapon;    // 剑
+    public Tool pickupAxe;  // 镐
+    public Tool axe;        // 斧
+    public Tool hammer;     // 锤
 
     [Header("UI设置")]
     public Vector2 inventoryOffset;
@@ -44,9 +45,10 @@ public class Inventory : MonoBehaviour
         SetupUI();
         UpdateInventoryUI();
         
-        Add(new Item(PickupAxe));
-        Add(new Item(Axe));
-        Add(new Item(Hammer));
+        Add(new Item(weapon));
+        Add(new Item(pickupAxe));
+        Add(new Item(axe));
+        Add(new Item(hammer));
     }
 
     #endregion
