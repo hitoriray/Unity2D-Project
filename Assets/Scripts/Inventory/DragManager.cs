@@ -29,6 +29,15 @@ public class DragManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    void Update()
+    {
+        // 实时更新拖拽预览位置
+        if (currentDragPreview != null)
+        {
+            UpdateDragPosition(Input.mousePosition);
+        }
+    }
     
     /// <summary>
     /// 开始拖拽，创建预览物体
@@ -57,18 +66,11 @@ public class DragManager : MonoBehaviour
     /// </summary>
     public void UpdateDragPosition(Vector3 screenPosition)
     {
-        if (currentDragPreview != null && canvas != null)
+        if (currentDragPreview != null)
         {
-            // 将屏幕坐标转换为Canvas本地坐标
-            Vector2 localPosition;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvas.transform as RectTransform,
-                screenPosition,
-                canvas.worldCamera,
-                out localPosition);
-
+            // 由于预览使用独立的ScreenSpaceOverlay Canvas，直接使用屏幕坐标
             RectTransform rectTransform = currentDragPreview.GetComponent<RectTransform>();
-            rectTransform.localPosition = localPosition;
+            rectTransform.position = screenPosition;
         }
     }
     
@@ -79,7 +81,15 @@ public class DragManager : MonoBehaviour
     {
         if (currentDragPreview != null)
         {
-            Destroy(currentDragPreview);
+            // 销毁整个Canvas（预览的父物体）
+            if (currentDragPreview.transform.parent != null)
+            {
+                Destroy(currentDragPreview.transform.parent.gameObject);
+            }
+            else
+            {
+                Destroy(currentDragPreview);
+            }
             currentDragPreview = null;
         }
     }
@@ -89,19 +99,21 @@ public class DragManager : MonoBehaviour
     /// </summary>
     private GameObject CreateDragPreview(Item item)
     {
-        if (canvas == null)
-        {
-            canvas = FindObjectOfType<Canvas>();
-            if (canvas == null)
-            {
-                Debug.LogError("DragManager: 找不到Canvas！");
-                return null;
-            }
-        }
+        // 创建一个完全独立的Canvas用于拖拽预览
+        GameObject previewCanvasObj = new GameObject("DragPreviewCanvas");
+        Canvas previewCanvas = previewCanvasObj.AddComponent<Canvas>();
+        previewCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        previewCanvas.sortingOrder = 32767; // 最高层级
+
+        CanvasScaler canvasScaler = previewCanvasObj.AddComponent<CanvasScaler>();
+        canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        canvasScaler.referenceResolution = new Vector2(1920, 1080);
+
+        previewCanvasObj.AddComponent<GraphicRaycaster>();
 
         // 创建预览物体
         GameObject preview = new GameObject("DragPreview");
-        preview.transform.SetParent(canvas.transform, false);
+        preview.transform.SetParent(previewCanvasObj.transform, false);
 
         // 添加Image组件
         Image previewImage = preview.AddComponent<Image>();
@@ -116,9 +128,6 @@ public class DragManager : MonoBehaviour
         CanvasGroup canvasGroup = preview.AddComponent<CanvasGroup>();
         canvasGroup.alpha = 0.8f; // 固定透明度，确保可见
         canvasGroup.blocksRaycasts = false;
-
-        // 确保预览在最上层
-        preview.transform.SetAsLastSibling();
 
         // 如果数量大于1，添加数量显示
         if (item.quantity > 1)

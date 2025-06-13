@@ -16,7 +16,6 @@ public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     private Vector2Int slotPosition;
     private Inventory inventory;
     private Canvas canvas;
-    private GameObject dragPreview;
     private CanvasGroup canvasGroup;
     private bool isHotbarSlot;
     
@@ -73,11 +72,8 @@ public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnDrag(PointerEventData eventData)
     {
-        // 使用DragManager更新拖拽位置（直接使用屏幕坐标）
-        if (DragManager.Instance != null)
-        {
-            DragManager.Instance.UpdateDragPosition(eventData.position);
-        }
+        // DragManager现在在Update中自动更新位置，这里不需要手动更新
+        // 但保留这个方法以满足IDragHandler接口要求
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -88,10 +84,19 @@ public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             DragManager.Instance.EndDrag();
         }
 
-        // 检查是否拖拽到库存界面外
-        if (!IsPointerOverInventory(eventData))
+        // 检查库存是否还在显示，如果不在显示则取消拖拽
+        PlayerController playerController = FindObjectOfType<PlayerController>();
+        if (playerController != null && !playerController.IsInventoryShowing)
         {
-            DropItemOutsideInventory();
+            // 库存已关闭，取消拖拽，不执行任何操作
+        }
+        else
+        {
+            // 库存还在显示，检查是否拖拽到库存界面外
+            if (!IsPointerOverInventory(eventData))
+            {
+                DropItemOutsideInventory();
+            }
         }
 
         // 重置拖拽状态 - 必须在最后执行
@@ -103,7 +108,7 @@ public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     }
 
     // 新增方法：重置槽位视觉状态
-    private void ResetSlotVisual()
+    public void ResetSlotVisual()
     {
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;

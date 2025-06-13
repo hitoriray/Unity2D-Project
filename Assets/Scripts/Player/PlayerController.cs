@@ -21,6 +21,9 @@ public class PlayerController : MonoBehaviour
     public GameObject hotbarSelector;
     public Item selectedItem;
 
+    // 公共属性用于外部访问库存状态
+    public bool IsInventoryShowing => inventoryShowing;
+
     #endregion
 
     #region 范围相关的变量
@@ -98,6 +101,12 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.B))
         {
+            // 如果正在拖拽且要关闭库存，取消拖拽
+            if (inventoryShowing && InventorySlotUI.isDragging)
+            {
+                CancelDrag();
+            }
+
             inventoryShowing = !inventoryShowing;
             hotbarShowing = !hotbarShowing;
         }
@@ -107,6 +116,12 @@ public class PlayerController : MonoBehaviour
         {
             if (inventoryShowing)
             {
+                // 如果正在拖拽，取消拖拽
+                if (InventorySlotUI.isDragging)
+                {
+                    CancelDrag();
+                }
+
                 inventoryShowing = false;
                 hotbarShowing = true;
             }
@@ -676,6 +691,32 @@ public class PlayerController : MonoBehaviour
 
         Gizmos.color = Color.white;
         Gizmos.DrawSphere(transform.position, 0.3f);
+    }
+
+    #endregion
+
+    #region 拖拽管理
+
+    /// <summary>
+    /// 取消当前的拖拽操作
+    /// </summary>
+    private void CancelDrag()
+    {
+        if (InventorySlotUI.isDragging && InventorySlotUI.draggedSlot != null)
+        {
+            // 重置拖拽槽位的视觉状态
+            InventorySlotUI.draggedSlot.ResetSlotVisual();
+
+            // 重置拖拽状态
+            InventorySlotUI.isDragging = false;
+            InventorySlotUI.draggedSlot = null;
+
+            // 销毁拖拽预览
+            if (DragManager.Instance != null)
+            {
+                DragManager.Instance.EndDrag();
+            }
+        }
     }
 
     #endregion
