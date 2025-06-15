@@ -1,213 +1,206 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using TMPro;
 
-public class InventorySlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerClickHandler
+public class InventorySlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, IDropHandler
 {
-    [Header("UI组件")]
-    public Image itemIcon;
+    public Image icon;
     public TextMeshProUGUI quantityText;
-    
-    [Header("拖拽设置")]
-    public GameObject dragPreviewPrefab; // 拖拽时显示的预览物体
-    
-    // 私有变量
-    private Vector2Int slotPosition;
-    private Inventory inventory;
-    private Canvas canvas;
     private CanvasGroup canvasGroup;
-    private bool isHotbarSlot;
-    
-    // 静态变量用于管理拖拽状态
+
+    private ItemContainer itemContainer;
+    private Vector2Int positionInContainer;
+
+    // Static variables to track drag state across all slots
     public static InventorySlotUI draggedSlot;
-    public static bool isDragging = false;
-    
+
     void Awake()
     {
-        // 获取组件
-        if (itemIcon == null)
-            itemIcon = transform.GetChild(0).GetComponent<Image>();
-        if (quantityText == null)
-            quantityText = transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-            
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
+        {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
-            
-        canvas = GetComponentInParent<Canvas>();
+        }
     }
-    
-    public void Initialize(Vector2Int position, Inventory inv, bool isHotbar = false)
+
+    public void Initialize(ItemContainer container, Vector2Int position)
     {
-        slotPosition = position;
-        inventory = inv;
-        isHotbarSlot = isHotbar;
+        itemContainer = container;
+        positionInContainer = position;
     }
-    
+
+    public void AssignContainer(ItemContainer container, Vector2Int position)
+    {
+        itemContainer = container;
+        positionInContainer = position;
+        // Optionally, force an immediate UI update for this slot after re-assignment
+        UpdateSlotDisplay(itemContainer.GetSlot(positionInContainer));
+    }
+
+    public void UpdateSlotDisplay(InventorySlot slot)
+    {
+        if (slot == null || slot.item == null)
+        {
+            if(icon != null) icon.sprite = null;
+            if(icon != null) icon.enabled = false;
+            if(quantityText != null) quantityText.text = "";
+            return;
+        }
+
+        if(icon != null) icon.enabled = true;
+        if(icon != null) icon.sprite = slot.item.itemSprite;
+        if(quantityText != null) quantityText.text = slot.item.quantity > 1 ? slot.item.quantity.ToString() : "";
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // 检查槽位是否有物品
-        InventorySlot slot = GetInventorySlot();
-        if (slot == null || slot.item == null) return;
+        InventorySlot slot = itemContainer.GetSlot(positionInContainer);
+        if (itemContainer == null || slot == null || eventData.button != PointerEventData.InputButton.Left)
+            return;
 
-        // 设置拖拽状态
-        isDragging = true;
         draggedSlot = this;
+        DragManager.Instance.StartDrag(slot.item, transform.position);
 
-        // 使用DragManager创建拖拽预览
-        if (DragManager.Instance != null)
-        {
-            DragManager.Instance.StartDrag(slot.item, transform.position);
-        }
-        else
-        {
-            Debug.LogError("DragManager.Instance 为 null！请确保场景中有DragManager组件。");
-        }
-
-        // 设置原槽位透明度
-        canvasGroup.alpha = 0.6f;
+        canvasGroup.alpha = 0.5f;
         canvasGroup.blocksRaycasts = false;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        // DragManager现在在Update中自动更新位置，这里不需要手动更新
-        // 但保留这个方法以满足IDragHandler接口要求
+        // The DragManager handles the icon's position update.
+        // This method is required by the interface but can be empty.
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // 使用DragManager结束拖拽
-        if (DragManager.Instance != null)
+        // Get the slot where the drag started from the event data. This is the most reliable source.
+        var startingSlot = eventData.pointerDrag.GetComponent<InventorySlotUI>();
+        
+        // If the starting slot can't be found, something is wrong. Exit to prevent errors.
+        if (startingSlot == null)
         {
             DragManager.Instance.EndDrag();
+            draggedSlot = null;
+            return;
         }
 
-        // 检查库存是否还在显示，如果不在显示则取消拖拽
-        PlayerController playerController = FindObjectOfType<PlayerController>();
-        if (playerController != null && !playerController.IsInventoryShowing)
+        // Check if the drop was successfully handled by an OnDrop call.
+        // The signal for this is our static draggedSlot being set to null.
+        bool dropWasHandled = (draggedSlot == null);
+
+        // If the drop was NOT handled (i.e., we dropped on an invalid location)
+        if (!dropWasHandled)
         {
-            // 库存已关闭，取消拖拽，不执行任何操作
-        }
-        else
-        {
-            // 库存还在显示，检查是否拖拽到库存界面外
-            if (!IsPointerOverInventory(eventData))
+            // This is the "Drop into World" case.
+            Inventory playerInventory = FindObjectOfType<Inventory>();
+            if (playerInventory != null)
             {
-                DropItemOutsideInventory();
+                var originalPosition = startingSlot.positionInContainer;
+                Item itemToDrop = startingSlot.itemContainer.GetSlot(originalPosition).item;
+                playerInventory.DropItem(itemToDrop, playerInventory.transform.position);
+                
+                // Use the proper container method to remove the item and trigger UI updates
+                startingSlot.itemContainer.RemoveItem(originalPosition.x, originalPosition.y);
+            }
+            else
+            {
+                Debug.LogError("Could not find Player's Inventory to drop item!");
             }
         }
 
-        // 重置拖拽状态 - 必须在最后执行
-        isDragging = false;
-        draggedSlot = null;
-
-        // 恢复原槽位状态 - 确保总是恢复
-        ResetSlotVisual();
+        // This must always be called at the very end of the entire drag-drop operation.
+        DragManager.Instance.EndDrag();
+        
+        // This resets the visual state (e.g., alpha) of the original slot.
+        startingSlot.ResetSlotVisual();
+        
+        // And finally, clear the static reference.
+        draggedSlot = null; 
     }
 
-    // 新增方法：重置槽位视觉状态
-    public void ResetSlotVisual()
-    {
-        canvasGroup.alpha = 1f;
-        canvasGroup.blocksRaycasts = true;
-    }
-    
     public void OnDrop(PointerEventData eventData)
     {
         if (draggedSlot != null && draggedSlot != this)
         {
-            // 执行物品交换或移动
-            SwapItems(draggedSlot, this);
-        }
+            var fromSlotUI = draggedSlot;
+            var toSlotUI = this;
 
-        // 确保拖拽源槽位状态重置
-        if (draggedSlot != null)
-        {
-            draggedSlot.ResetSlotVisual();
-        }
-    }
-    
+            var fromContainer = fromSlotUI.GetAssignedContainer();
+            var toContainer = toSlotUI.GetAssignedContainer();
+            var fromPosition = fromSlotUI.GetAssignedPosition();
+            var toPosition = toSlotUI.GetAssignedPosition();
 
-    
-    private bool IsPointerOverInventory(PointerEventData eventData)
-    {
-        // 检查鼠标是否在库存界面上
-        GraphicRaycaster raycaster = canvas.GetComponent<GraphicRaycaster>();
-        var results = new System.Collections.Generic.List<RaycastResult>();
-        raycaster.Raycast(eventData, results);
-        
-        foreach (var result in results)
-        {
-            if (result.gameObject.GetComponent<InventorySlotUI>() != null ||
-                result.gameObject.transform.IsChildOf(inventory.inventoryUI.transform) ||
-                result.gameObject.transform.IsChildOf(inventory.hotbarUI.transform))
+            if (fromContainer != null && fromContainer == toContainer)
             {
-                return true;
+                fromContainer.Swap(fromPosition, toPosition);
             }
+            else
+            {
+                Debug.Log("Cross-container drop detected but not implemented.");
+            }
+            
+            // Mark the drag as handled by setting draggedSlot to null.
+            // This is the "signal" to OnEndDrag that it doesn't need to do anything for the data.
+            draggedSlot = null;
         }
-        return false;
-    }
-    
-    private void DropItemOutsideInventory()
-    {
-        InventorySlot slot = GetInventorySlot();
-        if (slot != null && slot.item != null)
-        {
-            inventory.DropItem(slotPosition, isHotbarSlot);
-        }
-        else
-        {
-            Debug.LogWarning("尝试丢弃空槽位的物品！");
-        }
-    }
-    
-    private void SwapItems(InventorySlotUI fromSlot, InventorySlotUI toSlot)
-    {
-        inventory.SwapItems(fromSlot.slotPosition, fromSlot.isHotbarSlot,
-                           toSlot.slotPosition, toSlot.isHotbarSlot);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 右键点击分割物品
+        if (itemContainer == null) return;
+        
+        InventorySlot slot = itemContainer.GetSlot(positionInContainer);
+        if (slot == null || slot.item == null) return;
+
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            InventorySlot slot = GetInventorySlot();
-            if (slot != null && slot.item != null && slot.item.quantity > 1)
+            if (slot.item.quantity > 1)
             {
-                // 显示分割界面
-                if (ItemSplitUI.Instance != null)
-                {
-                    ItemSplitUI.Instance.ShowSplitUI(slot.item, this, eventData.position, OnSplitConfirmed);
-                }
+                ItemSplitUI.Instance.ShowSplitUI(slot.item, this, Input.mousePosition, (splitAmount) => {
+                    // This is the callback action when split is confirmed
+                    Item newItem = new Item(slot.item);
+                    newItem.quantity = splitAmount;
+                    
+                    slot.item.quantity -= splitAmount;
+                    
+                    // Manually start dragging the new split stack
+                    DragManager.Instance.StartDrag(newItem, transform.position);
+                    
+                    // We need a way to handle this dragged item. For now, we just log it.
+                    // A proper implementation would require a temporary "hand" slot.
+                    Debug.Log($"Started dragging a new stack of {newItem.itemName} with quantity {newItem.quantity}");
+
+                    // Manually update the source slot display
+                    UpdateSlotDisplay(slot);
+                });
             }
         }
     }
 
-    /// <summary>
-    /// 分割确认回调
-    /// </summary>
-    private void OnSplitConfirmed(int splitAmount)
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        InventorySlot slot = GetInventorySlot();
-        if (slot != null && slot.item != null && splitAmount > 0 && splitAmount < slot.item.quantity)
-        {
-            // 调用库存的分割方法
-            inventory.SplitItem(slotPosition, isHotbarSlot, splitAmount);
-        }
+        // Future implementation: Show item tooltip
     }
 
-    private InventorySlot GetInventorySlot()
+    public void OnPointerExit(PointerEventData eventData)
     {
-        if (isHotbarSlot)
-        {
-            return inventory.hotbarSlots[slotPosition.x];
-        }
-        else
-        {
-            return inventory.inventorySlots[slotPosition.x, slotPosition.y];
-        }
+        // Future implementation: Hide item tooltip
     }
-}
+    
+    public void ResetSlotVisual()
+    {
+        canvasGroup.alpha = 1.0f;
+        canvasGroup.blocksRaycasts = true;
+    }
+
+    public ItemContainer GetAssignedContainer()
+    {
+        return itemContainer;
+    }
+
+    public Vector2Int GetAssignedPosition()
+    {
+        return positionInContainer;
+    }
+} 

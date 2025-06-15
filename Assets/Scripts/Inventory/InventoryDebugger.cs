@@ -1,4 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 /// <summary>
 /// 库存拖拽系统调试工具
@@ -7,107 +10,136 @@ public class InventoryDebugger : MonoBehaviour
 {
     [Header("调试设置")]
     public bool enableDebugLogs = true;
-    public bool showSlotStates = false;
+    public bool showSlotStatesOnGUI = true;
     
     private Inventory inventory;
+    private GraphicRaycaster mainCanvasRaycaster;
+    private PointerEventData pointerEventData;
+    private EventSystem eventSystem;
+    private string hoveredObjectName = "None";
     
     void Start()
     {
-        inventory = GetComponent<Inventory>();
+        inventory = GetComponentInParent<Inventory>();
         if (inventory == null)
         {
-            inventory = FindObjectOfType<Inventory>();
+            Debug.LogError("InventoryDebugger: 找不到Inventory组件！脚本已禁用。");
+            enabled = false;
+            return;
+        }
+
+        // Find the main canvas's GraphicRaycaster
+        mainCanvasRaycaster = FindObjectOfType<GraphicRaycaster>();
+        if(mainCanvasRaycaster == null)
+        {
+             Debug.LogError("InventoryDebugger: 找不到GraphicRaycaster！请确保场景中Canvas上挂载了此组件。");
+             enabled = false;
+             return;
         }
         
-        if (inventory == null)
+        eventSystem = EventSystem.current;
+         if(eventSystem == null)
         {
-            Debug.LogError("找不到Inventory组件！");
+             Debug.LogError("InventoryDebugger: 找不到EventSystem！请确保场景中有EventSystem。");
+             enabled = false;
         }
     }
     
     void Update()
     {
-        // 按F1显示库存状态
         if (Input.GetKeyDown(KeyCode.F1))
         {
-            ShowInventoryState();
+            LogFullInventoryState();
         }
         
-        // 按F2重置所有槽位状态
         if (Input.GetKeyDown(KeyCode.F2))
         {
             ResetAllSlotStates();
         }
         
-        // 按F3检查拖拽状态
         if (Input.GetKeyDown(KeyCode.F3))
         {
-            CheckDragState();
+            LogDragState();
+        }
+
+        // Real-time hover check
+        if(showSlotStatesOnGUI)
+        {
+            CheckHoveredObject();
+        }
+    }
+
+    private void CheckHoveredObject()
+    {
+        pointerEventData = new PointerEventData(eventSystem);
+        pointerEventData.position = Input.mousePosition;
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        mainCanvasRaycaster.Raycast(pointerEventData, results);
+
+        if (results.Count > 0)
+        {
+            hoveredObjectName = results[0].gameObject.name;
+        }
+        else
+        {
+            hoveredObjectName = "None";
         }
     }
     
-    void ShowInventoryState()
+    public void LogFullInventoryState()
     {
-        if (inventory == null) return;
+        if (inventory == null || inventory.inventory == null) return;
         
-        Debug.Log("=== 库存状态 ===");
+        Debug.Log("=============== INVENTORY STATE (F1) ===============");
         
-        // 显示主库存
-        for (int y = 0; y < inventory.inventoryHeight; y++)
+        // Display Main Inventory Data
+        for (int y = 0; y < inventory.inventory.height; y++)
         {
-            for (int x = 0; x < inventory.inventoryWidth; x++)
+            for (int x = 0; x < inventory.inventory.width; x++)
             {
-                var slot = inventory.inventorySlots[x, y];
+                var slot = inventory.inventory.GetSlot(new Vector2Int(x, y));
                 if (slot != null && slot.item != null)
                 {
-                    Debug.Log($"库存[{x},{y}]: {slot.item.itemName} x{slot.item.quantity}");
+                    Debug.Log($"Main Inventory [{x},{y}]: {slot.item.itemName} x{slot.item.quantity}");
                 }
             }
         }
-        
-        // 显示热键栏
-        for (int x = 0; x < inventory.hotbarSlots.Length; x++)
-        {
-            var slot = inventory.hotbarSlots[x];
-            if (slot != null && slot.item != null)
-            {
-                Debug.Log($"热键栏[{x}]: {slot.item.itemName} x{slot.item.quantity}");
-            }
-        }
+        Debug.Log("======================================================");
     }
     
-    void ResetAllSlotStates()
+    public void ResetAllSlotStates()
     {
-        Debug.Log("重置所有槽位状态...");
+        Debug.LogWarning("=============== RESETTING ALL SLOTS (F2) ===============");
         
-        // 重置主库存槽位UI状态
-        for (int y = 0; y < inventory.inventoryHeight; y++)
+        // Reset main inventory UI slots
+        if (inventory.inventoryUI != null && inventory.inventoryUI.uiSlots != null)
         {
-            for (int x = 0; x < inventory.inventoryWidth; x++)
+            foreach (var slotGO in inventory.inventoryUI.uiSlots)
             {
-                GameObject slotUI = inventory.inventoryUISlots[x, y];
-                if (slotUI != null)
-                {
-                    ResetSlotUIState(slotUI);
-                }
+                if(slotGO != null) ResetSlotUIState(slotGO);
             }
         }
         
-        // 重置热键栏槽位UI状态
-        for (int x = 0; x < inventory.hotbarUISlots.Length; x++)
+        // Reset hotbar UI slots
+        if (inventory.hotbarUI != null && inventory.hotbarUI.uiSlots != null)
         {
-            GameObject slotUI = inventory.hotbarUISlots[x];
-            if (slotUI != null)
+            foreach (var slotGO in inventory.hotbarUI.uiSlots)
             {
-                ResetSlotUIState(slotUI);
+                 if(slotGO != null) ResetSlotUIState(slotGO);
             }
         }
+
+        // Reset DragManager state
+        if (DragManager.Instance != null && DragManager.Instance.IsDragging())
+        {
+            DragManager.Instance.EndDrag();
+        }
         
-        // 重置拖拽状态
-        InventorySlotUI.isDragging = false;
+        // Reset static slot reference
         InventorySlotUI.draggedSlot = null;
         
-        Debug.Log("所有槽位状态已重置！");
+        Debug.Log("All slot states reset!");
     }
     
     void ResetSlotUIState(GameObject slotUI)
@@ -118,54 +150,55 @@ public class InventoryDebugger : MonoBehaviour
             canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = true;
         }
-        
-        var slotUIComponent = slotUI.GetComponent<InventorySlotUI>();
-        if (slotUIComponent != null)
-        {
-            // 通过反射重置私有字段（如果需要）
-            // 这里可以添加更多重置逻辑
-        }
     }
     
-    void CheckDragState()
+    public void LogDragState()
     {
-        Debug.Log($"拖拽状态检查:");
-        Debug.Log($"- isDragging: {InventorySlotUI.isDragging}");
-        Debug.Log($"- draggedSlot: {(InventorySlotUI.draggedSlot != null ? "有" : "无")}");
-        
+        Debug.Log("=============== DRAG STATE (F3) ===============");
         if (DragManager.Instance != null)
         {
-            Debug.Log($"- DragManager正在拖拽: {DragManager.Instance.IsDragging()}");
+            Debug.Log($"- DragManager.IsDragging(): {DragManager.Instance.IsDragging()}");
         }
         else
         {
-            Debug.LogWarning("- DragManager实例不存在！");
+            Debug.LogWarning("- DragManager instance not found!");
         }
+        Debug.Log($"- InventorySlotUI.draggedSlot: {(InventorySlotUI.draggedSlot != null ? InventorySlotUI.draggedSlot.name : "null")}");
+        Debug.Log("===============================================");
     }
     
     void OnGUI()
     {
-        if (!showSlotStates) return;
+        if (!showSlotStatesOnGUI) return;
 
-        // 移到右上角
-        GUILayout.BeginArea(new Rect(Screen.width - 320, 10, 300, 200));
-        GUILayout.Label("库存调试信息:");
-        GUILayout.Label($"拖拽状态: {InventorySlotUI.isDragging}");
-        GUILayout.Label($"拖拽槽位: {(InventorySlotUI.draggedSlot != null ? "有" : "无")}");
-
-        if (GUILayout.Button("显示库存状态 (F1)"))
+        GUILayout.BeginArea(new Rect(10, 10, 300, 250), "Inventory Debugger", GUI.skin.window);
+        
+        if (DragManager.Instance != null)
         {
-            ShowInventoryState();
+            GUILayout.Label($"DragManager IsDragging: {DragManager.Instance.IsDragging()}");
+        }
+        GUILayout.Label($"Dragged Slot Object: {(InventorySlotUI.draggedSlot != null ? InventorySlotUI.draggedSlot.name : "None")}");
+        
+        // Display real-time hovered object name
+        GUILayout.Space(10);
+        GUI.color = Color.cyan;
+        GUILayout.Label($"MOUSE IS OVER: {hoveredObjectName}");
+        GUI.color = Color.white;
+        GUILayout.Space(10);
+
+        if (GUILayout.Button("Log Inventory State (F1)"))
+        {
+            LogFullInventoryState();
         }
 
-        if (GUILayout.Button("重置槽位状态 (F2)"))
+        if (GUILayout.Button("Reset Slots (F2)"))
         {
             ResetAllSlotStates();
         }
 
-        if (GUILayout.Button("检查拖拽状态 (F3)"))
+        if (GUILayout.Button("Log Drag State (F3)"))
         {
-            CheckDragState();
+            LogDragState();
         }
 
         GUILayout.EndArea();

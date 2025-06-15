@@ -145,10 +145,10 @@ public class ItemDrop : MonoBehaviour
         // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Player is within item's general pickupRange.");
 
         bool canBeMagnetized = distance <= playerController.currentPickupRange; // 是否在玩家的“磁铁”范围内
-        bool inventoryNotFull = !playerController.GetComponent<Inventory>().IsFull(item);
+        bool inventoryHasSpace = playerController.GetComponent<Inventory>().CanAddItem(item);
         // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: canBeMagnetized: {canBeMagnetized}, inventoryNotFull: {inventoryNotFull}");
 
-        if (canBeMagnetized && inventoryNotFull)
+        if (canBeMagnetized && inventoryHasSpace)
         {
             // Debug.Log($"[ItemDrop '{gameObject.name}'] CheckForPlayer: Conditions met. Calling StartMovingToPlayer().");
             StartMovingToPlayer(playerController.transform);
@@ -158,7 +158,7 @@ public class ItemDrop : MonoBehaviour
             // 之前的日志逻辑，现在只在未能启动移动时触发
             string reason = "";
             if (!canBeMagnetized) reason += $"不在玩家磁铁范围内 (玩家拾取范围: {playerController.currentPickupRange}, 实际距离: {distance:F2}). ";
-            if (!inventoryNotFull) reason += "玩家背包已满. ";
+            if (!inventoryHasSpace) reason += "玩家背包已满. ";
             Debug.Log($"[ItemDrop '{(item != null ? item.itemName : gameObject.name)}'] CheckForPlayer: Cannot start moving to player. Reason: {reason}");
         }
     }
@@ -226,7 +226,7 @@ public class ItemDrop : MonoBehaviour
         // 显示文本信息
         ShowPickupText();
         // 添加到背包
-        if (playerController.GetComponent<Inventory>().Add(item))
+        if (playerController.GetComponent<Inventory>().TryAddItem(item))
         {
             // 播放拾取音效
             // AudioSource.PlayClipAtPoint(pickupSound, transform.position);
@@ -239,7 +239,12 @@ public class ItemDrop : MonoBehaviour
     {
         if (playerTransform != null)
         {
-            string displayText = item != null ? $"{item.itemName}({item.quantity})" : gameObject.name;
+            int quantity = item != null ? item.quantity : 0;
+            string displayText = "";
+            if (quantity > 1)
+                displayText = $"{item.itemName}({quantity})";
+            else
+                displayText = $"{item.itemName}";
 
             // 使用3D文本
             if (PickupText3DManager.Instance != null)

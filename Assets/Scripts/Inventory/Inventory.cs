@@ -1,525 +1,156 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
-    [Header("工具")]
-    public Weapon weapon;    // 剑
-    public Tool pickupAxe;  // 镐
-    public Tool axe;        // 斧
-    public Tool hammer;     // 锤
+    [Header("Data Containers")]
+    public ItemContainer inventory;
+    
+    [Header("UI Panels")]
+    public ItemContainerUI inventoryUI;
+    public ItemContainerUI hotbarUI;
+    public ItemContainerUI boxUI;
 
-    [Header("UI设置")]
-    public Vector2 inventoryOffset;
-    public Vector2 hotbarOffset;
-    public Vector2 multiplier;
-    public GameObject inventoryUI;
-    public GameObject hotbarUI;
-    public GameObject inventorySlotPrefab;
-    public GameObject hotbarSlotPrefab;
+    [Header("Configuration")]
+    [SerializeField] private int inventoryWidth = 8;
+    [SerializeField] private int inventoryHeight = 4;
+    [SerializeField] private int hotbarWidth = 8;
 
     [Header("拖拽设置")]
-    public GameObject itemDropPrefab; // ItemDrop预制体引用
+    public GameObject itemDropPrefab;
 
-    [Header("库存设置")]
-    public int inventoryWidth;
-    public int inventoryHeight;
-    public InventorySlot[,] inventorySlots;
-    public InventorySlot[] hotbarSlots;
-    public GameObject[,] inventoryUISlots;
-    public GameObject[] hotbarUISlots;
+    [Header("初始物品")]
+    public Weapon starSword;
+    public Tool startingAxe;
+    public Tool startingPickaxe;
+    public Tool startingHammer;
 
-
-    #region 生命周期函数
-    private void Start()
+    void Awake()
     {
-        inventorySlots = new InventorySlot[inventoryWidth, inventoryHeight];
-        inventoryUISlots = new GameObject[inventoryWidth, inventoryHeight];
-        hotbarSlots = new InventorySlot[inventoryWidth];
-        hotbarUISlots = new GameObject[inventoryWidth];
+        // Initialize the single, main inventory container
+        inventory = new ItemContainer(inventoryWidth, inventoryHeight);
 
-
-        SetupUI();
-        UpdateInventoryUI();
-        
-        Add(new Item(weapon));
-        Add(new Item(pickupAxe));
-        Add(new Item(axe));
-        Add(new Item(hammer));
-    }
-
-    #endregion
-
-
-    #region UI设置、更新
-
-    void SetupUI()
-    {
-        // setup inventory
-        for (int x = 0; x < inventoryWidth; ++x)
-            for (int y = 0; y < inventoryHeight; ++y)
-            {
-                GameObject inventorySlot = Instantiate(inventorySlotPrefab, inventoryUI.transform.GetChild(0).transform);
-                inventorySlot.GetComponent<RectTransform>().localPosition = new Vector3((x * multiplier.x) + inventoryOffset.x, (y * multiplier.y) + inventoryOffset.y);
-
-                // 添加拖拽功能组件
-                InventorySlotUI slotUI = inventorySlot.GetComponent<InventorySlotUI>();
-                if (slotUI == null)
-                    slotUI = inventorySlot.AddComponent<InventorySlotUI>();
-                slotUI.Initialize(new Vector2Int(x, y), this, false);
-
-                inventoryUISlots[x, y] = inventorySlot;
-                inventorySlots[x, y] = null;
-            }
-        // setup hotbar
-        for (int x = 0; x < inventoryWidth; ++x)
+        // Link the main inventory data to the main inventory UI
+        if (inventoryUI != null)
         {
-            GameObject hotbarSlot = Instantiate(hotbarSlotPrefab, hotbarUI.transform.GetChild(0).transform);
-            hotbarSlot.GetComponent<RectTransform>().localPosition = new Vector3((x * multiplier.x) + hotbarOffset.x, hotbarOffset.y);
-
-            // 添加拖拽功能组件
-            InventorySlotUI slotUI = hotbarSlot.GetComponent<InventorySlotUI>();
-            if (slotUI == null)
-                slotUI = hotbarSlot.AddComponent<InventorySlotUI>();
-            slotUI.Initialize(new Vector2Int(x, 0), this, true);
-
-            hotbarUISlots[x] = hotbarSlot;
-            hotbarSlots[x] = null;
+            inventory.OnItemsChanged += inventoryUI.UpdateUI;
+            inventoryUI.Initialize(inventory);
         }
-    }
 
-    public void UpdateInventoryUI()
-    {
-        // update inventory
-        for (int x = 0; x < inventoryWidth; ++x)
-            for (int y = 0; y < inventoryHeight; ++y)
+        // Link the SAME inventory data to the hotbar UI, but remap the slots
+        if (hotbarUI != null)
+        {
+            // The hotbar UI should also update when the main inventory changes
+            inventory.OnItemsChanged += hotbarUI.UpdateUI;
+            
+            // We create a temporary, purely visual container for the hotbar UI's layout
+            ItemContainer hotbarVisualContainer = new ItemContainer(hotbarWidth, 1);
+            hotbarUI.Initialize(hotbarVisualContainer);
+
+            // CRITICAL STEP: Re-assign each hotbar UI slot to point to the
+            // corresponding slot in the LAST ROW of the main inventory data container.
+            for (int x = 0; x < hotbarWidth; x++)
             {
-                if (inventoryUISlots[x, y] == null)
+                if (hotbarUI.uiSlots[x, 0] != null)
                 {
-                    Debug.LogWarning($"库存UI槽位[{x},{y}]为null！");
-                    continue;
-                }
-
-                UpdateSlotUI(inventoryUISlots[x, y], inventorySlots[x, y], x, y, false);
-            }
-
-        // update hotbar
-        int col = inventoryHeight - 1;
-        for (int x = 0; x < inventoryWidth; ++x)
-        {
-            if (hotbarUISlots[x] == null)
-            {
-                Debug.LogWarning($"热键栏UI槽位[{x}]为null！");
-                continue;
-            }
-
-            UpdateSlotUI(hotbarUISlots[x], inventorySlots[x, col], x, col, true);
-        }
-
-    }
-
-    // 更新单个槽位UI
-    private void UpdateSlotUI(GameObject slotUI, InventorySlot slot, int x, int y, bool isHotbar)
-    {
-        if (slotUI == null) return;
-
-        var imageComponent = slotUI.transform.GetChild(0).GetComponent<Image>();
-        var textComponent = slotUI.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-
-        if (slot == null || slot.item == null)
-        {
-            // 空槽位
-            if (imageComponent != null)
-            {
-                imageComponent.sprite = null;
-                imageComponent.enabled = false;
-            }
-            if (textComponent != null)
-            {
-                textComponent.text = "";
-                textComponent.enabled = false;
-            }
-        }
-        else
-        {
-            // 有物品的槽位
-            if (imageComponent != null)
-            {
-                imageComponent.enabled = true;
-                imageComponent.sprite = slot.item.itemSprite;
-            }
-            if (textComponent != null)
-            {
-                textComponent.enabled = true;
-                if (slot.item.quantity == 1)
-                    textComponent.text = "";
-                else
-                    textComponent.text = slot.item.quantity.ToString();
-            }
-        }
-    }
-
-    #endregion
-
-
-    #region 增、删、查
-    public bool Add(Item item)
-    {
-        if (item == null || item.quantity <= 0) return false;
-        Vector2Int? firstEmptySlot = null;
-        for (int y = inventoryHeight - 1; y >= 0; --y)
-        {
-            for (int x = 0; x < inventoryWidth; ++x)
-            {
-                if (inventorySlots[x, y] != null && inventorySlots[x, y].item.CanStackWith(item))
-                {
-                    int remain = inventorySlots[x, y].TryStack(item);
-                    item.quantity = remain;
-                    if (remain == 0)
+                    InventorySlotUI slotUIComponent = hotbarUI.uiSlots[x, 0].GetComponent<InventorySlotUI>();
+                    if (slotUIComponent != null)
                     {
-                        UpdateInventoryUI();
-                        return true;
+                        // This slot's data comes from inventory at (x, inventoryHeight - 1)
+                        slotUIComponent.AssignContainer(inventory, new Vector2Int(x, inventoryHeight - 1));
                     }
                 }
-
-                if (inventorySlots[x, y] == null && !firstEmptySlot.HasValue)
-                {
-                    firstEmptySlot = new Vector2Int(x, y);
-                }
             }
         }
 
-        if (item.quantity > 0 && firstEmptySlot.HasValue)
-        {
-            Vector2Int pos = firstEmptySlot.Value;
-            inventorySlots[pos.x, pos.y] = new InventorySlot
-            {
-                position = pos,
-                item = new Item(item),
-            };
-
-            item.quantity = 0;
-            UpdateInventoryUI();
-            return true;
-        }
-        return false;
+        // Add starting items if they have been assigned in the editor
+        GiveStartingItems();
     }
 
-    public void Remove(Item item)
+    private void Update()
     {
-        Vector2Int pos = Contains(item);
-        if (pos != Vector2Int.one * -1)
+        // 示例：按下I键切换背包UI的显示/隐藏
+        if (Input.GetKeyDown(KeyCode.I))
         {
-            inventorySlots[pos.x, pos.y] = null;
-            UpdateInventoryUI();
+            inventoryUI.gameObject.SetActive(!inventoryUI.gameObject.activeSelf);
         }
     }
 
-    public Vector2Int Contains(Item item) {
-        for (int y = inventoryHeight - 1; y >= 0; --y)
-        {
-            for (int x = 0; x < inventoryWidth; ++x)
-            {
-                if (inventorySlots[x, y] != null && 
-                    inventorySlots[x, y].item.itemName == item.itemName && 
-                    inventorySlots[x, y].item.quantity == item.quantity)
-                    return new Vector2Int(x, y);
-            }
-        }
-        return Vector2Int.one * -1;
-    }
-
-    public bool IsFull(Item item) {
-        for (int y = inventoryHeight - 1; y >= 0; --y)
-        {
-            for (int x = 0; x < inventoryWidth; ++x)
-            {
-                if (inventorySlots[x, y] == null) return false;
-                if (inventorySlots[x, y].item.itemName == item.itemName && 
-                    inventorySlots[x, y].item.quantity < inventorySlots[x, y].item.maxStackSize)
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    #endregion
-
-
-    #region 拖拽相关功能
-
-    // 交换两个槽位的物品
-    public void SwapItems(Vector2Int fromPos, bool fromIsHotbar, Vector2Int toPos, bool toIsHotbar)
+    public void DropItem(Item item)
     {
-        InventorySlot fromSlot = GetSlot(fromPos, fromIsHotbar);
-        InventorySlot toSlot = GetSlot(toPos, toIsHotbar);
+        if (item == null) return;
 
-        // 如果源槽位没有物品，不执行操作
-        if (fromSlot == null || fromSlot.item == null)
-        {
-            Debug.LogWarning("源槽位为空，取消交换");
-            return;
-        }
-
-        // 如果目标槽位为空，直接移动
-        if (toSlot == null || toSlot.item == null)
-        {
-            MoveItem(fromPos, fromIsHotbar, toPos, toIsHotbar);
-            return;
-        }
-
-        // 如果两个物品可以堆叠，尝试堆叠
-        if (fromSlot.item.CanStackWith(toSlot.item))
-        {
-            int remainingQuantity = toSlot.TryStack(fromSlot.item);
-            if (remainingQuantity == 0)
-            {
-                // 完全堆叠，清空源槽位
-                SetSlot(fromPos, fromIsHotbar, null);
-            }
-            else
-            {
-                // 部分堆叠，更新源槽位数量
-                fromSlot.item.quantity = remainingQuantity;
-            }
-        }
-        else
-        {
-            // 不能堆叠，执行交换
-            Item tempItem = new Item(fromSlot.item);
-            fromSlot.item = new Item(toSlot.item);
-            toSlot.item = tempItem;
-        }
-
-        StartCoroutine(ForceUIRefresh());
+        Vector3 dropPosition = GetPlayerDropPosition(); 
+        CreateItemDrop(item, dropPosition);
     }
-
-    // 移动物品到指定槽位
-    private void MoveItem(Vector2Int fromPos, bool fromIsHotbar, Vector2Int toPos, bool toIsHotbar)
-    {
-        InventorySlot fromSlot = GetSlot(fromPos, fromIsHotbar);
-        if (fromSlot == null || fromSlot.item == null)
-        {
-            Debug.LogWarning("移动失败：源槽位为空");
-            return;
-        }
-
-        // 创建新的槽位
-        InventorySlot newSlot = new InventorySlot
-        {
-            position = toPos,
-            item = new Item(fromSlot.item)
-        };
-
-        // 设置到目标位置
-        SetSlot(toPos, toIsHotbar, newSlot);
-        // 清空源位置
-        SetSlot(fromPos, fromIsHotbar, null);
-
-        StartCoroutine(ForceUIRefresh());
-    }
-
-    // 丢弃物品到世界中
-    public void DropItem(Vector2Int pos, bool isHotbar)
-    {
-        InventorySlot slot = GetSlot(pos, isHotbar);
-        if (slot == null || slot.item == null) return;
-
-        // 获取玩家位置 - 多种方式查找
-        Vector3 dropPosition = GetPlayerDropPosition();
-        CreateItemDrop(slot.item, dropPosition);
-
-        // 清空槽位
-        SetSlot(pos, isHotbar, null);
-        UpdateInventoryUI();
-    }
-
-    // 获取玩家丢弃位置
+    
+    // 这些方法现在是 Inventory 特有的，因为它们与玩家的位置有关
     private Vector3 GetPlayerDropPosition()
     {
-        // 通过当前Inventory组件的GameObject（通常挂在Player上）
-        Vector3 playerPosition = transform.position;
-
-        // 如果上面获取不到，尝试查找Player标签
-        if (playerPosition == Vector3.zero)
-        {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                playerPosition = player.transform.position;
-            }
-        }
-
-        // 如果还是不行，尝试查找PlayerController组件
-        if (playerPosition == Vector3.zero)
-        {
-            PlayerController playerController = FindObjectOfType<PlayerController>();
-            if (playerController != null)
-            {
-                playerPosition = playerController.transform.position;
-            }
-        }
-
-        // 如果都找不到，使用默认位置并警告
-        if (playerPosition == Vector3.zero)
-        {
-            Debug.LogWarning("找不到玩家位置！物品将在原点丢弃。请确保玩家有Player标签或PlayerController组件。");
-            playerPosition = Vector3.zero;
-        }
-
-        // 在玩家位置上方一点丢弃
-        return playerPosition + Vector3.up * 0.5f;
+        return transform.position + Vector3.right; // 示例位置
     }
 
-    // 创建掉落物
     private void CreateItemDrop(Item item, Vector3 position)
     {
-        // 使用直接引用的ItemDrop预制体
-        if (itemDropPrefab == null)
+        if (itemDropPrefab != null)
         {
-            Debug.LogError("ItemDrop预制体未设置！请在Inventory组件中拖拽Assets/Prefabs/Item.prefab到ItemDropPrefab字段");
-            return;
+            GameObject drop = Instantiate(itemDropPrefab, position, Quaternion.identity);
+            // 假设 ItemDrop 脚本有一个 Initialize 方法
+            // drop.GetComponent<ItemDrop>().Initialize(item); 
         }
-
-        GameObject dropObject = Instantiate(itemDropPrefab, position, Quaternion.identity);
-        ItemDrop itemDrop = dropObject.GetComponent<ItemDrop>();
-
-        if (itemDrop != null)
+        else
         {
-            itemDrop.SetItem(item);
-            // 标记为玩家丢弃的物品
-            itemDrop.MarkAsPlayerDropped();
-
-            // 添加一个小的随机力，让物品散开
-            Rigidbody2D rb = dropObject.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                Vector2 randomForce = new Vector2(
-                    Random.Range(-2f, 2f),
-                    Random.Range(1f, 3f)
-                );
-                rb.AddForce(randomForce, ForceMode2D.Impulse);
-            }
+            Debug.LogWarning("ItemDrop 预制件未设置！");
         }
     }
 
-    // 获取指定位置的槽位
-    private InventorySlot GetSlot(Vector2Int pos, bool isHotbar)
+    // Methods for adding/checking items now operate on the single inventory
+    public bool CanAddItem(Item item)
     {
-        if (isHotbar)
+        return inventory.CanAddItem(item);
+    }
+
+    public bool TryAddItem(Item item)
+    {
+        return inventory.AddItem(item);
+    }
+
+    public void DropItem(Item item, Vector3 position)
+    {
+        if (itemDropPrefab != null)
         {
-            if (pos.x >= 0 && pos.x < hotbarSlots.Length)
+            GameObject dropGO = Instantiate(itemDropPrefab, position, Quaternion.identity);
+            ItemDrop itemDrop = dropGO.GetComponent<ItemDrop>();
+            if (itemDrop != null)
             {
-                return hotbarSlots[pos.x];
+                itemDrop.SetItem(new Item(item)); // Pass a copy to the drop
+                itemDrop.MarkAsPlayerDropped();
             }
             else
             {
-                Debug.LogWarning($"热键栏索引越界: {pos.x}, 长度: {hotbarSlots.Length}");
+                Debug.LogError("itemDropPrefab does not have an ItemDrop component!");
+                Destroy(dropGO);
             }
         }
         else
         {
-            if (pos.x >= 0 && pos.x < inventoryWidth && pos.y >= 0 && pos.y < inventoryHeight)
-            {
-                return inventorySlots[pos.x, pos.y];
-            }
-            else
-            {
-                Debug.LogWarning($"库存索引越界: ({pos.x},{pos.y}), 大小: ({inventoryWidth},{inventoryHeight})");
-            }
+            Debug.LogError("itemDropPrefab is not assigned in the Inventory component!");
         }
-        return null;
     }
 
-    // 设置指定位置的槽位
-    private void SetSlot(Vector2Int pos, bool isHotbar, InventorySlot slot)
+    private void GiveStartingItems()
     {
-        if (isHotbar)
-        {
-            if (pos.x >= 0 && pos.x < hotbarSlots.Length)
-            {
-                hotbarSlots[pos.x] = slot;
-            }
-            else
-            {
-                Debug.LogWarning($"设置热键栏失败，索引越界: {pos.x}");
-            }
-        }
-        else
-        {
-            if (pos.x >= 0 && pos.x < inventoryWidth && pos.y >= 0 && pos.y < inventoryHeight)
-            {
-                inventorySlots[pos.x, pos.y] = slot;
-            }
-            else
-            {
-                Debug.LogWarning($"设置库存失败，索引越界: ({pos.x},{pos.y})");
-            }
-        }
+        if (starSword != null)
+            inventory.AddItem(new Item(starSword));
+        if (startingPickaxe != null)
+            inventory.AddItem(new Item(startingPickaxe));
+        if (startingAxe != null)
+            inventory.AddItem(new Item(startingAxe));
+        if (startingHammer != null)
+            inventory.AddItem(new Item(startingHammer));
     }
 
-    // 强制UI刷新协程
-    private IEnumerator ForceUIRefresh()
+    public void ToggleInventory()
     {
-        yield return null; // 等待一帧
-        UpdateInventoryUI();
+        // ... existing code ...
     }
-
-    public void SplitItem(Vector2Int pos, bool isHotbar, int splitAmount)
-    {
-        InventorySlot sourceSlot = GetSlot(pos, isHotbar);
-        if (sourceSlot == null || sourceSlot.item == null || splitAmount <= 0 || splitAmount >= sourceSlot.item.quantity)
-        {
-            Debug.LogWarning("分割失败：无效的分割数量或源槽位");
-            return;
-        }
-
-        Item splitItem = new Item(sourceSlot.item);
-        splitItem.quantity = splitAmount;
-        sourceSlot.item.quantity -= splitAmount;
-        Vector2Int emptySlot = FindEmptySlot();
-        if (emptySlot.x != -1)
-        {
-            // 找到空槽位，放置分割的物品
-            InventorySlot newSlot = new InventorySlot
-            {
-                position = emptySlot,
-                item = splitItem
-            };
-            SetSlot(emptySlot, false, newSlot);
-        }
-        else
-        {
-            // 没有空槽位，在玩家位置丢弃分割的物品
-            Vector3 dropPosition = GetPlayerDropPosition();
-            CreateItemDrop(splitItem, dropPosition);
-        }
-
-        UpdateInventoryUI();
-    }
-
-    // 查找空的库存槽位
-    private Vector2Int FindEmptySlot()
-    {
-        // 按照指定顺序检查主库存：从下到上，从左到右
-        for (int y = inventoryHeight - 1; y >= 0; --y)
-        {
-            for (int x = 0; x < inventoryWidth; ++x)
-            {
-                if (inventorySlots[x, y] == null || inventorySlots[x, y].item == null)
-                {
-                    return new Vector2Int(x, y);
-                }
-            }
-        }
-
-        // 没找到空槽位
-        return new Vector2Int(-1, -1);
-    }
-
-    #endregion
-
 }

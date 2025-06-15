@@ -131,7 +131,7 @@ public static class LightingManager
     {
         int radiusToUse = specificRadiusToClear ?? (int)terrainGen.lightRadius;
         int effectiveClearRadius = radiusToUse + 1; // 稍微扩大清除半径以确保覆盖
-        Debug.Log($"[LightingManager] RemoveLightSource: Called for ({x},{y}). Nominal radius: {radiusToUse}, Effective clear radius: {effectiveClearRadius}.");
+        // Debug.Log($"[LightingManager] RemoveLightSource: Called for ({x},{y}). Nominal radius: {radiusToUse}, Effective clear radius: {effectiveClearRadius}.");
 
         if (terrainGen == null)
         {
@@ -279,7 +279,7 @@ public static class LightingManager
             return;
         }
 
-        Debug.Log($"[LightingManager] PulseTemporaryLight: Pulsing light at ({x},{y}) with Intensity: {intensity}, Radius: {radius}, Duration: {duration}. Runner: {coroutineRunner.gameObject.name}");
+        // Debug.Log($"[LightingManager] PulseTemporaryLight: Pulsing light at ({x},{y}) with Intensity: {intensity}, Radius: {radius}, Duration: {duration}. Runner: {coroutineRunner.gameObject.name}");
 
         // 立即应用光照 - 注意：LightBlockInternal的iteration参数与radius的直接关系需要明确。
         // LightBlockInternal的第三个参数是intensity，第四个是iteration。
@@ -295,7 +295,7 @@ public static class LightingManager
         // 现在 LightBlockInternal 的最后一个参数是 maxIterationDepth，我们传入从武器配置中得到的 radius
         LightBlockInternal(terrainGen, x, y, intensity, 0, radius, true); // 显式传递 applyWallBoost = true
         terrainGen.worldTilesMap.Apply(); // 确保立即应用
-        Debug.Log($"[LightingManager] PulseTemporaryLight: Initial light applied at ({x},{y}). Starting RemoveTemporaryLightCoroutine with duration {duration}s on TerrainGeneration object, pulseRadius: {radius}.");
+        // Debug.Log($"[LightingManager] PulseTemporaryLight: Initial light applied at ({x},{y}). Starting RemoveTemporaryLightCoroutine with duration {duration}s on TerrainGeneration object, pulseRadius: {radius}.");
 
 
         // 启动协程以在持续时间结束后移除光照
@@ -304,9 +304,9 @@ public static class LightingManager
 
     private static IEnumerator RemoveTemporaryLightCoroutine(TerrainGeneration terrainGen, int x, int y, float duration, int originalPulseRadius)
     {
-        Debug.Log($"[LightingManager] RemoveTemporaryLightCoroutine: Started for ({x},{y}) with originalPulseRadius: {originalPulseRadius}. Waiting for {duration}s.");
+        // Debug.Log($"[LightingManager] RemoveTemporaryLightCoroutine: Started for ({x},{y}) with originalPulseRadius: {originalPulseRadius}. Waiting for {duration}s.");
         yield return new WaitForSeconds(duration);
-        Debug.Log($"[LightingManager] RemoveTemporaryLightCoroutine: Wait finished for ({x},{y}). Calling RemoveLightSource with specific radius {originalPulseRadius}.");
+        // Debug.Log($"[LightingManager] RemoveTemporaryLightCoroutine: Wait finished for ({x},{y}). Calling RemoveLightSource with specific radius {originalPulseRadius}.");
         RemoveLightSource(terrainGen, x, y, originalPulseRadius); // 将原始脉冲半径传递给RemoveLightSource
     }
 }

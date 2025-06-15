@@ -52,7 +52,6 @@ public class DragManager : MonoBehaviour
         currentDragPreview = CreateDragPreview(item);
         if (currentDragPreview != null)
         {
-            Debug.Log("DragManager: 拖拽预览创建成功");
             UpdateDragPosition(Input.mousePosition);
         }
         else

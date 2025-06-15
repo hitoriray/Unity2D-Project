@@ -116,7 +116,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.B))
         {
             // 如果正在拖拽且要关闭库存，取消拖拽
-            if (inventoryShowing && InventorySlotUI.isDragging)
+            if (inventoryShowing && DragManager.Instance != null && DragManager.Instance.IsDragging())
             {
                 CancelDrag();
             }
@@ -131,7 +131,7 @@ public class PlayerController : MonoBehaviour
             if (inventoryShowing)
             {
                 // 如果正在拖拽，取消拖拽
-                if (InventorySlotUI.isDragging)
+                if (DragManager.Instance != null && DragManager.Instance.IsDragging())
                 {
                     CancelDrag();
                 }
@@ -145,7 +145,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetAxis("Mouse ScrollWheel") < 0)
         {
             // scoll up
-            if (selectedSlotIndex < inventory.inventoryWidth - 1)
+            if (selectedSlotIndex < inventory.inventory.width - 1)
                 ++selectedSlotIndex;
 
         }
@@ -159,16 +159,19 @@ public class PlayerController : MonoBehaviour
         HandleNumberInput();
 
         // set selected slot UI
-        hotbarSelector.transform.position = inventory.hotbarUISlots[selectedSlotIndex].transform.position;
-        // set selected item
-        selectedItem = inventory.inventorySlots[selectedSlotIndex, inventory.inventoryHeight - 1]?.item;
+        if (inventory.hotbarUI != null && inventory.hotbarUI.uiSlots != null && inventory.hotbarUI.uiSlots[selectedSlotIndex, 0] != null)
+        {
+            hotbarSelector.transform.position = inventory.hotbarUI.uiSlots[selectedSlotIndex, 0].transform.position;
+        }
+        // set selected item from the last row of the main inventory
+        selectedItem = inventory.inventory?.GetSlot(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1))?.item;
         weapon.GetComponent<SpriteRenderer>().sprite = selectedItem?.itemSprite;
 
         HandleJumpInput();
         HandleActionInput();
 
-        inventory.inventoryUI.SetActive(inventoryShowing);
-        inventory.hotbarUI.SetActive(hotbarShowing);
+        inventory.inventoryUI.gameObject.SetActive(inventoryShowing);
+        inventory.hotbarUI.gameObject.SetActive(hotbarShowing);
     }
 
     private void FixedUpdate()
@@ -203,9 +206,9 @@ public class PlayerController : MonoBehaviour
 
 
         // 检查是否正在拖拽库存物品或显示分割界面
-        if (!InventorySlotUI.isDragging &&
-            (ItemSplitUI.Instance == null || !ItemSplitUI.Instance.IsShowing()) &&
-            Vector2.Distance(currentPos, mousePos) <= miningRange)
+        bool isUIDisplayed = DragManager.Instance != null && DragManager.Instance.IsDragging() || (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
+
+        if (!isUIDisplayed && Vector2.Distance(currentPos, mousePos) <= miningRange)
         {
             if (isMining)
             {
@@ -219,7 +222,6 @@ public class PlayerController : MonoBehaviour
             {
                 PlacingWall();
             }
-
         }
     }
 
@@ -285,8 +287,12 @@ public class PlayerController : MonoBehaviour
         }
 
         TileType tileType = terrainGen.GetTileType(x, y);
-        if (tileType == TileType.Air || tileType == TileType.Wall)
+        if (tileType == TileType.Air || tileType == TileType.Wall || tileType == TileType.Flower)
         {
+            if(tileType == TileType.Flower)
+            {
+                 terrainGen.RemoveTile(x, y, TileType.Dirt);
+            }
             bool succesed = terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
             if (succesed)
             {
@@ -295,29 +301,12 @@ public class PlayerController : MonoBehaviour
                 else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
                 
                 LightingManager.RemoveLightSource(terrainGen, x, y);
-                --selectedItem.quantity;
+
+                // Use the new method to decrease item quantity from the last row of the inventory
+                inventory.inventory.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1), 1);
+                // Update selectedItem reference as it might have been removed
+                selectedItem = inventory.inventory.GetSlot(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1))?.item;
             }
-        }
-        else if (tileType == TileType.Flower)
-        {
-            terrainGen.RemoveTile(x, y, TileType.Dirt);
-            bool succesed = terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
-            if (succesed)
-            {
-                if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
-                    SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
-                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
-                
-                LightingManager.RemoveLightSource(terrainGen, x, y);
-                --selectedItem.quantity;
-            }
-        }
-        inventory.UpdateInventoryUI();
-        if (selectedItem.quantity == 0)
-        {
-            inventory.Remove(selectedItem);
-            inventory.UpdateInventoryUI();
-            selectedItem = null;
         }
     }
 
@@ -346,16 +335,12 @@ public class PlayerController : MonoBehaviour
                 else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
                 
                 LightingManager.RemoveLightSource(terrainGen, x, y);
-                --selectedItem.quantity;
-            }
-        }
 
-        inventory.UpdateInventoryUI();
-        if (selectedItem.quantity == 0)
-        {
-            inventory.Remove(selectedItem);
-            inventory.UpdateInventoryUI();
-            selectedItem = null;
+                // Use the new method to decrease item quantity from the last row of the inventory
+                inventory.inventory.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1), 1);
+                // Update selectedItem reference as it might have been removed
+                selectedItem = inventory.inventory.GetSlot(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1))?.item;
+            }
         }
     }
 
@@ -424,7 +409,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleActionInput()
     {
-        if (InventorySlotUI.isDragging)
+        if (DragManager.Instance != null && DragManager.Instance.IsDragging())
         {
             return;
         }
@@ -497,7 +482,8 @@ public class PlayerController : MonoBehaviour
 
     private void HandleNumberInput()
     {
-        for (int i = 0; i < inventory.hotbarUISlots.Length; ++i)
+        if (inventory.inventory == null) return;
+        for (int i = 0; i < inventory.inventory.width; ++i)
         {
             if (Input.GetKeyDown(KeyCode.Alpha1 + i))
             {
@@ -573,7 +559,7 @@ public class PlayerController : MonoBehaviour
         if (spumPrefabs == null) return;
 
         // 拖拽时或分割界面显示时不播放动作动画
-        bool uiBlocking = InventorySlotUI.isDragging || (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
+        bool uiBlocking = (DragManager.Instance != null && DragManager.Instance.IsDragging()) || (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
         var isPerformingAction = !uiBlocking && (isMining || isPlacing || isPlacingWall || isAttacking);
         var wasPerformingAction = wasMining || wasPlacing || wasAttacking;
 
@@ -607,7 +593,7 @@ public class PlayerController : MonoBehaviour
     private IEnumerator PlayActionAnimation()
     {
         while ((isMining || isPlacing || isPlacingWall || isAttacking) &&
-               !InventorySlotUI.isDragging &&
+               !(DragManager.Instance != null && DragManager.Instance.IsDragging()) &&
                (ItemSplitUI.Instance == null || !ItemSplitUI.Instance.IsShowing()))
         {
             // 根据当前动作类型播放对应动画
@@ -842,20 +828,19 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     private void CancelDrag()
     {
-        if (InventorySlotUI.isDragging && InventorySlotUI.draggedSlot != null)
+        if (DragManager.Instance != null && DragManager.Instance.IsDragging())
         {
-            // 重置拖拽槽位的视觉状态
-            InventorySlotUI.draggedSlot.ResetSlotVisual();
-
-            // 重置拖拽状态
-            InventorySlotUI.isDragging = false;
-            InventorySlotUI.draggedSlot = null;
-
-            // 销毁拖拽预览
-            if (DragManager.Instance != null)
+            // Reset the visual state of the dragged slot
+            if (InventorySlotUI.draggedSlot != null)
             {
-                DragManager.Instance.EndDrag();
+                InventorySlotUI.draggedSlot.ResetSlotVisual();
             }
+
+            // End the drag operation via the manager
+            DragManager.Instance.EndDrag();
+            
+            // Clear the static reference
+            InventorySlotUI.draggedSlot = null;
         }
     }
 
