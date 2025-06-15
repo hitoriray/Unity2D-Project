@@ -2,6 +2,7 @@ using UnityEngine;
 using Combat.Interfaces; // 使用我们创建的接口命名空间
 using Combat.Weapons;   // 如果需要直接引用 Weapon 类型 (例如 DamageInfo 中的 sourceWeaponAsset)
 using UI;               // 新增：为了能引用 DamageTextManager
+// 移除了 using GameAudio; 因为 SoundEffectManager 现在在全局命名空间
 
 namespace Enemies // 建议为敌人脚本也添加命名空间
 {
@@ -15,7 +16,7 @@ namespace Enemies // 建议为敌人脚本也添加命名空间
 
         [Header("Feedback")]
         [Tooltip("受伤时播放的音效 (可选, 更通用的音效应来自武器)")]
-        public AudioClip hurtSound;
+        public AudioClip[] hurtSound;
         [Tooltip("死亡时播放的特效 (可选)")]
         public GameObject deathEffectPrefab;
 
@@ -51,9 +52,17 @@ namespace Enemies // 建议为敌人脚本也添加命名空间
             }
 
             // 播放敌人自身的受伤音效 (如果配置了)
-            if (hurtSound != null)
+            if (hurtSound != null && hurtSound.Length > 0) // 确保数组不为空
             {
-                AudioSource.PlayClipAtPoint(hurtSound, transform.position);
+                if (SoundEffectManager.Instance != null)
+                {
+                    SoundEffectManager.Instance.PlaySoundAtPoint(hurtSound[Random.Range(0, hurtSound.Length)], transform.position);
+                }
+                else
+                {
+                    Debug.LogWarning("[EnemyHealth] SoundEffectManager.Instance is null. Cannot play hurt sound via manager.");
+                    AudioSource.PlayClipAtPoint(hurtSound[Random.Range(0, hurtSound.Length)], transform.position); // Fallback
+                }
             }
 
             // 检查是否死亡
@@ -92,7 +101,15 @@ namespace Enemies // 建议为敌人脚本也添加命名空间
             }
             if (soundToPlay != null)
             {
-                AudioSource.PlayClipAtPoint(soundToPlay, damageInfo.hitPoint);
+                if (SoundEffectManager.Instance != null)
+                {
+                    SoundEffectManager.Instance.PlaySoundAtPoint(soundToPlay, damageInfo.hitPoint);
+                }
+                else
+                {
+                    Debug.LogWarning("[EnemyHealth] SoundEffectManager.Instance is null. Cannot play weapon hit sound via manager.");
+                    AudioSource.PlayClipAtPoint(soundToPlay, damageInfo.hitPoint); // Fallback
+                }
             }
         }
 

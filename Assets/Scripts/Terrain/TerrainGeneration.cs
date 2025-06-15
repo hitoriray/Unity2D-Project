@@ -352,13 +352,13 @@ public class TerrainGeneration : MonoBehaviour
     }
 
     #endregion
-    
-    
+
+
     #region 放置方块
 
-    public void PlaceTile(int x, int y, Tile tile, TileType tileType, string tileTag, string biomeName)
+    public bool PlaceTile(int x, int y, Tile tile, TileType tileType, string tileTag, string biomeName)
     {
-        if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return;
+        if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return false;
         if ((tileType != TileType.Wall && !worldTilePosition.Contains(new Vector2(x, y))) ||
             (tileType == TileType.Wall && !worldWallPosition.Contains(new Vector2(x, y))))
         {
@@ -366,7 +366,7 @@ public class TerrainGeneration : MonoBehaviour
             if (chunkSize <= 0)
             {
                 Destroy(newTile);
-                return;
+                return false;
             }
             int chunkIndex = Mathf.FloorToInt(x / chunkSize);
             if (worldChunks != null && chunkIndex >= 0 && chunkIndex < worldChunks.Length)
@@ -416,7 +416,10 @@ public class TerrainGeneration : MonoBehaviour
                 UpdateSurroundingWalls(x, y);
             else
                 UpdateSurroundingTiles(x, y);
+
+            return true;
         }
+        return false;
     }
 
     public void GenerateTile(Sprite tileSprite, float x, float y, bool backGroundElement, string tileTag = "Ground")
@@ -499,9 +502,9 @@ public class TerrainGeneration : MonoBehaviour
 
     #region 移除方块
 
-    public void RemoveTile(int x, int y, TileType tileType)
+    public bool RemoveTile(int x, int y, TileType tileType)
     {
-        if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return;
+        if (x < 0 || x >= worldSize || y < 0 || y >= worldSize) return false;
         Vector2 tilePos = new(x, y);
         if (worldTilePosition.Contains(tilePos) && tileType != TileType.Wall)
         {
@@ -535,7 +538,8 @@ public class TerrainGeneration : MonoBehaviour
                     worldTileInfo.Remove(tilePos);
                 }
 
-                if (worldWallPosition.Contains(tilePos)) {
+                if (worldWallPosition.Contains(tilePos))
+                {
                     wallMap[x, y] = true;
                     SetTerrainMap(x, y, TileType.Wall);
                     worldTileInfo[tilePos] = new TileInfo(GetCurrentBiomeTileFromType(TileType.Wall), TileType.Wall, curBiome.biomeName, false);
@@ -567,6 +571,8 @@ public class TerrainGeneration : MonoBehaviour
                     }
                 }
                 UpdateSurroundingTiles(x, y);
+                worldTilesMap.Apply();
+                return true;
             }
         }
         else if (!worldTilePosition.Contains(tilePos) && worldWallPosition.Contains(tilePos) && tileType == TileType.Wall)
@@ -586,8 +592,10 @@ public class TerrainGeneration : MonoBehaviour
             wallMap[x, y] = false;
             SetTerrainMap(x, y, TileType.Air);
             UpdateSurroundingWalls(x, y);
+            worldTilesMap.Apply();
+            return true;
         }
-        worldTilesMap.Apply();
+        return false;
     }
 
     private void RemoveTileDFS(int centerX, int centerY, bool allRemoved = false)
@@ -849,8 +857,70 @@ public class TerrainGeneration : MonoBehaviour
         }
     }
 
-    #endregion
+    public bool IsWallAt(int x, int y)
+    {
+        return wallMap[x, y] || terrainMap[x, y] == TileType.Wall;
+    }
     
+    /// <summary>
+    /// 获取指定世界坐标对应的氛围系统生物群系类型。
+    /// </summary>
+    /// <param name="worldPosition">世界坐标。</param>
+    /// <returns>对应的 AmbianceSystem.BiomeType。</returns>
+    public global::AmbianceSystem.BiomeType GetAmbianceBiomeTypeAtWorldPosition(Vector3 worldPosition)
+    {
+        // 将世界坐标转换为图块坐标
+        int tileX = Mathf.RoundToInt(worldPosition.x - 0.5f);
+        int tileY = Mathf.RoundToInt(worldPosition.y - 0.5f);
+
+        // 边界检查
+        if (tileX < 0 || tileX >= worldSize || tileY < 0 || tileY >= worldSize)
+        {
+            return global::AmbianceSystem.BiomeType.None;
+        }
+
+        Biome macroBiome = GetCurrentBiome(tileX, tileY);
+        if (macroBiome == null)
+        {
+            return global::AmbianceSystem.BiomeType.None;
+        }
+
+        TileType actualTileAtPlayer = GetTileType(tileX, tileY);
+
+        // 洞穴判断：如果玩家脚下是空气，但其位置在地图上被标记为背景墙 (wallMap[tileX, tileY] is true)
+        // 或者宏观生物群系明确是洞穴类型
+        if (IsWallAt(tileX, tileY) && actualTileAtPlayer == TileType.Air) // 玩家在背景墙前的空气中，很可能是在洞穴里
+        {
+            return global::AmbianceSystem.BiomeType.Generic; // 之前是 Cave
+        }
+        if (actualTileAtPlayer == TileType.Wall && !worldTilePosition.Contains(new Vector2(tileX, tileY))) // 玩家所在格是墙（无前景方块）
+        {
+            return global::AmbianceSystem.BiomeType.Generic; // 之前是 Cave
+        }
+        if (macroBiome.biomeName != null && macroBiome.biomeName.ToLower().Contains("cave"))
+        {
+            return global::AmbianceSystem.BiomeType.Generic; // 之前是 Cave
+        }
+
+        if (macroBiome.biomeName == null) return global::AmbianceSystem.BiomeType.Generic; // 如果宏观生物群系名为空，默认为通用 (之前是 Surface)
+
+        switch (macroBiome.biomeName.ToLower())
+        {
+            case "forest":
+                return global::AmbianceSystem.BiomeType.Forest;
+            case "desert":
+                return global::AmbianceSystem.BiomeType.Desert;
+            case "snow": // 新增雪原生物群系判断
+                return global::AmbianceSystem.BiomeType.Snow;
+            case "grassland":
+                return global::AmbianceSystem.BiomeType.Generic; // 之前是 Surface
+            default:
+                return global::AmbianceSystem.BiomeType.Generic; // 之前是 Surface
+        }
+    }
+
+    #endregion
+
 
     #region 掉落物生成
     public void GenerateItemDrop(int x, int y, TileType tileType)
@@ -867,7 +937,7 @@ public class TerrainGeneration : MonoBehaviour
         {
             TileInfo info = worldTileInfo[tilePos];
             // TODO:如果墙壁在方块后面，则会爆方块的itemDrop
-            sourceTile = info.sourceTile; 
+            sourceTile = info.sourceTile;
             sourceBiome = info.sourceBiome;
         }
         else

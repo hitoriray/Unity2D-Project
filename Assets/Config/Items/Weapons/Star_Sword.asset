@@ -29,7 +29,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileSpeed: 10
   projectileLifetime: 5
-  attackSound: {fileID: 0}
+  attackSound: {fileID: 8300000, guid: 27946b1d59710dd4eb2c695252e550eb, type: 3}
   hitSound: {fileID: 0}
   attackEffect: {fileID: 0}
   hitEffect: {fileID: 0}
@@ -42,3 +42,8 @@ MonoBehaviour:
   numberOfStarsPerAttack: 1
   starSpawnVerticalOffset: 10
   starTargetRandomRadius: 1
+  starSpecificFallSound: {fileID: 8300000, guid: 382a40ba5cb751744a6e8ae79ba1c82f, type: 3}
+  starCreatesLight: 1
+  starLightIntensity: 0.8
+  starLightRadius: 2
+  starLightDuration: 0.5

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: SnowDay
+  m_EditorClassIdentifier: Assembly-CSharp:AmbianceSystem:AmbianceProfile
+  profileName: SnowDay
+  biome: 4
+  layer: 0
+  timeOfDay: 1
+  backgroundImage: {fileID: 21300000, guid: 3180cd80a781ed8468d7b73b3a4f03a8, type: 3}
+  backgroundMusic: {fileID: 8300000, guid: 8fc3b622fa01cf74a968d928cc3b9263, type: 3}
+  imageFadeDuration: 1
+  musicFadeDuration: 2
+  musicVolume: 1

@@ -63,7 +63,7 @@ public static class FeatureGenerator
         }
         else
         {
-            Debug.LogError("top index out of bound: " + topIndex + (baldness ? 3 : 0));
+            Debug.LogWarning("top index out of bound: " + (topIndex + (baldness ? 3 : 0)));
         }
     }
 

@@ -133,6 +133,20 @@ public class Weapon : ScriptableObject
     [Tooltip("星星最终目标点在鼠标指针周围的随机半径")]
     [Range(0f, 5f)]
     public float starTargetRandomRadius = 1f;
+    [Tooltip("（星怒武器专属）星星开始降落时播放的音效")]
+    public AudioClip starSpecificFallSound;
+    [Header("星怒光照效果")]
+    [Tooltip("星星是否产生临时光照")]
+    public bool starCreatesLight = true;
+    [Tooltip("星星光照强度")]
+    [Range(0.1f, 1.5f)]
+    public float starLightIntensity = 0.8f;
+    [Tooltip("星星光照半径（格子数）")]
+    [Range(1, 10)]
+    public int starLightRadius = 5;
+    [Tooltip("星星单次脉冲光照的持续时间（秒）")]
+    [Range(0.1f, 5f)]
+    public float starLightDuration = 1.0f;
     #endregion
     
     #region 运行时属性（只读）

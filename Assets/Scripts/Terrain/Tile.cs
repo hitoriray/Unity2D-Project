@@ -15,4 +15,10 @@ public class Tile : ScriptableObject
     public Sprite itemSprite;
 
     public bool inBackground = false;
+
+    public static bool IsOre(TileType tileType)
+    {
+        return tileType == TileType.Copper || tileType == TileType.Iron || tileType == TileType.Gold ||
+               tileType == TileType.Ruby || tileType == TileType.Emerald || tileType == TileType.Sapphire;
+    }
 }

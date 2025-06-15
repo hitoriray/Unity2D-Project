@@ -25,9 +25,18 @@ namespace Combat.Weapons // 建议添加命名空间
         private DamageInfo damageInfo;
         private float currentLifetime;
         private Rigidbody2D rb;
-        // private int remainingPierceCount; // 不再通过此变量控制销毁，但保留概念用于防止重复攻击
-        private ObjectPool myPool; // 新增：用于存储对象池的引用
-        private List<int> hitEnemyInstanceIDs; // 用于跟踪已击中的敌人实例ID
+        private ObjectPool myPool;
+        private List<int> hitEnemyInstanceIDs;
+
+        // 光照相关参数
+        private TerrainGeneration terrainGenRef;
+        private bool createsLight;
+        private float lightIntensity;
+        private int lightRadius;
+        private float lightDuration;
+        // private float lightPulseInterval = 0.2f; // 移除：不再使用固定时间间隔
+        // private float timeSinceLastLightPulse = 0f; // 移除
+        private Vector2Int lastLitGridPosition; // 新增：用于跟踪上一个被照亮的格子位置
 
         void Awake()
         {
@@ -44,23 +53,30 @@ namespace Combat.Weapons // 建议添加命名空间
         /// <summary>
         /// 初始化投射物。
         /// </summary>
-        /// <param name="target">星星的目标飞行位置。</param>
-        /// <param name="dmgInfo">此星星造成的伤害信息。</param>
-        /// <param name="pool">创建此对象的对象池。</param>
-        public void Initialize(Vector2 target, DamageInfo dmgInfo, ObjectPool pool)
+        public void Initialize(Vector2 target, DamageInfo dmgInfo, ObjectPool pool,
+                               TerrainGeneration terrainGen, bool createsLight, float lightIntensity,
+                               int lightRadius, float lightDuration)
         {
             this.targetPosition = target;
             this.damageInfo = dmgInfo;
-            this.myPool = pool; // 存储对象池引用
-            // this.remainingPierceCount = dmgInfo.pierceCount; // 不再需要基于此销毁
+            this.myPool = pool;
             this.currentLifetime = 0f;
+
+            this.terrainGenRef = terrainGen;
+            this.createsLight = createsLight;
+            this.lightIntensity = lightIntensity;
+            this.lightRadius = lightRadius;
+            this.lightDuration = lightDuration;
+            // this.timeSinceLastLightPulse = 0f; // 移除
+            this.lastLitGridPosition = new Vector2Int(int.MinValue, int.MinValue); // 初始化为一个无效位置
+
             if (hitEnemyInstanceIDs == null)
             {
                 hitEnemyInstanceIDs = new List<int>();
             }
             else
             {
-                hitEnemyInstanceIDs.Clear(); // 重置已击中列表
+                hitEnemyInstanceIDs.Clear();
             }
 
             // 使星星朝向目标方向 (视觉调整)
@@ -81,6 +97,7 @@ namespace Combat.Weapons // 建议添加命名空间
         void Update()
         {
             currentLifetime += Time.deltaTime;
+            // timeSinceLastLightPulse += Time.deltaTime; // 移除
 
             if (currentLifetime > lifetime)
             {
@@ -88,10 +105,28 @@ namespace Combat.Weapons // 建议添加命名空间
                 return;
             }
 
+            Vector2 previousPosition = transform.position; // 记录移动前的位置
             // 使用Transform直接移动 (如果Rigidbody是Kinematic或者没有Rigidbody)
             if (rb == null || rb.isKinematic)
             {
                 transform.position = Vector2.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+            }
+
+            // 处理光照：当星星移动到新的格子时触发
+            if (createsLight && terrainGenRef != null)
+            {
+                Vector2Int currentGridPosition = new Vector2Int(
+                    Mathf.RoundToInt(transform.position.x - 0.5f),
+                    Mathf.RoundToInt(transform.position.y - 0.5f)
+                );
+
+                // 只有当星星移动到新的格子，或者这是第一次（lastLitGridPosition是初始无效值）
+                if (currentGridPosition != lastLitGridPosition)
+                {
+                    LightingManager.PulseTemporaryLight(this, terrainGenRef, currentGridPosition.x, currentGridPosition.y, lightIntensity, lightRadius, lightDuration);
+                    // Debug.Log($"[StarProjectile '{gameObject.name}'] Pulsing light at new grid ({currentGridPosition.x},{currentGridPosition.y})");
+                    lastLitGridPosition = currentGridPosition;
+                }
             }
 
             float distanceToTarget = Vector2.Distance(transform.position, targetPosition);

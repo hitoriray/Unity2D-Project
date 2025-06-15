@@ -1,9 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Combat.Weapons; // 新增：为了能引用 StarProjectile
 using Utility;        // 新增：为了能引用 ObjectPool
+// SoundEffectManager 在全局命名空间，不需要额外 using
 
 public class PlayerController : MonoBehaviour
 {
@@ -12,6 +11,13 @@ public class PlayerController : MonoBehaviour
     public TerrainGeneration terrainGen;
 
     public GameObject weapon;
+
+    public AudioClip[] digAudios; // 已有的挖掘音效数组
+    [Header("Audio")]
+    [Tooltip("角色挥剑或攻击时的音效")]
+    public AudioClip swordSwingSound;
+    // [Tooltip("星星开始降落时的音效")] // 下面这行将被移除，音效移至Weapon.cs
+    // public AudioClip starFallSound;
 
     #region 背包相关的变量
 
@@ -281,18 +287,30 @@ public class PlayerController : MonoBehaviour
         TileType tileType = terrainGen.GetTileType(x, y);
         if (tileType == TileType.Air || tileType == TileType.Wall)
         {
-            terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
-            // 放置方块后移除该位置的光照
-            LightingManager.RemoveLightSource(terrainGen, x, y);
-            --selectedItem.quantity;
+            bool succesed = terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+            if (succesed)
+            {
+                if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
+                    SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
+                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
+                
+                LightingManager.RemoveLightSource(terrainGen, x, y);
+                --selectedItem.quantity;
+            }
         }
         else if (tileType == TileType.Flower)
         {
             terrainGen.RemoveTile(x, y, TileType.Dirt);
-            terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
-            // 放置方块后移除该位置的光照
-            LightingManager.RemoveLightSource(terrainGen, x, y);
-            --selectedItem.quantity;
+            bool succesed = terrainGen.PlaceTile(x, y, defaultTile, itemTileType, "Ground", biomeName);
+            if (succesed)
+            {
+                if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
+                    SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
+                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
+                
+                LightingManager.RemoveLightSource(terrainGen, x, y);
+                --selectedItem.quantity;
+            }
         }
         inventory.UpdateInventoryUI();
         if (selectedItem.quantity == 0)
@@ -320,10 +338,16 @@ public class PlayerController : MonoBehaviour
 
         if (terrainGen.GetTileType(x, y) != TileType.Wall)
         {
-            terrainGen.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall", biomeName);
-            // 放置背景墙后移除该位置的光照
-            LightingManager.RemoveLightSource(terrainGen, x, y);
-            --selectedItem.quantity;
+            bool succesed = terrainGen.PlaceTile(x, y, defaultWallTile, TileType.Wall, "Wall", biomeName);
+            if (succesed)
+            {
+                if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
+                    SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
+                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
+                
+                LightingManager.RemoveLightSource(terrainGen, x, y);
+                --selectedItem.quantity;
+            }
         }
 
         inventory.UpdateInventoryUI();
@@ -344,13 +368,29 @@ public class PlayerController : MonoBehaviour
         if (selectedItem != null && selectedItem.itemType == ItemType.Tool)
         {
             // 移除方块
+            bool succesed = false;
             if (selectedItem.toolType == ToolType.PickAxe)
-                terrainGen.RemoveTile(pos.x, pos.y, TileType.Dirt);
+            {
+                succesed = terrainGen.RemoveTile(pos.x, pos.y, TileType.Dirt);
+            }
             else if (selectedItem.toolType == ToolType.Axe)
-                terrainGen.RemoveTile(pos.x, pos.y, TileType.Tree);
+            {
+                succesed = terrainGen.RemoveTile(pos.x, pos.y, TileType.Tree);
+            }
             // 移除墙
             else if (selectedItem.toolType == ToolType.Hammer)
-                terrainGen.RemoveTile(pos.x, pos.y, TileType.Wall);
+            {
+                succesed = terrainGen.RemoveTile(pos.x, pos.y, TileType.Wall); // Hammer removal might not need 'succesed' check if it always works
+                // Hammer sound is played regardless of RemoveTile success for walls, as it's an action sound.
+                if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
+                    SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
+                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
+            }
+            if (succesed && selectedItem.toolType != ToolType.Hammer) { // Avoid double sound for hammer
+                if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
+                    SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
+                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
+            }
         }
 
     }
@@ -384,7 +424,6 @@ public class PlayerController : MonoBehaviour
 
     private void HandleActionInput()
     {
-        // 检查是否正在拖拽库存物品
         if (InventorySlotUI.isDragging)
         {
             return;
@@ -581,6 +620,14 @@ public class PlayerController : MonoBehaviour
                 else
                     spumPrefabs.PlayAnimation(attackAnim);
 
+                // 播放挥剑音效
+                if (swordSwingSound != null)
+                {
+                    if (SoundEffectManager.Instance != null)
+                        SoundEffectManager.Instance.PlaySoundAtPoint(swordSwingSound, transform.position);
+                    else AudioSource.PlayClipAtPoint(swordSwingSound, transform.position); // Fallback
+                }
+
                 // 如果是星怒，在播放攻击动画的同时（或紧随其后）生成星星
                 if (selectedItem != null && selectedItem.weapon != null && selectedItem.weapon.isStarfuryWeapon)
                 {
@@ -594,6 +641,20 @@ public class PlayerController : MonoBehaviour
                     spumPrefabs.PlayAnimation("6_Mining_Run");
                 else
                     spumPrefabs.PlayAnimation("6_Mining_Idle");
+
+                // 如果是使用工具挖掘 (isMining)，播放挥舞音效 (swordSwingSound)
+                if (isMining && selectedItem != null && selectedItem.itemType == ItemType.Tool)
+                {
+                    if (swordSwingSound != null)
+                    {
+                        if (SoundEffectManager.Instance != null)
+                            SoundEffectManager.Instance.PlaySoundAtPoint(swordSwingSound, transform.position);
+                        else AudioSource.PlayClipAtPoint(swordSwingSound, transform.position); // Fallback
+                    }
+                }
+                
+                // 挖掘或放置的特定音效 (digAudios) 将在 PlacingTile, PlacingWall, RemovingTile 方法中
+                // 成功执行操作时播放，此处不再重复播放以避免每帧/每动画周期播放。
             }
 
             // 根据动作类型使用不同的等待时间
@@ -854,6 +915,14 @@ public class PlayerController : MonoBehaviour
             starInstance.transform.rotation = Quaternion.identity;
             starInstance.SetActive(true);
 
+            // 在星星设置好位置并激活后，播放武器专属的星星降落音效
+            if (starfuryWeapon.starSpecificFallSound != null)
+            {
+                if (SoundEffectManager.Instance != null)
+                    SoundEffectManager.Instance.PlaySoundAtPoint(starfuryWeapon.starSpecificFallSound, spawnPos);
+                else AudioSource.PlayClipAtPoint(starfuryWeapon.starSpecificFallSound, spawnPos); // Fallback
+            }
+
             StarProjectile starProjectile = starInstance.GetComponent<StarProjectile>();
 
             if (starProjectile != null)
@@ -862,7 +931,16 @@ public class PlayerController : MonoBehaviour
                 // hitDirection 应该是从生成点到最终目标点的方向
                 // 星星的 Initialize 方法接收的是最终的飞行目标点 (projectileFinalTargetPos)
                 DamageInfo damageInfo = starfuryWeapon.CreateDamageInfo(gameObject, aimThroughPoint, (projectileFinalTargetPos - spawnPos).normalized);
-                starProjectile.Initialize(projectileFinalTargetPos, damageInfo, starProjectilePool);
+                starProjectile.Initialize(
+                    projectileFinalTargetPos,
+                    damageInfo,
+                    starProjectilePool,
+                    terrainGen, // 传递 TerrainGeneration 引用
+                    starfuryWeapon.starCreatesLight,
+                    starfuryWeapon.starLightIntensity,
+                    starfuryWeapon.starLightRadius,
+                    starfuryWeapon.starLightDuration
+                );
             }
             else
             {

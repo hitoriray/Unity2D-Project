@@ -142,4 +142,4 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   hitEffectPrefab: {fileID: 0}
-  hitSound: {fileID: 0}
+  hitSound: {fileID: 8300000, guid: 27946b1d59710dd4eb2c695252e550eb, type: 3}
