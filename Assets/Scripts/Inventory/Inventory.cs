@@ -26,10 +26,8 @@ public class Inventory : MonoBehaviour
 
     void Awake()
     {
-        // Initialize the single, main inventory container
         inventory = new ItemContainer(inventoryWidth, inventoryHeight);
 
-        // Link the main inventory data to the main inventory UI
         if (inventoryUI != null)
         {
             inventory.OnItemsChanged += inventoryUI.UpdateUI;
@@ -62,7 +60,6 @@ public class Inventory : MonoBehaviour
             }
         }
 
-        // Add starting items if they have been assigned in the editor
         GiveStartingItems();
     }
 
@@ -86,7 +83,7 @@ public class Inventory : MonoBehaviour
     // 这些方法现在是 Inventory 特有的，因为它们与玩家的位置有关
     private Vector3 GetPlayerDropPosition()
     {
-        return transform.position + Vector3.right; // 示例位置
+        return transform.position + Vector3.up * 10f + Vector3.right * 10f; // 示例位置
     }
 
     private void CreateItemDrop(Item item, Vector3 position)

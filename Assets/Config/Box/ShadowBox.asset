@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ccbaf72d9236744881d531839320e8, type: 3}
+  m_Name: ShadowBox
+  m_EditorClassIdentifier: 
+  BoxName: "\u6697\u5F71\u7BB1"
+  openAnimationSpeed: 0.15
+  bottomLeftSprites:
+  - {fileID: -310028445, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: -356679784, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: 490659973, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  bottomRightSprites:
+  - {fileID: 1245051716, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: -276457852, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: 1911188082, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  topLeftSprites:
+  - {fileID: -2143224900, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: -399051742, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: -1789401628, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  topRightSprites:
+  - {fileID: -114066045, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: -763171154, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}
+  - {fileID: 1509255040, guid: 0ec4cdb446258104487c06b071a3dff7, type: 3}

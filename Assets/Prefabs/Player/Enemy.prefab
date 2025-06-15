@@ -480,9 +480,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61c01139c5f68ac4f8308779dde4a968, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 10000
   currentHealth: 0
-  hurtSound: {fileID: 0}
+  hurtSound:
+  - {fileID: 8300000, guid: 080f942f64daa9c49be208122375c0ac, type: 3}
+  - {fileID: 8300000, guid: 3699f532fc46d4d47a426ef99febae65, type: 3}
+  - {fileID: 8300000, guid: f62142ba5edbb1d468c6ed281a585f33, type: 3}
   deathEffectPrefab: {fileID: 0}
 --- !u!1 &4487255636983126593
 GameObject:

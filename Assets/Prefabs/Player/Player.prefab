@@ -3879,6 +3879,7 @@ GameObject:
   - component: {fileID: 4292723228715428875}
   - component: {fileID: 3456888401436643649}
   - component: {fileID: 981529729}
+  - component: {fileID: 981529730}
   m_Layer: 6
   m_Name: PlayerRoot
   m_TagString: Player
@@ -4057,6 +4058,11 @@ MonoBehaviour:
     m_Bits: 55
   terrainGen: {fileID: 0}
   weapon: {fileID: 7115978679671716916}
+  digAudios:
+  - {fileID: 8300000, guid: b750417e419d8f64c80d51a8b7eeb939, type: 3}
+  - {fileID: 8300000, guid: 752018fe4581aa941ad792b393bff221, type: 3}
+  - {fileID: 8300000, guid: b9480c2a41845de46a292666e19388ca, type: 3}
+  swordSwingSound: {fileID: 8300000, guid: 27946b1d59710dd4eb2c695252e550eb, type: 3}
   inventory: {fileID: 3456888401436643649}
   hotbarSelector: {fileID: 0}
   selectedItem:
@@ -4068,9 +4074,11 @@ MonoBehaviour:
     tileType: 0
     sourceBiome: 
     tool: {fileID: 0}
+    weapon: {fileID: 0}
     itemType: 0
     toolType: 0
     quantity: 1
+  starProjectilePool: {fileID: 0}
   miningRange: 5
   basePickupRange: 5
   currentPickupRange: 5
@@ -4094,20 +4102,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 543cb441c65c4b3498b94fdaecafa1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PickupAxe: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
-  Axe: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
-  Hammer: {fileID: 11400000, guid: 29635c85cc244bc41897b0eac93d9a64, type: 2}
-  inventoryOffset: {x: 25, y: -180}
-  hotbarOffset: {x: 25, y: -20}
-  multiplier: {x: 40, y: 40}
+  inventory:
+    width: 8
+    height: 5
   inventoryUI: {fileID: 0}
   hotbarUI: {fileID: 0}
-  inventorySlotPrefab: {fileID: 1441472296053433960, guid: 61ec2c7eccd2f174fbbf4220ede1bd58, type: 3}
-  hotbarSlotPrefab: {fileID: 1441472296053433960, guid: d9fe191df57447444945c7175fd341a9, type: 3}
-  itemDropPrefab: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
+  boxUI: {fileID: 0}
   inventoryWidth: 8
   inventoryHeight: 5
-  hotbarUISlots: []
+  hotbarWidth: 8
+  itemDropPrefab: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
+  starSword: {fileID: 11400000, guid: 6865400b4b794944c80aa92a03af89ed, type: 2}
+  startingAxe: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
+  startingPickaxe: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
+  startingHammer: {fileID: 11400000, guid: 29635c85cc244bc41897b0eac93d9a64, type: 2}
 --- !u!114 &981529729
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4121,7 +4129,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableDebugLogs: 1
-  showSlotStates: 1
+  showSlotStatesOnGUI: 1
+--- !u!114 &981529730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8572255946325881019}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ede35300094f7642be8b0815f0bd0da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testWeapon: {fileID: 11400000, guid: 6865400b4b794944c80aa92a03af89ed, type: 2}
+  testTool: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
+  weaponItemInfo: 
+  stackingTestInfo: 
 --- !u!1 &9076336075174239352
 GameObject:
   m_ObjectHideFlags: 0
