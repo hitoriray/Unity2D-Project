@@ -65,6 +65,48 @@ public static class LightingManager
     }
 
     /// <summary>
+    /// 当一个方块被放置或破坏时，更新其光照。
+    /// 这是处理方块变化时光照的主要入口点。
+    /// </summary>
+    public static void UpdateBlockLighting(TerrainGeneration terrainGen, int x, int y)
+    {
+        // 首先，根据天空光设置方块的基础亮度
+        if (SkyLightManager.IsPositionSkyLit(x, y))
+        {
+            terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
+        }
+        else
+        {
+            terrainGen.worldTilesMap.SetPixel(x, y, Color.black);
+        }
+
+        // 然后，从邻近的更亮的方块传播光线到这个方块
+        for (int dx = -1; dx <= 1; ++dx)
+        {
+            for (int dy = -1; dy <= 1; ++dy)
+            {
+                if (dx == 0 && dy == 0) continue;
+
+                int nx = x + dx;
+                int ny = y + dy;
+
+                if (nx < 0 || nx >= terrainGen.worldSize || ny < 0 || ny >= terrainGen.worldSize) continue;
+
+                // 如果邻居比当前方块亮，就从邻居那里开始重新传播光
+                if (terrainGen.worldTilesMap.GetPixel(nx, ny).r > terrainGen.worldTilesMap.GetPixel(x, y).r)
+                {
+                    float neighborIntensity = terrainGen.worldTilesMap.GetPixel(nx, ny).r;
+                    LightBlockInternal(terrainGen, nx, ny, neighborIntensity, 0, (int)terrainGen.lightRadius, true);
+                }
+            }
+        }
+
+        // 最后，移除当前位置可能存在的旧光照，并重新计算周围
+        RemoveLightSource(terrainGen, x, y);
+        terrainGen.worldTilesMap.Apply();
+    }
+
+    /// <summary>
     /// 立即更新光照（用于初始化等场景），使用地形的默认光照半径。
     /// </summary>
     public static void LightBlock(TerrainGeneration terrainGen, int x, int y, float intensity, int iteration)
@@ -149,15 +191,21 @@ public static class LightingManager
                 if (Vector2.Distance(new Vector2(x, y), new Vector2(ix, iy)) <= effectiveClearRadius)
                 {
                     Vector2Int currentPos = new Vector2Int(ix, iy);
-                    TileType currentTileType = terrainGen.GetTileType(ix, iy);
-                    if (currentTileType == TileType.Air && !terrainGen.IsWallAt(ix, iy))
+
+                    // 核心修改：在决定方块的"自然"光照状态时，优先考虑天空光
+                    if (SkyLightManager.IsPositionSkyLit(ix, iy))
                     {
-                        terrainGen.worldTilesMap.SetPixel(ix, iy, Color.white); // 纯空气恢复透光
+                        // 如果方块暴露在天空下，无论它是什么类型（空气、实体、背景墙），
+                        // 在移除人造光源后，它都应该恢复到最亮的白色。
+                        terrainGen.worldTilesMap.SetPixel(ix, iy, Color.white);
                     }
                     else
                     {
-                        terrainGen.worldTilesMap.SetPixel(ix, iy, Color.black); // 洞穴/实体恢复黑暗
+                        // 对于地下（不被天空光照射）的方块，使用旧的逻辑
+                        // 注意：即使是地下的纯空气，也应该先变黑，然后由周围的光源重新照亮
+                        terrainGen.worldTilesMap.SetPixel(ix, iy, Color.black);
                     }
+
                     // 确保添加到 unlitBlocks 列表中，以便后续的 relight 逻辑可以处理边界
                     if (!terrainGen.unlitBlocks.Contains(currentPos))
                     {
@@ -191,11 +239,11 @@ public static class LightingManager
         {
             float sourceIntensity = terrainGen.worldTilesMap.GetPixel(source.x, source.y).r;
             // 仅当邻近的源光照强度足够高时（表明它可能是一个持久光源），才进行重新光照。
-            // 并且使用一个非常小的迭代深度（例如1），以限制光线传播回洞穴。
             if (sourceIntensity > 0.25f)
             {
-                // 使用固定的最小迭代深度（例如1）进行重新传播，并且不应用墙壁增强。
-                LightBlockInternal(terrainGen, source.x, source.y, sourceIntensity, 0, 1, false);
+                // 【修正】使用地形的默认光照半径进行重新传播，而不是硬编码的 1。
+                // 这允许光线从侧面完全填充被遮挡的列。
+                LightBlockInternal(terrainGen, source.x, source.y, sourceIntensity, 0, (int)terrainGen.lightRadius, false);
             }
         }
 
@@ -229,18 +277,24 @@ public static class LightingManager
                     UnlightBlockInternal(terrainGen, nx, ny, originX, originY, maxUnlightRadius); // 传递 maxUnlightRadius
             }
         
-        TileType currentTileType = terrainGen.GetTileType(x,y);
-        if (currentTileType == TileType.Air && !terrainGen.IsWallAt(x, y)) // 如果是纯空气（没有背景墙）
+        // 核心修改：同样，在这里应用天空光逻辑
+        if (SkyLightManager.IsPositionSkyLit(x, y))
         {
-            // 对于纯空气块，移除光源时应该让它恢复到完全透光的状态，
-            // 以便能接收到全局光照或天空光。在您的系统中，Color.white 代表最大透光度/基础亮度。
+            // 天空光下的方块总是亮的
             terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
         }
-        else // 对于实体方块或有背景墙的空气（如洞穴）
+        else
         {
-            // 这些在移除特定光源后，应设为无光(Color.black)，
-            // 然后由 RemoveLightSource 中的 relight 逻辑尝试用周围光源重新照亮。
-            terrainGen.worldTilesMap.SetPixel(x, y, Color.black);
+            // 地下逻辑保持不变
+            TileType currentTileType = terrainGen.GetTileType(x,y);
+            if (currentTileType == TileType.Air && !terrainGen.IsWallAt(x, y))
+            {
+                terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
+            }
+            else 
+            {
+                terrainGen.worldTilesMap.SetPixel(x, y, Color.black);
+            }
         }
         terrainGen.unlitBlocks.Add(currentPos);
     }

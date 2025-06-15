@@ -300,7 +300,9 @@ public class PlayerController : MonoBehaviour
                     SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
                 else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
                 
-                LightingManager.RemoveLightSource(terrainGen, x, y);
+                // LightingManager.RemoveLightSource(terrainGen, x, y);
+                SkyLightManager.OnBlockChanged(x, terrainGen);
+                LightingManager.UpdateBlockLighting(terrainGen, x, y);
 
                 // Use the new method to decrease item quantity from the last row of the inventory
                 inventory.inventory.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1), 1);
@@ -334,7 +336,9 @@ public class PlayerController : MonoBehaviour
                     SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
                 else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
                 
-                LightingManager.RemoveLightSource(terrainGen, x, y);
+                // LightingManager.RemoveLightSource(terrainGen, x, y);
+                SkyLightManager.OnBlockChanged(x, terrainGen);
+                LightingManager.UpdateBlockLighting(terrainGen, x, y);
 
                 // Use the new method to decrease item quantity from the last row of the inventory
                 inventory.inventory.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1), 1);
@@ -374,8 +378,12 @@ public class PlayerController : MonoBehaviour
             if (succesed && selectedItem.toolType != ToolType.Hammer) { // Avoid double sound for hammer
                 if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
                     SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
-                else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
+                else if (digAudios != null && digAudios.Length > 0)
+                    AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
             }
+            // LightingManager.RemoveLightSource(terrainGen, x, y);
+            SkyLightManager.OnBlockChanged(pos.x, terrainGen);
+            LightingManager.UpdateBlockLighting(terrainGen, pos.x, pos.y);
         }
 
     }

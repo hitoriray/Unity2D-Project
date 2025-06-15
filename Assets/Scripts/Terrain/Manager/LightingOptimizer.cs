@@ -55,7 +55,7 @@ public class LightingOptimizer : MonoBehaviour
         {
             if (lightUpdatesThisFrame > 0)
             {
-                Debug.Log($"[光照性能] 光照更新: {lightUpdatesThisFrame}/秒, 总计: {totalLightUpdates}");
+                // Debug.Log($"[光照性能] 光照更新: {lightUpdatesThisFrame}/秒, 总计: {totalLightUpdates}");
             }
             
             lightUpdatesThisFrame = 0;

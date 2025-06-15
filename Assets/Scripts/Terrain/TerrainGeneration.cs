@@ -62,7 +62,7 @@ public class TerrainGeneration : MonoBehaviour
     #region 生命周期函数
     private void Start()
     {
-        // initialize light
+        // initialize light        
         worldTilesMap = new Texture2D(worldSize, worldSize);
         worldTilesMap.filterMode = FilterMode.Bilinear;
         lightShader.SetTexture("_ShadowTex", worldTilesMap);
@@ -90,6 +90,8 @@ public class TerrainGeneration : MonoBehaviour
 
         CreateChunks();
         GenerateTerrain();
+
+        SkyLightManager.Initialize(this);
 
         for (int x = 0; x < worldSize; ++x)
             for (int y = 0; y < worldSize; ++y)
@@ -528,7 +530,9 @@ public class TerrainGeneration : MonoBehaviour
                 GameObject.Destroy(tileObject);
                 worldTilesMap.SetPixel(x, y, Color.white);
                 // 使用队列机制更新光照，提升性能
-                LightingManager.QueueLightUpdate(this, x, y, 1f);
+                // LightingManager.QueueLightUpdate(this, x, y, 1f);
+                SkyLightManager.OnBlockChanged(x, this);
+                LightingManager.UpdateBlockLighting(this, x, y);
 
                 worldTilePosition.RemoveAt(index);
                 worldTileObjects.RemoveAt(index);
@@ -585,7 +589,9 @@ public class TerrainGeneration : MonoBehaviour
             GameObject.Destroy(wallObject);
             worldTilesMap.SetPixel(x, y, Color.white);
             // 使用队列机制更新光照，提升性能
-            LightingManager.QueueLightUpdate(this, x, y, 1f);
+            // LightingManager.QueueLightUpdate(this, x, y, 1f);
+            SkyLightManager.OnBlockChanged(x, this);
+            LightingManager.UpdateBlockLighting(this, x, y);
 
             worldWallPosition.RemoveAt(index);
             worldWallObjects.RemoveAt(index);
