@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f54c1632f7b64341ad99967c49b8f60, type: 3}
-  m_Name: Star_Sword
+  m_Name: Sword_Star
   m_EditorClassIdentifier: 
   weaponName: "\u661F\u6012"
   weaponSprite: {fileID: 21300000, guid: f9203f4d939f9de4195e0baa6fb381b7, type: 3}
   weaponType: 0
   description: "\u505A\u6211\u7684\u661F\u6012\u5427~"
-  damage: 69
+  damage: 72
   attackSpeed: 0.5
   range: 2.5
-  criticalChance: 0.3
+  criticalChance: 0.5
   criticalMultiplier: 2
   damageType: 0
-  knockbackForce: 2
-  pierceCount: 0
+  knockbackForce: 6.5
+  pierceCount: 10
   ammoConsumption: 1
   manaCost: 0
   projectilePrefab: {fileID: 0}
@@ -36,7 +36,7 @@ MonoBehaviour:
   trailEffect: {fileID: 0}
   attackAnimationName: 2_Attack_Normal
   attackAnimationDuration: 0.5
-  canMoveWhileAttacking: 0
+  canMoveWhileAttacking: 1
   isStarfuryWeapon: 1
   starProjectilePrefab: {fileID: 4797515371780817052, guid: be8c84fffd33c644caa70a15d7bef768, type: 3}
   numberOfStarsPerAttack: 1

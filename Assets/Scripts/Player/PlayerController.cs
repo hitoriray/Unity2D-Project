@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Combat.Weapons; // 新增：为了能引用 StarProjectile
 using Utility;        // 新增：为了能引用 ObjectPool
@@ -6,6 +7,9 @@ using Utility;        // 新增：为了能引用 ObjectPool
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("依赖")]
+    [SerializeField] private CraftingUI craftingUI; // 引用UI控制器
+
     public LayerMask layerMask;
 
     public TerrainGeneration terrainGen;
@@ -125,6 +129,12 @@ public class PlayerController : MonoBehaviour
             hotbarShowing = !hotbarShowing;
         }
 
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            // 这里我们直接开关UI，而不是在CraftingUI里再用一个按键控制
+            craftingUI.gameObject.SetActive(!craftingUI.gameObject.activeSelf);
+        }
+
         // ESC键关闭库存界面
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -138,6 +148,11 @@ public class PlayerController : MonoBehaviour
 
                 inventoryShowing = false;
                 hotbarShowing = true;
+            }
+
+            if (craftingUI.gameObject.activeSelf)
+            {
+                craftingUI.gameObject.SetActive(!craftingUI.gameObject.activeSelf);
             }
         }
 
@@ -627,6 +642,10 @@ public class PlayerController : MonoBehaviour
                 {
                     PerformStarfuryAttack();
                 }
+                else if (selectedItem != null && selectedItem.weapon != null && selectedItem.weapon.isZenith)
+                {
+                    StartCoroutine(PerformZenithAttack());
+                }
             }
             else if (isMining || isPlacing || isPlacingWall)
             {
@@ -797,33 +816,20 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Vector2 direction = transform.localScale.x < 0 ? Vector2.right : Vector2.left;
-
-        // 绘制脚部检测射线（红色）
         Gizmos.color = Color.red;
-        Vector3 footPos = transform.position + Vector3.up * 0.3f;
-        Gizmos.DrawRay(footPos, direction * 1.2f);
+        Gizmos.DrawRay(transform.position + Vector3.up * 0.3f, direction * 1.2f);
 
-        // 绘制头部检测射线（蓝色）
         Gizmos.color = Color.blue;
-        Vector3 headPos = transform.position + Vector3.up * 1.5f;
-        Gizmos.DrawRay(headPos, direction * 1.2f);
+        Gizmos.DrawRay(transform.position + Vector3.up * 1.5f, direction * 1.2f);
 
-        // 绘制边缘检测射线（绿色）
-        Gizmos.color = Color.green;
-        Vector3 leftFootPos = transform.position + Vector3.left * 0.4f - Vector3.down * 0.1f;
-        Vector3 rightFootPos = transform.position + Vector3.right * 0.4f - Vector3.down * 0.1f;
-        Gizmos.DrawRay(leftFootPos, Vector3.down * 0.5f);
-        Gizmos.DrawRay(rightFootPos, Vector3.down * 0.5f);
-
-        // 绘制起点
+        // 可视化挖矿范围
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(footPos, 0.1f);
-        Gizmos.DrawSphere(headPos, 0.1f);
-        Gizmos.DrawSphere(leftFootPos, 0.05f);
-        Gizmos.DrawSphere(rightFootPos, 0.05f);
+        Gizmos.DrawWireSphere(transform.position, miningRange);
 
-        Gizmos.color = Color.white;
-        Gizmos.DrawSphere(transform.position, 0.3f);
+        // 可视化拾取范围
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, currentPickupRange);
+
     }
 
     #endregion
@@ -855,7 +861,6 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region 星怒攻击实现
-    // 将 PerformStarfuryAttack 方法移到 PlayerController 类的内部
     void PerformStarfuryAttack()
     {
         if (selectedItem == null) { Debug.LogError("[PlayerController] PerformStarfuryAttack: selectedItem is NULL. Aborting."); return; }
@@ -959,5 +964,87 @@ public class PlayerController : MonoBehaviour
         // if (starfuryWeapon.RequiresMana) { /* 扣除魔法值 */ }
         // if (starfuryWeapon.RequiresAmmo) { /* 扣除弹药 */ }
     }
+
+    private IEnumerator PerformZenithAttack()
+    {
+        var weaponData = selectedItem?.weapon;
+        if (weaponData == null || !weaponData.isZenith) yield break;
+
+        if (weaponData.phantomSwordPrefab == null)
+        {
+            Debug.LogError($"[PlayerController] Zenith weapon '{weaponData.weaponName}' is missing phantomSwordPrefab.");
+            yield break;
+        }
+
+        // --- 全新的幻影剑列表生成逻辑 ---
+        List<SwordAppearance> swordsToSpawn = new List<SwordAppearance>();
+        
+        // 1. 创建本体剑的外观实例 (假设本体剑的sprite就是武器图标)
+        SwordAppearance baseSwordAppearance = new SwordAppearance { swordSprite = weaponData.weaponSprite, trailColor = weaponData.baseSwordTrailColor }; // 使用新的可配置颜色
+
+        // 2. 添加指定数量的本体剑
+        for (int i = 0; i < weaponData.baseSwordCount; i++)
+        {
+            swordsToSpawn.Add(baseSwordAppearance);
+        }
+
+        // 3. 添加其他剑，填满剩余的位置
+        int remainingSwords = weaponData.totalSwordsPerSwing - weaponData.baseSwordCount;
+        if (remainingSwords > 0 && weaponData.swordAppearances != null && weaponData.swordAppearances.Count > 0)
+        {
+            for (int i = 0; i < remainingSwords; i++)
+            {
+                // 循环使用外观列表里的剑
+                swordsToSpawn.Add(weaponData.swordAppearances[i % weaponData.swordAppearances.Count]);
+            }
+        }
+        
+        // 打乱列表，让剑的出现顺序是随机的
+        swordsToSpawn.Shuffle();
+
+
+        Vector2 targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        for (int i = 0; i < swordsToSpawn.Count; i++)
+        {
+            // 在玩家周围随机一个位置生成幻影剑的起点 (这个可以去掉，如果都想从一个点出来的话)
+            Vector2 spawnPos = (Vector2)transform.position + Random.insideUnitCircle * 1.5f; 
+            
+            GameObject swordGO = Instantiate(weaponData.phantomSwordPrefab, spawnPos, Quaternion.identity);
+            
+            if (swordGO.TryGetComponent<Terraira.Combat.PhantomSword>(out var phantomSword))
+            {
+                // 使用新的Initialize方法
+                phantomSword.Initialize(weaponData.damage, transform, targetPos, swordsToSpawn[i]);
+            }
+            else
+            {
+                 Debug.LogError($"[PlayerController] Phantom Sword Prefab is missing the PhantomSword script.");
+                 Destroy(swordGO);
+            }
+            
+            // 短暂的延迟，让剑一把接一把地出现
+            yield return new WaitForSeconds(0.03f);
+        }
+    }
     #endregion
+}
+
+// 在 PlayerController 类的外面，或者一个专门的工具类文件中，添加这个扩展方法
+public static class ListExtensions
+{
+    private static System.Random rng = new System.Random();
+
+    public static void Shuffle<T>(this IList<T> list)
+    {
+        int n = list.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1);
+            T value = list[k];
+            list[k] = list[n];
+            list[n] = value;
+        }
+    }
 }

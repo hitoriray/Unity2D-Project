@@ -6,6 +6,7 @@ public class Item
     [Header("基本信息")]
     public string itemName;
     public string description;
+    public string specificDescription;
     public Sprite itemSprite;
     public int maxStackSize;
     
@@ -41,6 +42,8 @@ public class Item
         tool = _tool;
         itemName = _tool.toolName;
         itemSprite = _tool.toolSprite;
+        description = _tool.description;
+        specificDescription = _tool.specificDescription;
         itemType = ItemType.Tool;
         toolType = _tool.toolType;
         maxStackSize = 1;
@@ -52,6 +55,8 @@ public class Item
         weapon = _weapon;
         itemName = _weapon.weaponName;
         itemSprite = _weapon.weaponSprite;
+        description = _weapon.description;
+        specificDescription = _weapon.specificDescription;
         itemType = ItemType.Weapon;
         maxStackSize = 1;  // 武器不可堆叠
         quantity = 1;

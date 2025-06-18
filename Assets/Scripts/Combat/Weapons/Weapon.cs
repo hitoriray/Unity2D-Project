@@ -1,4 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
+
+/// <summary>
+/// 定义了单把幻影剑的外观，包括Sprite和轨迹颜色
+/// </summary>
+[System.Serializable]
+public class SwordAppearance
+{
+    public Sprite swordSprite;
+    public Color trailColor = Color.white;
+}
 
 /// <summary>
 /// 武器数据资产 - 使用ScriptableObject模式存储武器配置
@@ -22,6 +33,10 @@ public class Weapon : ScriptableObject
     [Tooltip("武器描述")]
     [TextArea(2, 4)]
     public string description;
+
+    [Tooltip("武器特殊描述")]
+    [TextArea(2, 4)]
+    public string specificDescription;
     #endregion
     
     #region 战斗属性
@@ -147,6 +162,33 @@ public class Weapon : ScriptableObject
     [Tooltip("星星单次脉冲光照的持续时间（秒）")]
     [Range(0.1f, 5f)]
     public float starLightDuration = 1.0f;
+    #endregion
+    
+    #region 天顶剑武器专属配置
+    [Header("天顶剑武器配置")]
+    [Tooltip("是否为天顶剑")]
+    public bool isZenith = false;
+    
+    [Tooltip("天顶剑的幻影剑预制体")]
+    public GameObject phantomSwordPrefab;
+
+    [Tooltip("构成天顶剑的所有幻影剑的Sprite列表")]
+    [System.Obsolete("这个字段已被新的 `swordAppearances` 列表取代。")]
+    public Sprite[] zenithSwordSprites;
+
+    [Tooltip("每次挥舞产生的总剑数")]
+    [Range(1, 50)]
+    public int totalSwordsPerSwing = 15;
+    
+    [Tooltip("每次挥舞中，本体剑（天顶剑自己）的数量")]
+    [Range(0, 50)]
+    public int baseSwordCount = 10;
+
+    [Tooltip("本体剑（天顶剑自己）的轨迹颜色")]
+    public Color baseSwordTrailColor = Color.cyan;
+
+    [Tooltip("构成天顶剑的其他剑的外观列表（Sprite 和轨迹颜色）")]
+    public List<SwordAppearance> swordAppearances;
     #endregion
     
     #region 运行时属性（只读）

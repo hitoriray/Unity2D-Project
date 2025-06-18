@@ -19,6 +19,7 @@ public class Inventory : MonoBehaviour
     public GameObject itemDropPrefab;
 
     [Header("初始物品")]
+    public Weapon zenithSword;
     public Weapon starSword;
     public Tool startingAxe;
     public Tool startingPickaxe;
@@ -136,6 +137,8 @@ public class Inventory : MonoBehaviour
 
     private void GiveStartingItems()
     {
+        if (zenithSword != null)
+            inventory.AddItem(new Item(zenithSword));
         if (starSword != null)
             inventory.AddItem(new Item(starSword));
         if (startingPickaxe != null)

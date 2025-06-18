@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f54c1632f7b64341ad99967c49b8f60, type: 3}
+  m_Name: Sword_Zenith
+  m_EditorClassIdentifier: 
+  weaponName: "\u5929\u9876\u5251"
+  weaponSprite: {fileID: 21300000, guid: eadd57c07f58dad4fa81cba837dcbd0f, type: 3}
+  weaponType: 0
+  description: "\u5929\u9876\u5251\u662F\u4E00\u628A\u56F0\u96BE\u6A21\u5F0F\uFF0C\u6708\u4EAE\u9886\u4E3B\u540E\u7684\u8FD1\u6218\u6B66\u5668\uFF0C\u7531\u5728\u6574\u4E2A\u6E38\u620F\u8FDB\u7A0B\u4E2D\u83B7\u5F97\u7684\u5404\u79CD\u5251\u5236\u4F5C\u3002"
+  specificDescription: "\u6BCF\u6B21\u6325\u821E\u4E2D\u751F\u6210\u7684\u7B2C\u4E00\u628A\u5251\u5FC5\u5B9A\u662F\u5929\u9876\u5251\u5C04\u5F39\uFF0C\u4F1A\u7559\u4E0B\u6D45\u7EFF\u8272\u7684\u8F68\u8FF9\u3002\u6BCF\u628A\u751F\u6210\u7684\u5251\u90FD\u4F1A\u6709\u4E00\u79CD\u72EC\u7279\u7684\u8F68\u8FF9\u989C\u8272\uFF0C\u8FD9\u4F1A\u751F\u6210\u5927\u91CF\u7684\u5149\u3002\r\n\u5929\u9876\u5251\u6700\u5927\u53EA\u80FD\u653B\u51FB\u5230\u7AD6\u76F4\u65B9\u5411
+    600 \u4E2A\u50CF\u7D20\uFF0C\u6C34\u5E73\u65B9\u5411 960 \u4E2A\u50CF\u7D20\u7684\u8303\u56F4\u3002\r\n\u8FD1\u6218\u901F\u5EA6\u7684\u589E\u52A0\u4F1A\u5F71\u54CD\u6BCF\u6B21\u4F7F\u7528\u51FA\u73B0\u7684\u5251\u7684\u6570\u91CF\uFF0C\u4F46\u4E0D\u4F1A\u5F71\u54CD\u6BCF\u79D2\u4E22\u51FA\u7684\u5251\u7684\u603B\u6570\u6216\u5251\u7684\u5C04\u5F39\u901F\u5EA6\u3002\u8F83\u9AD8\u7684\u8FD1\u6218\u901F\u5EA6\u4F1A\u4F7F\u5F97\u9664\u4E86\u5929\u9876\u5251\u4EE5\u5916\u7684\u5251\u7684\u51FA\u73B0\u6570\u91CF\u53D8\u5C11\uFF0C\u800C\u8F83\u4F4E\u7684\u8FD1\u6218\u901F\u5EA6\u4F1A\u4F7F\u66F4\u591A\u5251\u51FA\u73B0\u3002\u5728\u8FD1\u6218\u901F\u5EA6\u8DB3\u591F\u9AD8\u65F6\uFF0C\u5C31\u53EF\u4EE5\u53EA\u8BA9\u5929\u9876\u5251\u51FA\u73B0\u3002\u7136\u800C\uFF0C\u5929\u9876\u5251\u4F1A\u5931\u53BB\u8FFD\u8E2A\u654C\u602A\u7684\u80FD\u529B\uFF0C\u56E0\u4E3A\u5929\u9876\u5251\u5176\u81EA\u8EAB\u5E76\u4E0D\u80FD\u8FFD\u8E2A\u3002\r\n\u6BCF\u628A\u98DE\u5251\u6BCF\u79D2\u53EF\u51FB\u4E2D
+    8 \u6B21\uFF0C\u5E76\u4E14\u53EF\u4EE5\u51FB\u4E2D\u5355\u4E2A\u654C\u602A\u591A\u6B21\uFF0C\u8FD9\u53D6\u51B3\u4E8E\u5176\u5927\u5C0F\u4E0E\u4F4D\u7F6E\u3002\r\n\u98DE\u5251\u5728\u8FD4\u56DE\u65F6\u4E5F\u4F1A\u5BF9\u73A9\u5BB6\u8EAB\u540E\u9020\u6210\u4F24\u5BB3\u3002\r\n\u867D\u7136\u548C\u5176\u94DC\u5BF9\u5E94\u7269\u51E0\u4E4E\u4E00\u81F4\uFF0C\u9521\u77ED\u5251\u4E0D\u80FD\u88AB\u7528\u4E8E\u5236\u4F5C\u5929\u9876\u5251\u3002\u8FD9\u53EF\u80FD\u662F\u56E0\u4E3A\u94DC\u77ED\u5251\u662F\u6BCF\u4E2A\u73A9\u5BB6\uFF08\u65C5\u884C\u6A21\u5F0F\u4EBA\u7269\u9664\u5916\uFF09\u6240\u80FD\u83B7\u5F97\u7684\u7B2C\u4E00\u628A\u5251\u3002"
+  damage: 190
+  attackSpeed: 0.3
+  range: 2.5
+  criticalChance: 0.05
+  criticalMultiplier: 2
+  damageType: 0
+  knockbackForce: 2
+  pierceCount: 0
+  ammoConsumption: 1
+  manaCost: 0
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
+  projectileLifetime: 5
+  attackSound: {fileID: 8300000, guid: 826d4dcad6458954f8e5189cc3dbf46b, type: 3}
+  hitSound: {fileID: 0}
+  attackEffect: {fileID: 0}
+  hitEffect: {fileID: 0}
+  trailEffect: {fileID: 0}
+  attackAnimationName: 2_Attack_Normal
+  attackAnimationDuration: 0.5
+  canMoveWhileAttacking: 1
+  isStarfuryWeapon: 0
+  starProjectilePrefab: {fileID: 0}
+  numberOfStarsPerAttack: 1
+  starSpawnVerticalOffset: 10
+  starTargetRandomRadius: 1
+  starSpecificFallSound: {fileID: 0}
+  starCreatesLight: 1
+  starLightIntensity: 0.8
+  starLightRadius: 5
+  starLightDuration: 1
+  isZenith: 1
+  phantomSwordPrefab: {fileID: 1607163473319546902, guid: 1b423bd219811a648ac272de0c64a6ff, type: 3}
+  zenithSwordSprites:
+  - {fileID: 21300000, guid: 8b958c7fbe7ea284abeaf6df280032c7, type: 3}
+  - {fileID: 21300000, guid: e4c75f44ea0efa449bb95f2c8ed9b6dd, type: 3}
+  - {fileID: 21300000, guid: ccaa8412dcf863342b47c90069f47b24, type: 3}
+  - {fileID: 21300000, guid: f9203f4d939f9de4195e0baa6fb381b7, type: 3}
+  - {fileID: 21300000, guid: 18c53e2201c04c04aa52f62d6926c3d2, type: 3}
+  - {fileID: 21300000, guid: ad3b0dee341dc12499f5b47cba3b234f, type: 3}
+  - {fileID: 21300000, guid: 09106415ec9251943a55c967e9c6e5a2, type: 3}
+  - {fileID: 21300000, guid: e6098685c205d8e4c933d07b1742498f, type: 3}
+  - {fileID: 21300000, guid: 00d24e4cf12b4fc49879b12939c4e30c, type: 3}
+  - {fileID: 21300000, guid: d1e9060ac4d44ef46b1fa1053a9e4ccf, type: 3}
+  - {fileID: 21300000, guid: 844484cbbb9c19242b947de63fed0656, type: 3}
+  - {fileID: 21300000, guid: 1c258e1ade87e5d4f85e937c94c25310, type: 3}
+  - {fileID: 21300000, guid: c69903d6bd478064195c3f096400f712, type: 3}
+  - {fileID: 21300000, guid: 5407be05c03965646ae5862f75cc9a48, type: 3}
+  - {fileID: 21300000, guid: a5da9f9e9be5e56499fd4df9aaa3594c, type: 3}
+  - {fileID: 21300000, guid: ef46829fbe04f0d488356f37cb37d50b, type: 3}
+  - {fileID: 21300000, guid: bc83ad3baaf0260498de809271670abe, type: 3}
+  - {fileID: 21300000, guid: 30a82aee2589bdf4cbc28640d280243d, type: 3}
+  - {fileID: 21300000, guid: 66470e4af35f4fd43909236b8f69d484, type: 3}
+  totalSwordsPerSwing: 10
+  baseSwordCount: 1
+  baseSwordTrailColor: {r: 0.69803923, g: 1, b: 0.7058824, a: 1}
+  swordAppearances:
+  - swordSprite: {fileID: 21300000, guid: 8b958c7fbe7ea284abeaf6df280032c7, type: 3}
+    trailColor: {r: 0.9215687, g: 0.6509804, b: 0.5294118, a: 0}
+  - swordSprite: {fileID: 21300000, guid: e4c75f44ea0efa449bb95f2c8ed9b6dd, type: 3}
+    trailColor: {r: 0.35686275, g: 0.61960787, b: 0.909804, a: 0}
+  - swordSprite: {fileID: 21300000, guid: ccaa8412dcf863342b47c90069f47b24, type: 3}
+    trailColor: {r: 1, g: 0.9058824, b: 0.27058825, a: 0}
+  - swordSprite: {fileID: 21300000, guid: f9203f4d939f9de4195e0baa6fb381b7, type: 3}
+    trailColor: {r: 0.92549026, g: 0.24313727, b: 0.75294125, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 18c53e2201c04c04aa52f62d6926c3d2, type: 3}
+    trailColor: {r: 0.98823535, g: 0.37254903, b: 0.015686275, a: 0}
+  - swordSprite: {fileID: 21300000, guid: ad3b0dee341dc12499f5b47cba3b234f, type: 3}
+    trailColor: {r: 0.56078434, g: 0.8431373, b: 0.1137255, a: 0}
+  - swordSprite: {fileID: 21300000, guid: e6098685c205d8e4c933d07b1742498f, type: 3}
+    trailColor: {r: 0.9294118, g: 0.24705884, b: 0.52156866, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 09106415ec9251943a55c967e9c6e5a2, type: 3}
+    trailColor: {r: 0.32941177, g: 0.9176471, b: 0.9607844, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 00d24e4cf12b4fc49879b12939c4e30c, type: 3}
+    trailColor: {r: 0.9960785, g: 0.7607844, b: 0.9803922, a: 0}
+  - swordSprite: {fileID: 21300000, guid: d1e9060ac4d44ef46b1fa1053a9e4ccf, type: 3}
+    trailColor: {r: 0.3137255, g: 0.8705883, b: 0.4784314, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 844484cbbb9c19242b947de63fed0656, type: 3}
+    trailColor: {r: 0.7019608, g: 0.21176472, b: 0.78823537, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 1c258e1ade87e5d4f85e937c94c25310, type: 3}
+    trailColor: {r: 0.41960788, g: 0.7960785, b: 0, a: 0}
+  - swordSprite: {fileID: 21300000, guid: c69903d6bd478064195c3f096400f712, type: 3}
+    trailColor: {r: 0.9960785, g: 0.61960787, b: 0.13725491, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 5407be05c03965646ae5862f75cc9a48, type: 3}
+    trailColor: {r: 0.4784314, g: 0.25882354, b: 0.7490196, a: 0}
+  - swordSprite: {fileID: 21300000, guid: a5da9f9e9be5e56499fd4df9aaa3594c, type: 3}
+    trailColor: {r: 0.92549026, g: 0.7843138, b: 0.07450981, a: 0}
+  - swordSprite: {fileID: 21300000, guid: ef46829fbe04f0d488356f37cb37d50b, type: 3}
+    trailColor: {r: 0.92549026, g: 0.7843138, b: 0.07450981, a: 0}
+  - swordSprite: {fileID: 21300000, guid: bc83ad3baaf0260498de809271670abe, type: 3}
+    trailColor: {r: 0.7019608, g: 0.21176472, b: 0.78823537, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 30a82aee2589bdf4cbc28640d280243d, type: 3}
+    trailColor: {r: 0.69803923, g: 1, b: 0.7058824, a: 0}
+  - swordSprite: {fileID: 21300000, guid: 66470e4af35f4fd43909236b8f69d484, type: 3}
+    trailColor: {r: 0.21960786, g: 0.30588236, b: 0.8235295, a: 0}

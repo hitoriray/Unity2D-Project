@@ -220,6 +220,66 @@ public class ItemContainer
         return false;
     }
 
+    /// <summary>
+    /// 获取容器中指定名称物品的总数
+    /// </summary>
+    public int GetTotalItemCount(string itemName)
+    {
+        int totalCount = 0;
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (slots[x, y] != null && slots[x, y].item.itemName == itemName)
+                {
+                    if (slots[x, y].item.quantity != 0) totalCount += slots[x, y].item.quantity;
+                    else totalCount += 1;
+                }
+            }
+        }
+        return totalCount;
+    }
+    
+    /// <summary>
+    /// 从容器中移除指定数量的物品
+    /// </summary>
+    public void RemoveItems(string itemName, int amountToRemove)
+    {
+        int amountRemoved = 0;
+        // 从后往前遍历，这样可以先消耗后面的物品
+        for (int y = height - 1; y >= 0; y--)
+        {
+            for (int x = width - 1; x >= 0; x--)
+            {
+                if (amountRemoved >= amountToRemove)
+                {
+                    OnItemsChanged?.Invoke();
+                    return;
+                }
+
+                InventorySlot slot = slots[x, y];
+                if (slot != null && slot.item.itemName == itemName)
+                {
+                    int quantityInSlot = slot.item.quantity;
+                    int canRemoveFromSlot = Mathf.Min(quantityInSlot, amountToRemove - amountRemoved);
+
+                    slot.item.quantity -= canRemoveFromSlot;
+                    amountRemoved += canRemoveFromSlot;
+
+                    if (slot.item.quantity <= 0)
+                    {
+                        slots[x, y] = null;
+                    }
+                }
+            }
+        }
+
+        if (amountRemoved > 0)
+        {
+            OnItemsChanged?.Invoke();
+        }
+    }
+
     public void DecreaseItemQuantity(Vector2Int pos, int amount)
     {
         InventorySlot slot = GetSlot(pos);
