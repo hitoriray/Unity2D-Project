@@ -82,7 +82,7 @@ public class SoundEffectManager : MonoBehaviour
                 Destroy(obj); // 销毁无效对象
             }
         }
-        Debug.Log($"[SoundEffectManager] 对象池初始化完成，大小: {availableAudioSources.Count}");
+        // Debug.Log($"[SoundEffectManager] 对象池初始化完成，大小: {availableAudioSources.Count}");
     }
 
     /// <summary>

@@ -37,7 +37,7 @@ public static class SkyLightManager
         PropagateInitialSkylight(terrainGen);
 
         isInitialized = true;
-        Debug.Log("[SkyLightManager] Sky light system initialized and initial light propagated.");
+        // Debug.Log("[SkyLightManager] Sky light system initialized and initial light propagated.");
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public static class SkyLightManager
     /// </summary>
     private static void PropagateInitialSkylight(TerrainGeneration terrainGen)
     {
-        Debug.Log("[SkyLightManager] Starting initial skylight propagation...");
+        // Debug.Log("[SkyLightManager] Starting initial skylight propagation...");
         // 遍历所有列
         for (int x = 0; x < worldSize; x++)
         {
@@ -130,6 +130,6 @@ public static class SkyLightManager
                 }
             }
         }
-        Debug.Log("[SkyLightManager] Initial skylight propagation queued for processing.");
+        // Debug.Log("[SkyLightManager] Initial skylight propagation queued for processing.");
     }
 } 

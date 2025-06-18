@@ -150,7 +150,7 @@ namespace AmbianceSystem
 
             if (targetProfile != currentActiveProfile) 
             {
-                Debug.Log($"[AmbianceManager] Profile Transition: From '{currentActiveProfile?.profileName ?? "None"}' to '{targetProfile?.profileName ?? "None"}'");
+                // Debug.Log($"[AmbianceManager] Profile Transition: From '{currentActiveProfile?.profileName ?? "None"}' to '{targetProfile?.profileName ?? "None"}'");
                 TransitionToProfile(targetProfile);
             }
         }
@@ -201,13 +201,13 @@ namespace AmbianceSystem
                 {
                     if (backgroundSpriteRenderer1 != null && backgroundSpriteRenderer2 != null)
                     {
-                        Debug.Log($"[AmbianceManager] Image change: '{currentDisplayedSprite?.name ?? "None"}' -> '{newTargetSprite.name}'. Starting image fade.");
+                        // Debug.Log($"[AmbianceManager] Image change: '{currentDisplayedSprite?.name ?? "None"}' -> '{newTargetSprite.name}'. Starting image fade.");
                         activeImageFadeCoroutine = StartCoroutine(FadeSpriteCoroutine(newTargetSprite, newProfile.imageFadeDuration));
                     }
                 }
                 else 
                 {
-                    Debug.Log($"[AmbianceManager] New Profile '{newProfile?.profileName ?? "None"}' has no image or is null. Hiding current image.");
+                    // Debug.Log($"[AmbianceManager] New Profile '{newProfile?.profileName ?? "None"}' has no image or is null. Hiding current image.");
                     if (backgroundSpriteRenderer1 != null && backgroundSpriteRenderer1.sprite != null && backgroundSpriteRenderer1.gameObject.activeInHierarchy)
                     {
                         Color c = backgroundSpriteRenderer1.color; c.a = 0; backgroundSpriteRenderer1.color = c;
@@ -221,7 +221,7 @@ namespace AmbianceSystem
             }
             else if (newTargetSprite != null) 
             {
-                 Debug.Log($"[AmbianceManager] Image '{newTargetSprite.name}' is same as current. Ensuring visibility and adjustment.");
+                //  Debug.Log($"[AmbianceManager] Image '{newTargetSprite.name}' is same as current. Ensuring visibility and adjustment.");
                  if(backgroundSpriteRenderer1 != null) {
                     Color c = backgroundSpriteRenderer1.color; c.a = 1f; backgroundSpriteRenderer1.color = c;
                     backgroundSpriteRenderer1.gameObject.SetActive(true);
@@ -241,7 +241,7 @@ namespace AmbianceSystem
             {
                 if (currentPlayingClip != null) 
                 {
-                    Debug.Log($"[AmbianceManager] New Profile has no music or is null. Fading out current music: {currentPlayingClip.name}");
+                    // Debug.Log($"[AmbianceManager] New Profile has no music or is null. Fading out current music: {currentPlayingClip.name}");
                     activeMusicFadeCoroutine = StartCoroutine(FadeOutMusicOnlyCoroutine(musicFadeOutDuration, musicAudioSource1));
                 }
                 if (musicAudioSource2 != null && musicAudioSource2.isPlaying) 
@@ -253,12 +253,12 @@ namespace AmbianceSystem
             {
                 if (musicAudioSource1.isPlaying && currentPlayingClip == newTargetMusic)
                 {
-                    Debug.Log($"[AmbianceManager] Music '{newTargetMusic.name}' is same. Current Vol: {musicAudioSource1.volume}, Target Vol: {newTargetVolume}");
+                    // Debug.Log($"[AmbianceManager] Music '{newTargetMusic.name}' is same. Current Vol: {musicAudioSource1.volume}, Target Vol: {newTargetVolume}");
                     if (Mathf.Abs(musicAudioSource1.volume - newTargetVolume) > 0.01f)
                     {
                         // TODO: Smooth volume transition here if desired
                         musicAudioSource1.volume = newTargetVolume;
-                        Debug.Log($"[AmbianceManager] Adjusted volume for '{newTargetMusic.name}' to {newTargetVolume}.");
+                        // Debug.Log($"[AmbianceManager] Adjusted volume for '{newTargetMusic.name}' to {newTargetVolume}.");
                     }
                     if (musicAudioSource2 != null && musicAudioSource2.isPlaying && musicAudioSource2.clip == newTargetMusic)
                     {
@@ -267,7 +267,7 @@ namespace AmbianceSystem
                 }
                 else
                 {
-                    Debug.Log($"[AmbianceManager] Music change: '{(currentPlayingClip?.name ?? "None")}' -> '{newTargetMusic.name}'. Starting crossfade.");
+                    // Debug.Log($"[AmbianceManager] Music change: '{(currentPlayingClip?.name ?? "None")}' -> '{newTargetMusic.name}'. Starting crossfade.");
                     if (musicAudioSource1 != null && musicAudioSource2 != null)
                     {
                         activeMusicFadeCoroutine = StartCoroutine(FadeMusicCoroutine(newTargetMusic, musicFadeInDuration)); // Use new profile's fade duration
