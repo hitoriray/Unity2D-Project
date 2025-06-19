@@ -624,6 +624,7 @@ public class PlayerController : MonoBehaviour
             {
                 // 播放攻击动画
                 string attackAnim = GetAttackAnimationName();
+                // if (attackAnim == null) weapon.SetActive(false);
                 if (isMoving)
                     spumPrefabs.PlayAnimation(attackAnim); // 考虑移动时的攻击动画是否不同
                 else
@@ -701,7 +702,7 @@ public class PlayerController : MonoBehaviour
             if (!string.IsNullOrEmpty(selectedItem.weapon.attackAnimationName))
                 return selectedItem.weapon.attackAnimationName;
         }
-        return "6_Mining_Idle"; // 默认攻击动画
+        return null;
     }
 
     #endregion    
@@ -1014,8 +1015,10 @@ public class PlayerController : MonoBehaviour
             
             if (swordGO.TryGetComponent<Terraira.Combat.PhantomSword>(out var phantomSword))
             {
-                // 使用新的Initialize方法
-                phantomSword.Initialize(weaponData.damage, transform, targetPos, swordsToSpawn[i]);
+                // 创建一个 DamageInfo 实例
+                DamageInfo damageInfo = selectedItem.weapon.CreateDamageInfo(gameObject, targetPos, Vector2.zero);
+                // 调用新的Initialize方法
+                phantomSword.Initialize(damageInfo, transform, targetPos, swordsToSpawn[i]);
             }
             else
             {
@@ -1024,7 +1027,7 @@ public class PlayerController : MonoBehaviour
             }
             
             // 短暂的延迟，让剑一把接一把地出现
-            yield return new WaitForSeconds(0.03f);
+            yield return new WaitForSeconds(weaponData.swordFreq);
         }
     }
     #endregion

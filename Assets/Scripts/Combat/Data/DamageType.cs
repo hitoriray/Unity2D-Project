@@ -85,9 +85,9 @@ public static class DamageTypeExtensions
         switch (damageType)
         {
             case DamageType.Physical:
-                return Color.red;
-            case DamageType.Fire:
                 return new Color(1f, 0.4f, 0f);      // 橙红色
+            case DamageType.Fire:
+                return Color.red;                    // 红色
             case DamageType.Ice:
                 return new Color(0.4f, 0.8f, 1f);    // 冰蓝色
             case DamageType.Lightning:

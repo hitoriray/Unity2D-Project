@@ -103,7 +103,48 @@ public static class LightingManager
 
         // 最后，移除当前位置可能存在的旧光照，并重新计算周围
         RemoveLightSource(terrainGen, x, y);
-        terrainGen.worldTilesMap.Apply();
+        // terrainGen.worldTilesMap.Apply(); // 确保这行被注释或删除
+    }
+
+    /// <summary>
+    /// UpdateBlockLighting的无Apply版本，用于批量处理。
+    /// </summary>
+    public static void UpdateBlockLighting_NoApply(TerrainGeneration terrainGen, int x, int y)
+    {
+        // 首先，根据天空光设置方块的基础亮度
+        if (SkyLightManager.IsPositionSkyLit(x, y))
+        {
+            terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
+        }
+        else
+        {
+            terrainGen.worldTilesMap.SetPixel(x, y, Color.black);
+        }
+
+        // 然后，从邻近的更亮的方块传播光线到这个方块
+        for (int dx = -1; dx <= 1; ++dx)
+        {
+            for (int dy = -1; dy <= 1; ++dy)
+            {
+                if (dx == 0 && dy == 0) continue;
+
+                int nx = x + dx;
+                int ny = y + dy;
+
+                if (nx < 0 || nx >= terrainGen.worldSize || ny < 0 || ny >= terrainGen.worldSize) continue;
+
+                // 如果邻居比当前方块亮，就从邻居那里开始重新传播光
+                if (terrainGen.worldTilesMap.GetPixel(nx, ny).r > terrainGen.worldTilesMap.GetPixel(x, y).r)
+                {
+                    float neighborIntensity = terrainGen.worldTilesMap.GetPixel(nx, ny).r;
+                    LightBlockInternal(terrainGen, nx, ny, neighborIntensity, 0, (int)terrainGen.lightRadius, true);
+                }
+            }
+        }
+
+        // 最后，移除当前位置可能存在的旧光照，并重新计算周围
+        RemoveLightSource(terrainGen, x, y);
+        // terrainGen.worldTilesMap.Apply(); // 确保这行被注释或删除
     }
 
     /// <summary>

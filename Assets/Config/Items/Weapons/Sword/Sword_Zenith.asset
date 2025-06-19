@@ -22,8 +22,8 @@ MonoBehaviour:
   damage: 190
   attackSpeed: 0.3
   range: 2.5
-  criticalChance: 0.05
-  criticalMultiplier: 2
+  criticalChance: 0.5
+  criticalMultiplier: 2.5
   damageType: 0
   knockbackForce: 2
   pierceCount: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
   attackEffect: {fileID: 0}
   hitEffect: {fileID: 0}
   trailEffect: {fileID: 0}
-  attackAnimationName: 2_Attack_Normal
+  attackAnimationName: 
   attackAnimationDuration: 0.5
   canMoveWhileAttacking: 1
   isStarfuryWeapon: 0
@@ -51,6 +51,7 @@ MonoBehaviour:
   starLightRadius: 5
   starLightDuration: 1
   isZenith: 1
+  swordFreq: 0.1
   phantomSwordPrefab: {fileID: 1607163473319546902, guid: 1b423bd219811a648ac272de0c64a6ff, type: 3}
   zenithSwordSprites:
   - {fileID: 21300000, guid: 8b958c7fbe7ea284abeaf6df280032c7, type: 3}
@@ -72,8 +73,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: bc83ad3baaf0260498de809271670abe, type: 3}
   - {fileID: 21300000, guid: 30a82aee2589bdf4cbc28640d280243d, type: 3}
   - {fileID: 21300000, guid: 66470e4af35f4fd43909236b8f69d484, type: 3}
-  totalSwordsPerSwing: 10
-  baseSwordCount: 1
+  totalSwordsPerSwing: 5
+  baseSwordCount: 3
   baseSwordTrailColor: {r: 0.69803923, g: 1, b: 0.7058824, a: 1}
   swordAppearances:
   - swordSprite: {fileID: 21300000, guid: 8b958c7fbe7ea284abeaf6df280032c7, type: 3}

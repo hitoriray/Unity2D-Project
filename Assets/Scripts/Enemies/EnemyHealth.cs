@@ -106,8 +106,8 @@ namespace Enemies // 建议为敌人脚本也添加命名空间
                     SoundEffectManager.Instance.PlaySoundAtPoint(soundToPlay, damageInfo.hitPoint);
                 }
                 else
-                {
                     Debug.LogWarning("[EnemyHealth] SoundEffectManager.Instance is null. Cannot play weapon hit sound via manager.");
+                {
                     AudioSource.PlayClipAtPoint(soundToPlay, damageInfo.hitPoint); // Fallback
                 }
             }

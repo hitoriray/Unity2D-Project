@@ -168,6 +168,9 @@ public class Weapon : ScriptableObject
     [Header("天顶剑武器配置")]
     [Tooltip("是否为天顶剑")]
     public bool isZenith = false;
+
+    [Tooltip("天顶剑的幻影剑出现频率")]
+    public float swordFreq = 0.1f;
     
     [Tooltip("天顶剑的幻影剑预制体")]
     public GameObject phantomSwordPrefab;

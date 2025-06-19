@@ -114,13 +114,13 @@ namespace UI // 建议为UI脚本也添加命名空间
             {
                 tmpText.text = damageAmount.ToString();
                 tmpText.color = DamageTypeExtensions.GetDisplayColor(damageType);
-                tmpText.fontStyle = FontStyles.Normal; // 重置字体样式
+                tmpText.fontStyle = FontStyles.Bold; // 重置字体样式
 
                 if (isCritical)
                 {
                     tmpText.fontSize = criticalFontSize; // 使用Inspector中设置的暴击字体大小
                     tmpText.fontStyle = FontStyles.Bold;
-                    tmpText.color = new Color(1f, 0.4f, 0f);
+                    tmpText.color = Color.red;
                 }
                 else
                 {
