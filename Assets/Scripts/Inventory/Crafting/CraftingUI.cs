@@ -136,7 +136,7 @@ public class CraftingUI : MonoBehaviour
         foreach (var ingredient in recipe.requiredIngredients)
         {
             GameObject newIngredientSlot = Instantiate(ingredientSlotPrefab, ingredientsContainer);
-            int currentAmount = craftingManager.GetInventory().inventory.GetTotalItemCount(ingredient.item.itemName);
+            int currentAmount = craftingManager.GetInventory().items.GetTotalItemCount(ingredient.item.itemName);
             newIngredientSlot.GetComponent<IngredientSlotUI>().Display(ingredient, currentAmount);
             ingredientSlots.Add(newIngredientSlot);
         }

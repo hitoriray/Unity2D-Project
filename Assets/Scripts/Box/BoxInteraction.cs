@@ -10,13 +10,19 @@ namespace Box
         public ItemContainer boxContainer;
         
         [Header("UI引用")]
-        public ItemContainerUI boxUI;
+        public BoxUI boxUI;
+        public ItemContainerUI boxContainerUI;
 
         [Header("宝箱物品容器设置")]
         public int boxWidth = 8;
         public int boxHeight = 4;
 
+        [Header("音效")]
+        [Tooltip("移动物品时的音效")]
+        public AudioClip moveItemSound;
+
         private bool playerInRange = false;
+        private Inventory playerInventory;
 
         private BoxController BoxController;
 
@@ -45,6 +51,7 @@ namespace Box
             if (BoxController.IsOpen)
             {
                 boxUI.gameObject.SetActive(false);
+                boxContainerUI.gameObject.SetActive(false);
                 BoxController.CloseBox();
             }
             else
@@ -52,7 +59,8 @@ namespace Box
                 BoxController.OpenBox(() =>
                 {
                     boxUI.gameObject.SetActive(true);
-                    boxUI.Initialize(boxContainer);
+                    boxContainerUI.gameObject.SetActive(true);
+                    boxContainerUI.Initialize(boxContainer);
                 });
             }
         }
@@ -62,6 +70,7 @@ namespace Box
             if (other.CompareTag("Player"))
             {
                 playerInRange = true;
+                playerInventory = other.GetComponent<Inventory>();
             }
         }
 
@@ -73,8 +82,73 @@ namespace Box
                 if (BoxController.IsOpen)
                 {
                     boxUI.gameObject.SetActive(false);
+                    boxContainerUI.gameObject.SetActive(false);
                     BoxController.CloseBox();
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 将玩家背包的所有物品存入宝箱
+        /// </summary>
+        public void StoreAll()
+        {
+            if (playerInventory == null) return;
+
+            var playerContainer = playerInventory.items;
+            bool itemsMoved = false;
+
+            // 从后往前遍历以安全地移除物品
+            for (int y = playerContainer.height - 1; y >= 0; y--)
+            {
+                for (int x = playerContainer.width - 1; x >= 0; x--)
+                {
+                    InventorySlot slot = playerContainer.GetSlot(new Vector2Int(x, y));
+                    if (slot != null && slot.item != null)
+                    {
+                        if (boxContainer.AddItem(slot.item))
+                            itemsMoved = true;
+                        if (slot.item.quantity == 0)
+                            playerContainer.RemoveItem(x, y);
+                    }
+                }
+            }
+            
+            if (itemsMoved && moveItemSound != null)
+            {
+                AudioSource.PlayClipAtPoint(moveItemSound, Camera.main.transform.position);
+            }
+        }
+
+        /// <summary>
+        /// 从宝箱中取出所有物品到玩家背包
+        /// </summary>
+        public void TakeAll()
+        {
+            if (playerInventory == null) return;
+
+            var playerContainer = playerInventory.items;
+            bool itemsMoved = false;
+
+            // 从后往前遍历以安全地移除物品
+            for (int y = boxContainer.height - 1; y >= 0; y--)
+            {
+                for (int x = boxContainer.width - 1; x >= 0; x--)
+                {
+                    InventorySlot slot = boxContainer.GetSlot(new Vector2Int(x, y));
+                    if (slot != null && slot.item != null)
+                    {
+                        if (playerContainer.AddItem(slot.item))
+                            itemsMoved = true;
+                        if (slot.item.quantity == 0)
+                            boxContainer.RemoveItem(x, y);
+                    }
+                }
+            }
+            
+            if (itemsMoved && moveItemSound != null)
+            {
+                AudioSource.PlayClipAtPoint(moveItemSound, Camera.main.transform.position);
             }
         }
     }

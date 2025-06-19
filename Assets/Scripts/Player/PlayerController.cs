@@ -117,12 +117,16 @@ public class PlayerController : MonoBehaviour
         mousePos.x = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).x - 0.5f);
         mousePos.y = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).y - 0.5f);
 
-        if (Input.GetKeyDown(KeyCode.B))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
             // 如果正在拖拽且要关闭库存，取消拖拽
             if (inventoryShowing && DragManager.Instance != null && DragManager.Instance.IsDragging())
             {
                 CancelDrag();
+            }
+            if (craftingUI.gameObject.activeSelf)
+            {
+                craftingUI.gameObject.SetActive(!craftingUI.gameObject.activeSelf);
             }
 
             inventoryShowing = !inventoryShowing;
@@ -134,33 +138,13 @@ public class PlayerController : MonoBehaviour
             // 这里我们直接开关UI，而不是在CraftingUI里再用一个按键控制
             craftingUI.gameObject.SetActive(!craftingUI.gameObject.activeSelf);
         }
-
-        // ESC键关闭库存界面
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (inventoryShowing)
-            {
-                // 如果正在拖拽，取消拖拽
-                if (DragManager.Instance != null && DragManager.Instance.IsDragging())
-                {
-                    CancelDrag();
-                }
-
-                inventoryShowing = false;
-                hotbarShowing = true;
-            }
-
-            if (craftingUI.gameObject.activeSelf)
-            {
-                craftingUI.gameObject.SetActive(!craftingUI.gameObject.activeSelf);
-            }
-        }
+        
 
         // scoll through hotbar UI
         if (Input.GetAxis("Mouse ScrollWheel") < 0)
         {
             // scoll up
-            if (selectedSlotIndex < inventory.inventory.width - 1)
+            if (selectedSlotIndex < inventory.items.width - 1)
                 ++selectedSlotIndex;
 
         }
@@ -179,11 +163,20 @@ public class PlayerController : MonoBehaviour
             hotbarSelector.transform.position = inventory.hotbarUI.uiSlots[selectedSlotIndex, 0].transform.position;
         }
         // set selected item from the last row of the main inventory
-        selectedItem = inventory.inventory?.GetSlot(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1))?.item;
+        selectedItem = inventory.items?.GetSlot(new Vector2Int(selectedSlotIndex, inventory.items.height - 1))?.item;
         weapon.GetComponent<SpriteRenderer>().sprite = selectedItem?.itemSprite;
 
+        bool isUIDisplayed = DragManager.Instance != null && DragManager.Instance.IsDragging() ||
+                            (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
+        isUIDisplayed |= GetComponent<WarehouseController>().IsWarehouseUIShowing();
+        isUIDisplayed |= craftingUI.gameObject.activeInHierarchy;
+
         HandleJumpInput();
-        HandleActionInput();
+
+        if (!isUIDisplayed)
+        {
+            HandleActionInput();
+        }
 
         inventory.inventoryUI.gameObject.SetActive(inventoryShowing);
         inventory.hotbarUI.gameObject.SetActive(hotbarShowing);
@@ -219,11 +212,7 @@ public class PlayerController : MonoBehaviour
         // 处理SPUM动画
         HandleSPUMAnimation();
 
-
-        // 检查是否正在拖拽库存物品或显示分割界面
-        bool isUIDisplayed = DragManager.Instance != null && DragManager.Instance.IsDragging() || (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
-
-        if (!isUIDisplayed && Vector2.Distance(currentPos, mousePos) <= miningRange)
+        if (Vector2.Distance(currentPos, mousePos) <= miningRange)
         {
             if (isMining)
             {
@@ -320,9 +309,9 @@ public class PlayerController : MonoBehaviour
                 LightingManager.UpdateBlockLighting(terrainGen, x, y);
 
                 // Use the new method to decrease item quantity from the last row of the inventory
-                inventory.inventory.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1), 1);
+                inventory.items.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.items.height - 1), 1);
                 // Update selectedItem reference as it might have been removed
-                selectedItem = inventory.inventory.GetSlot(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1))?.item;
+                selectedItem = inventory.items.GetSlot(new Vector2Int(selectedSlotIndex, inventory.items.height - 1))?.item;
             }
         }
     }
@@ -356,9 +345,9 @@ public class PlayerController : MonoBehaviour
                 LightingManager.UpdateBlockLighting(terrainGen, x, y);
 
                 // Use the new method to decrease item quantity from the last row of the inventory
-                inventory.inventory.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1), 1);
+                inventory.items.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.items.height - 1), 1);
                 // Update selectedItem reference as it might have been removed
-                selectedItem = inventory.inventory.GetSlot(new Vector2Int(selectedSlotIndex, inventory.inventory.height - 1))?.item;
+                selectedItem = inventory.items.GetSlot(new Vector2Int(selectedSlotIndex, inventory.items.height - 1))?.item;
             }
         }
     }
@@ -505,8 +494,8 @@ public class PlayerController : MonoBehaviour
 
     private void HandleNumberInput()
     {
-        if (inventory.inventory == null) return;
-        for (int i = 0; i < inventory.inventory.width; ++i)
+        if (inventory.items == null) return;
+        for (int i = 0; i < inventory.items.width; ++i)
         {
             if (Input.GetKeyDown(KeyCode.Alpha1 + i))
             {
@@ -1017,8 +1006,11 @@ public class PlayerController : MonoBehaviour
             {
                 // 创建一个 DamageInfo 实例
                 DamageInfo damageInfo = selectedItem.weapon.CreateDamageInfo(gameObject, targetPos, Vector2.zero);
-                // 调用新的Initialize方法
-                phantomSword.Initialize(damageInfo, transform, targetPos, swordsToSpawn[i]);
+                if (damageInfo.baseDamage != 0)
+                {
+                    // 调用新的Initialize方法
+                    phantomSword.Initialize(damageInfo, transform, targetPos, swordsToSpawn[i]);
+                }
             }
             else
             {

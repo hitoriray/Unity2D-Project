@@ -3,7 +3,7 @@ using UnityEngine;
 public class Inventory : MonoBehaviour
 {
     [Header("Data Containers")]
-    public ItemContainer inventory;
+    public ItemContainer items;
     
     [Header("UI Panels")]
     public ItemContainerUI inventoryUI;
@@ -27,19 +27,19 @@ public class Inventory : MonoBehaviour
 
     void Awake()
     {
-        inventory = new ItemContainer(inventoryWidth, inventoryHeight);
+        items = new ItemContainer(inventoryWidth, inventoryHeight);
 
         if (inventoryUI != null)
         {
-            inventory.OnItemsChanged += inventoryUI.UpdateUI;
-            inventoryUI.Initialize(inventory);
+            items.OnItemsChanged += inventoryUI.UpdateUI;
+            inventoryUI.Initialize(items);
         }
 
         // Link the SAME inventory data to the hotbar UI, but remap the slots
         if (hotbarUI != null)
         {
             // The hotbar UI should also update when the main inventory changes
-            inventory.OnItemsChanged += hotbarUI.UpdateUI;
+            items.OnItemsChanged += hotbarUI.UpdateUI;
             
             // We create a temporary, purely visual container for the hotbar UI's layout
             ItemContainer hotbarVisualContainer = new ItemContainer(hotbarWidth, 1);
@@ -55,7 +55,7 @@ public class Inventory : MonoBehaviour
                     if (slotUIComponent != null)
                     {
                         // This slot's data comes from inventory at (x, inventoryHeight - 1)
-                        slotUIComponent.AssignContainer(inventory, new Vector2Int(x, inventoryHeight - 1));
+                        slotUIComponent.AssignContainer(items, new Vector2Int(x, inventoryHeight - 1));
                     }
                 }
             }
@@ -104,12 +104,12 @@ public class Inventory : MonoBehaviour
     // Methods for adding/checking items now operate on the single inventory
     public bool CanAddItem(Item item)
     {
-        return inventory.CanAddItem(item);
+        return items.CanAddItem(item);
     }
 
     public bool TryAddItem(Item item)
     {
-        return inventory.AddItem(item);
+        return items.AddItem(item);
     }
 
     public void DropItem(Item item, Vector3 position)
@@ -138,15 +138,15 @@ public class Inventory : MonoBehaviour
     private void GiveStartingItems()
     {
         if (zenithSword != null)
-            inventory.AddItem(new Item(zenithSword));
+            items.AddItem(new Item(zenithSword));
         if (starSword != null)
-            inventory.AddItem(new Item(starSword));
+            items.AddItem(new Item(starSword));
         if (startingPickaxe != null)
-            inventory.AddItem(new Item(startingPickaxe));
+            items.AddItem(new Item(startingPickaxe));
         if (startingAxe != null)
-            inventory.AddItem(new Item(startingAxe));
+            items.AddItem(new Item(startingAxe));
         if (startingHammer != null)
-            inventory.AddItem(new Item(startingHammer));
+            items.AddItem(new Item(startingHammer));
     }
 
     public void ToggleInventory()

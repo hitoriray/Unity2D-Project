@@ -70,11 +70,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boxContainer:
-    width: 0
-    height: 0
+    width: 8
+    height: 4
   boxUI: {fileID: 0}
+  boxContainerUI: {fileID: 0}
   boxWidth: 8
   boxHeight: 4
+  moveItemSound: {fileID: 8300000, guid: d1886b2c893b40e4581b4d968eca1153, type: 3}
 --- !u!61 &638816383
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -203,7 +205,7 @@ GameObject:
   - component: {fileID: 5331538198018227518}
   - component: {fileID: 5331538198018227519}
   - component: {fileID: 6260503297343208912}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: TopLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -314,7 +316,7 @@ GameObject:
   - component: {fileID: 5331538198215861204}
   - component: {fileID: 5331538198215861205}
   - component: {fileID: 2501580777673256141}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: BottomLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -425,7 +427,7 @@ GameObject:
   - component: {fileID: 5331538198319317509}
   - component: {fileID: 5331538198319317514}
   - component: {fileID: 8183003486855593584}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: BottomRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -536,7 +538,7 @@ GameObject:
   - component: {fileID: 5331538198568803039}
   - component: {fileID: 5331538198568803036}
   - component: {fileID: 4955474382026361539}
-  m_Layer: 9
+  m_Layer: 0
   m_Name: TopRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}

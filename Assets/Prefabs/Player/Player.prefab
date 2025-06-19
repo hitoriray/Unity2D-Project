@@ -3878,8 +3878,7 @@ GameObject:
   - component: {fileID: 4292723228715428873}
   - component: {fileID: 4292723228715428875}
   - component: {fileID: 3456888401436643649}
-  - component: {fileID: 981529729}
-  - component: {fileID: 981529730}
+  - component: {fileID: 2039358500}
   m_Layer: 6
   m_Name: PlayerRoot
   m_TagString: Player
@@ -4053,6 +4052,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06b5fe2950c191749a617c7461997501, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  craftingUI: {fileID: 0}
   layerMask:
     serializedVersion: 2
     m_Bits: 55
@@ -4068,6 +4068,7 @@ MonoBehaviour:
   selectedItem:
     itemName: 
     description: 
+    specificDescription: 
     itemSprite: {fileID: 0}
     maxStackSize: 0
     tile: {fileID: 0}
@@ -4102,9 +4103,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 543cb441c65c4b3498b94fdaecafa1aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventory:
-    width: 8
-    height: 5
+  items:
+    width: 0
+    height: 0
   inventoryUI: {fileID: 0}
   hotbarUI: {fileID: 0}
   boxUI: {fileID: 0}
@@ -4112,40 +4113,25 @@ MonoBehaviour:
   inventoryHeight: 5
   hotbarWidth: 8
   itemDropPrefab: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
+  zenithSword: {fileID: 11400000, guid: 71fc5c6d72c0f734aa3865b32bc8c3f1, type: 2}
   starSword: {fileID: 11400000, guid: 6865400b4b794944c80aa92a03af89ed, type: 2}
   startingAxe: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
   startingPickaxe: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
   startingHammer: {fileID: 11400000, guid: 29635c85cc244bc41897b0eac93d9a64, type: 2}
---- !u!114 &981529729
+--- !u!114 &2039358500
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8572255946325881019}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1716ca74b2169b34ab9275b7ff0fce4d, type: 3}
+  m_Script: {fileID: 11500000, guid: 2226422fe0e8f3947a9cb611090edbfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableDebugLogs: 1
-  showSlotStatesOnGUI: 1
---- !u!114 &981529730
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8572255946325881019}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ede35300094f7642be8b0815f0bd0da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  testWeapon: {fileID: 11400000, guid: 6865400b4b794944c80aa92a03af89ed, type: 2}
-  testTool: {fileID: 11400000, guid: e34250ee87ce032499b444878d521435, type: 2}
-  weaponItemInfo: 
-  stackingTestInfo: 
+  warehouseUI: {fileID: 0}
+  interactionKey: 98
 --- !u!1 &9076336075174239352
 GameObject:
   m_ObjectHideFlags: 0

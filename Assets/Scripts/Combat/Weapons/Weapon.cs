@@ -247,6 +247,7 @@ public class Weapon : ScriptableObject
     /// <returns>配置好的伤害信息</returns>
     public DamageInfo CreateDamageInfo(GameObject source, Vector2 hitPoint, Vector2 hitDirection)
     {
+        if (source == null) return new DamageInfo();
         // 计算是否暴击
         bool isCritical = Random.Range(0f, 1f) < criticalChance;
         

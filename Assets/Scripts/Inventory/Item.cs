@@ -111,12 +111,12 @@ public class Item
 
 public enum ItemType
 {
-    Block,      // 可放置的块
-    Wall,       // 可放置的墙
-    Tool,       // 工具
-    Weapon,     // 武器
-    Consumable, // 消耗品
-    Material    // 材料
+    Block = 3,      // 可放置的块
+    Wall = 4,       // 可放置的墙
+    Tool = 1,       // 工具
+    Weapon = 0,     // 武器
+    Consumable = 2, // 消耗品
+    Material = 5    // 材料
 }
 
 public enum ToolType

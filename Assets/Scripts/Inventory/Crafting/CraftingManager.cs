@@ -29,7 +29,7 @@ public class CraftingManager : MonoBehaviour
 
         foreach (var ingredient in recipe.requiredIngredients)
         {
-            if (inventory.inventory.GetTotalItemCount(ingredient.item.itemName) < ingredient.quantity)
+            if (inventory.items.GetTotalItemCount(ingredient.item.itemName) < ingredient.quantity)
             {
                 // 只要有一种材料数量不够，就无法制作
                 return false;
@@ -52,7 +52,7 @@ public class CraftingManager : MonoBehaviour
         // 消耗材料
         foreach (var ingredient in recipe.requiredIngredients)
         {
-            inventory.inventory.RemoveItems(ingredient.item.itemName, ingredient.quantity);
+            inventory.items.RemoveItems(ingredient.item.itemName, ingredient.quantity);
         }
 
         // 添加产物

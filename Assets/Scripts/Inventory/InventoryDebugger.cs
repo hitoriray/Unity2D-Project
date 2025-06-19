@@ -89,16 +89,16 @@ public class InventoryDebugger : MonoBehaviour
     
     public void LogFullInventoryState()
     {
-        if (inventory == null || inventory.inventory == null) return;
+        if (inventory == null || inventory.items == null) return;
         
         Debug.Log("=============== INVENTORY STATE (F1) ===============");
         
         // Display Main Inventory Data
-        for (int y = 0; y < inventory.inventory.height; y++)
+        for (int y = 0; y < inventory.items.height; y++)
         {
-            for (int x = 0; x < inventory.inventory.width; x++)
+            for (int x = 0; x < inventory.items.width; x++)
             {
-                var slot = inventory.inventory.GetSlot(new Vector2Int(x, y));
+                var slot = inventory.items.GetSlot(new Vector2Int(x, y));
                 if (slot != null && slot.item != null)
                 {
                     Debug.Log($"Main Inventory [{x},{y}]: {slot.item.itemName} x{slot.item.quantity}");
