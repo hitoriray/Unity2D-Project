@@ -36,7 +36,6 @@ public class WarehouseData
         }
         if (warehouseItems.Count + 1 > capacity) return false;
         warehouseItems.Add(item);
-        Debug.Log(item.itemName);
         return false;
     }
 }

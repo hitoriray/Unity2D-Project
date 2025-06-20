@@ -11,41 +11,43 @@ public enum DamageType
     /// 物理伤害 - 基础伤害类型，受护甲影响
     /// </summary>
     Physical = 0,
-    
+
     /// <summary>
     /// 火焰伤害 - 可能造成燃烧效果
     /// </summary>
     Fire = 1,
-    
+
     /// <summary>
     /// 冰霜伤害 - 可能造成减速或冰冻效果
     /// </summary>
     Ice = 2,
-    
+
     /// <summary>
     /// 雷电伤害 - 可能造成麻痹或连锁伤害
     /// </summary>
     Lightning = 3,
-    
+
     /// <summary>
     /// 毒素伤害 - 可能造成持续伤害效果
     /// </summary>
     Poison = 4,
-    
+
     /// <summary>
     /// 神圣伤害 - 对亡灵生物额外伤害
     /// </summary>
     Holy = 5,
-    
+
     /// <summary>
     /// 暗影伤害 - 对神圣生物额外伤害
     /// </summary>
     Shadow = 6,
-    
+
     /// <summary>
     /// 真实伤害 - 无视护甲和抗性
     /// </summary>
-    True = 7
+    True = 7,
+    
+    Magic = 8,
 }
 
 /// <summary>

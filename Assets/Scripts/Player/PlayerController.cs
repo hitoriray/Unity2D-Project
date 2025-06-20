@@ -167,7 +167,7 @@ public class PlayerController : MonoBehaviour
         weapon.GetComponent<SpriteRenderer>().sprite = selectedItem?.itemSprite;
 
         bool isUIDisplayed = DragManager.Instance != null && DragManager.Instance.IsDragging() ||
-                            (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
+                             (ItemSplitUI.Instance != null && ItemSplitUI.Instance.IsShowing());
         isUIDisplayed |= GetComponent<WarehouseController>().IsWarehouseUIShowing();
         isUIDisplayed |= craftingUI.gameObject.activeInHierarchy;
 
@@ -184,7 +184,17 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
+        // --- 最终诊断修改：直接检测按键，绕过输入轴系统 ---
+        float horizontal = 0f;
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        {
+            horizontal = 1f;
+        }
+        else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            horizontal = -1f;
+        }
+        // --- 修改结束 ---
 
         Vector3 currentPos = transform.position;
         Vector2 movement = new Vector2(horizontal * moveSpeed, rb.velocity.y);

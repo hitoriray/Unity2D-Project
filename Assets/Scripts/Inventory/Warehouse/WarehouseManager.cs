@@ -17,11 +17,6 @@ public class WarehouseManager : MonoBehaviour
     {
         warehouseData = new WarehouseData();
         GetAllItemsFromInventory();
-
-        Debug.Log("==========warehouseData=============");
-        for (int i = 0; i < warehouseData.warehouseItems.Count; ++i)
-            Debug.Log(warehouseData.warehouseItems[i].itemName);
-        Debug.Log("==========warehouseData=============");
     }
 
     public int GetWarehouseSizeForCategory(ItemType itemType)
@@ -57,7 +52,6 @@ public class WarehouseManager : MonoBehaviour
             {
                 if (inventory.items.slots[x, y] != null)
                 {
-                    Debug.Log("Added!");
                     warehouseData.AddItem(inventory.items.slots[x, y].item);
                 }
             }
