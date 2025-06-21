@@ -4063,6 +4063,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 752018fe4581aa941ad792b393bff221, type: 3}
   - {fileID: 8300000, guid: b9480c2a41845de46a292666e19388ca, type: 3}
   swordSwingSound: {fileID: 8300000, guid: 27946b1d59710dd4eb2c695252e550eb, type: 3}
+  hurtSounds:
+  - {fileID: 8300000, guid: 080f942f64daa9c49be208122375c0ac, type: 3}
+  - {fileID: 8300000, guid: 3699f532fc46d4d47a426ef99febae65, type: 3}
+  - {fileID: 8300000, guid: f62142ba5edbb1d468c6ed281a585f33, type: 3}
   inventory: {fileID: 3456888401436643649}
   hotbarSelector: {fileID: 0}
   selectedItem:
@@ -4091,6 +4095,10 @@ MonoBehaviour:
   spumPrefabs: {fileID: 9063021166187635013}
   spawnPos: {x: 0, y: 0}
   mousePos: {x: 0, y: 0}
+  maxHealth: 10000
+  currentHealth: 10000
+  invulnerabilityTime: 1
+  blinkFrequency: 10
 --- !u!114 &3456888401436643649
 MonoBehaviour:
   m_ObjectHideFlags: 0

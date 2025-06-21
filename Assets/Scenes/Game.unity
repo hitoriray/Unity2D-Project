@@ -3582,6 +3582,10 @@ PrefabInstance:
       propertyPath: starProjectilePool
       value: 
       objectReference: {fileID: 1884715222}
+    - target: {fileID: 4292723228715428875, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
+      propertyPath: invulnerabilityTime
+      value: 0.5
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a9b4068e3c3d17a45b96f6c9b9f2bbb5, type: 3}
 --- !u!1 &1539485949
@@ -3908,11 +3912,6 @@ RectTransform:
   m_AnchoredPosition: {x: -1, y: 7}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!4 &1689050388 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1396587865129206546, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-  m_PrefabInstance: {fileID: 1396587866662444550}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1820382621
 GameObject:
   m_ObjectHideFlags: 0
@@ -4780,27 +4779,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1689050389, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-      propertyPath: groundCheck
-      value: 
-      objectReference: {fileID: 1689050388}
-    - target: {fileID: 1689050389, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-      propertyPath: groundCheckRadius
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1689050389, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-      propertyPath: groundLayer.m_Bits
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1689050390, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-      propertyPath: restartWhenComplete
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1689050390, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-      propertyPath: mBehaviorSource.mTaskData.JSONSerialization
-      value: '{"EntryTask":{"Type":"BehaviorDesigner.Runtime.Tasks.EntryTask","NodeData":{"Offset":"(287.749847,124.010773)"},"ID":0,"Name":"Entry","Instant":true},"RootTask":{"Type":"BehaviorDesigner.Runtime.Tasks.Selector","NodeData":{"Offset":"(-2.25015259,124.010773)"},"ID":1,"Name":"Selector","Instant":true,"AbortTypeabortType":"None","Children":[{"Type":"BehaviorDesigner.Runtime.Tasks.Sequence","NodeData":{"Offset":"(-3.65477085,175.484818)"},"ID":2,"Name":"Sequence","Instant":true,"AbortTypeabortType":"None","Children":[{"Type":"BehaviorDesigner.Runtime.Tasks.Wait","NodeData":{"Offset":"(-101.32,159.126953)"},"ID":3,"Name":"Wait","Instant":true,"SharedFloatwaitTime":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":2},"SharedBoolrandomWait":{"Type":"BehaviorDesigner.Runtime.SharedBool","Name":null,"BooleanmValue":false},"SharedFloatrandomWaitMin":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":1},"SharedFloatrandomWaitMax":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":1}},{"Type":"SlimeAI.BehaviorTree.Actions.SlimeHop","NodeData":{"Offset":"(110.307907,163.778137)"},"ID":4,"Name":"Slime
-        Hop","Instant":true}]}]}}'
-      objectReference: {fileID: 0}
     - target: {fileID: 1396587865129206546, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
       propertyPath: m_RootOrder
       value: 19
@@ -4848,10 +4826,6 @@ PrefabInstance:
     - target: {fileID: 1396587865129206550, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
       propertyPath: m_Name
       value: Slime
-      objectReference: {fileID: 0}
-    - target: {fileID: 1396587865129206550, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1da85dbe05d6566479e0ed0fc7d532d3, type: 3}
@@ -5015,6 +4989,10 @@ PrefabInstance:
     - target: {fileID: 4106907874483614320, guid: a706c40a06017ad4a8222a76fa14ed63, type: 3}
       propertyPath: m_Name
       value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 4106907874483614320, guid: a706c40a06017ad4a8222a76fa14ed63, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6099448365453824867, guid: a706c40a06017ad4a8222a76fa14ed63, type: 3}
       propertyPath: m_BodyType

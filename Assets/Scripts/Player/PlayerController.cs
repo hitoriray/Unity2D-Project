@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using Combat.Weapons; // 新增：为了能引用 StarProjectile
 using Utility;        // 新增：为了能引用 ObjectPool
+using Combat.Interfaces; // 新增：为了使用IDamageable接口
+using UI; // 新增：为了使用DamageTextManager
 // SoundEffectManager 在全局命名空间，不需要额外 using
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDamageable
 {
     [Header("依赖")]
     [SerializeField] private CraftingUI craftingUI; // 引用UI控制器
@@ -20,6 +22,8 @@ public class PlayerController : MonoBehaviour
     [Header("Audio")]
     [Tooltip("角色挥剑或攻击时的音效")]
     public AudioClip swordSwingSound;
+    [Tooltip("受伤时的音效")]
+    public AudioClip[] hurtSounds;
     // [Tooltip("星星开始降落时的音效")] // 下面这行将被移除，音效移至Weapon.cs
     // public AudioClip starFallSound;
 
@@ -99,6 +103,24 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+    #region 生命值系统
+    [Header("Health System")]
+    [Tooltip("玩家最大生命值")]
+    public float maxHealth = 100f;
+    [Tooltip("当前生命值")]
+    public float currentHealth = 100f;
+    [Tooltip("受伤时的无敌时间")]
+    public float invulnerabilityTime = 1f;
+    [Tooltip("受伤闪烁的频率")]
+    public float blinkFrequency = 10f;
+    
+    private bool isInvulnerable = false;
+    private SpriteRenderer playerSpriteRenderer;
+    private Coroutine invulnerabilityCoroutine;
+    private Coroutine playerHurtEffectCoroutine;
+    private Color originalPlayerColor = Color.white;
+    #endregion
+
 
 
     /* 成员方法 */
@@ -110,6 +132,19 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         inventory = GetComponent<Inventory>();
+        
+        // 初始化生命值系统
+        currentHealth = maxHealth;
+        playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (playerSpriteRenderer == null)
+        {
+            Debug.LogWarning("PlayerController: 未找到SpriteRenderer组件，受伤闪烁效果可能不工作");
+        }
+        else
+        {
+            // 保存玩家原始颜色
+            originalPlayerColor = playerSpriteRenderer.color;
+        }
     }
 
     private void Update()
@@ -1031,6 +1066,181 @@ public class PlayerController : MonoBehaviour
             // 短暂的延迟，让剑一把接一把地出现
             yield return new WaitForSeconds(weaponData.swordFreq);
         }
+    }
+    #endregion
+
+    #region IDamageable接口实现
+    /// <summary>
+    /// 实现IDamageable接口，处理玩家受到的伤害
+    /// </summary>
+    public void TakeDamage(DamageInfo damageInfo)
+    {
+        // 无敌时间内不受伤害
+        if (isInvulnerable) return;
+
+        // 扣血
+        currentHealth -= damageInfo.baseDamage;
+        Debug.Log($"玩家受到 {damageInfo.baseDamage} 点伤害，剩余血量: {currentHealth}");
+
+        // 显示伤害数字
+        if (DamageTextManager.Instance != null)
+        {
+            DamageTextManager.Instance.ShowDamage(
+                transform.position + Vector3.up * 1.5f, // 在玩家头部显示
+                Mathf.RoundToInt(damageInfo.baseDamage), 
+                damageInfo.isCritical, 
+                damageInfo.damageType
+            );
+        }
+        else
+        {
+            Debug.LogWarning($"[PlayerController] DamageTextManager.Instance为空，无法显示伤害数字");
+        }
+
+        // 播放受伤音效
+        if (hurtSounds != null)
+        {
+            if (SoundEffectManager.Instance != null)
+                SoundEffectManager.Instance.PlaySoundAtPoint(hurtSounds[Random.Range(0, hurtSounds.Length)], transform.position);
+            else 
+                AudioSource.PlayClipAtPoint(hurtSounds[Random.Range(0, hurtSounds.Length)], transform.position);
+        }
+
+        // 击退效果
+        if (damageInfo.knockbackForce > 0f && rb != null)
+        {
+            Vector2 knockbackDirection = damageInfo.hitDirection;
+            if (knockbackDirection == Vector2.zero)
+            {
+                // 如果没有指定方向，使用从伤害来源到玩家的方向
+                if (damageInfo.source != null)
+                {
+                    knockbackDirection = (transform.position - damageInfo.source.transform.position).normalized;
+                }
+                else
+                {
+                    knockbackDirection = Vector2.right * (transform.localScale.x > 0 ? -1 : 1);
+                }
+            }
+            
+            rb.AddForce(knockbackDirection * damageInfo.knockbackForce, ForceMode2D.Impulse);
+        }
+
+        // 启动受伤变红效果
+        if (playerHurtEffectCoroutine != null)
+            StopCoroutine(playerHurtEffectCoroutine);
+        playerHurtEffectCoroutine = StartCoroutine(PlayerHurtEffect());
+
+        // 启动无敌时间和闪烁效果
+        if (invulnerabilityCoroutine != null)
+            StopCoroutine(invulnerabilityCoroutine);
+        invulnerabilityCoroutine = StartCoroutine(InvulnerabilityCoroutine());
+
+        // 检查是否死亡
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    /// <summary>
+    /// 玩家受伤变红效果协程
+    /// </summary>
+    private IEnumerator PlayerHurtEffect()
+    {
+        if (playerSpriteRenderer == null)
+        {
+            playerHurtEffectCoroutine = null;
+            yield break;
+        }
+
+        // 变红
+        playerSpriteRenderer.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+
+        // 恢复原始颜色
+        if (playerSpriteRenderer != null)
+        {
+            playerSpriteRenderer.color = originalPlayerColor;
+        }
+
+        // 清理协程引用
+        playerHurtEffectCoroutine = null;
+    }
+
+    /// <summary>
+    /// 无敌时间协程，处理闪烁效果
+    /// </summary>
+    private IEnumerator InvulnerabilityCoroutine()
+    {
+        isInvulnerable = true;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < invulnerabilityTime)
+        {
+            // 闪烁效果 - 不干扰受伤变红效果
+            if (playerSpriteRenderer != null && playerHurtEffectCoroutine == null)
+            {
+                float alpha = Mathf.Sin(elapsedTime * blinkFrequency * Mathf.PI * 2) > 0 ? 0.3f : 1f;
+                Color currentColor = playerSpriteRenderer.color;
+                playerSpriteRenderer.color = new Color(currentColor.r, currentColor.g, currentColor.b, alpha);
+            }
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 恢复正常显示
+        if (playerSpriteRenderer != null)
+        {
+            playerSpriteRenderer.color = originalPlayerColor;
+        }
+
+        isInvulnerable = false;
+        invulnerabilityCoroutine = null;
+    }
+
+    /// <summary>
+    /// 玩家死亡处理
+    /// </summary>
+    private void Die()
+    {
+        Debug.Log("玩家死亡！");
+        
+        // 恢复颜色
+        if (playerSpriteRenderer != null)
+            playerSpriteRenderer.color = originalPlayerColor;
+            
+        // 停止所有受伤效果
+        if (playerHurtEffectCoroutine != null)
+        {
+            StopCoroutine(playerHurtEffectCoroutine);
+            playerHurtEffectCoroutine = null;
+        }
+        
+        // 这里可以添加死亡动画、重生逻辑等
+        // 暂时重置生命值作为重生机制
+        currentHealth = maxHealth;
+        
+        // 可以添加死亡惩罚，比如掉落物品、经验等
+        // TODO: 实现完整的死亡系统
+    }
+
+    /// <summary>
+    /// 恢复生命值
+    /// </summary>
+    public void Heal(float amount)
+    {
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+        Debug.Log($"玩家恢复 {amount} 点生命值，当前血量: {currentHealth}");
+    }
+
+    /// <summary>
+    /// 获取当前生命值百分比
+    /// </summary>
+    public float GetHealthPercentage()
+    {
+        return currentHealth / maxHealth;
     }
     #endregion
 }

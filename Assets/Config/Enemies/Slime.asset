@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Slime
   m_EditorClassIdentifier: 
   maxHealth: 100000
-  moveSpeed: 20
-  patrolSpeed: 10
-  detectionRadius: 50
+  moveSpeed: 5
+  patrolSpeed: 5
+  detectionRadius: 100
   loseSightRadius: 100
   attackRange: 1.5
-  attackCooldown: 2
+  attackCooldown: 1
   baseDamage:
-    baseDamage: 0
+    baseDamage: 10
     damageType: 0
     isCritical: 0
     source: {fileID: 0}
