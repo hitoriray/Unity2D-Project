@@ -152,9 +152,7 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 72
-  attackTriggerLayer:
-    serializedVersion: 2
-    m_Bits: 2048
+  attackTriggerLayer: 11
   idleSprite: {fileID: -382238951, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
   preparingJumpSprite: {fileID: -969017740, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
   inAirSprite: {fileID: -32631532, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
@@ -173,8 +171,8 @@ MonoBehaviour:
   chaseHopInterval: 1
   hopSound: {fileID: 0}
   attackSound: {fileID: 0}
-  hurtSound: {fileID: 0}
-  deathSound: {fileID: 0}
+  hurtSound: {fileID: 8300000, guid: 56bfad258e06548439b69433cc73b634, type: 3}
+  deathSound: {fileID: 8300000, guid: f336a39cc74f0f241aeccee3eee99521, type: 3}
 --- !u!114 &1689050390
 MonoBehaviour:
   m_ObjectHideFlags: 0

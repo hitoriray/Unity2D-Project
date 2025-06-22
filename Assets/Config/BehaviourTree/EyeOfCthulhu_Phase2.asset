@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23f08d2ae4cba14087c1ed36193d82b, type: 3}
+  m_Name: EyeOfCthulhu_Phase2
+  m_EditorClassIdentifier: 
+  mBehaviorSource:
+    behaviorName: EyeOfCthulhu_Phase2
+    behaviorDescription: 
+    mTaskData:
+      types: []
+      parentIndex: 
+      startIndex: 
+      variableStartIndex: 
+      JSONSerialization: '{"EntryTask":{"Type":"BehaviorDesigner.Runtime.Tasks.EntryTask","NodeData":{"Offset":"(286.7827,10)"},"ID":0,"Name":"Entry","Instant":true},"RootTask":{"Type":"BehaviorDesigner.Runtime.Tasks.Repeater","NodeData":{"Offset":"(-3.21728516,120)"},"ID":1,"Name":"Repeater","Instant":true,"SharedIntcount":{"Type":"BehaviorDesigner.Runtime.SharedInt","Name":null,"Int32mValue":0},"SharedBoolrepeatForever":{"Type":"BehaviorDesigner.Runtime.SharedBool","Name":null,"BooleanmValue":true},"SharedBoolendOnFailure":{"Type":"BehaviorDesigner.Runtime.SharedBool","Name":null,"BooleanmValue":true},"Children":[{"Type":"BehaviorDesigner.Runtime.Tasks.Selector","NodeData":{"Offset":"(3.87410355,140.708557)"},"ID":2,"Name":"Selector","Instant":true,"AbortTypeabortType":"None","Children":[{"Type":"BehaviorDesigner.Runtime.Tasks.Sequence","NodeData":{"Offset":"(-322.447937,166.922592)"},"ID":3,"Name":"Sequence","Instant":true,"AbortTypeabortType":"None","Children":[{"Type":"Combat.AI.BehaviorDesigner.EoCCheckDistance","NodeData":{"Offset":"(-82.05123,138.718)"},"ID":4,"Name":"Eo
+        C Check Distance","Instant":true,"SharedFloatminDistance":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0},"SharedFloatmaxDistance":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":50}},{"Type":"Combat.AI.BehaviorDesigner.EoCMultiChargeAttack","NodeData":{"Offset":"(87.2956848,144.358337)"},"ID":5,"Name":"Eo
+        C Multi Charge Attack","Instant":true,"SharedFloatchargeSpeed":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":40},"SharedFloatchargeDuration":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.3},"SharedFloatchargeInterval":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.15},"SharedFloatchargeDamage":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":50},"SharedFloatknockbackForce":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":12},"LayerMaskplayerLayer":64,"SharedFloatroarDelay":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.3},"SharedFloatcooldownTime":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":4},"Int32maxCharges":5}]},{"Type":"BehaviorDesigner.Runtime.Tasks.Sequence","NodeData":{"Offset":"(107.928871,159.9512)"},"ID":6,"Name":"Sequence","Instant":true,"AbortTypeabortType":"None","Children":[{"Type":"Combat.AI.BehaviorDesigner.EoCCheckDistance","NodeData":{"Offset":"(-132.786011,161.876892)"},"ID":7,"Name":"Eo
+        C Check Distance","Instant":true,"SharedFloatminDistance":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0},"SharedFloatmaxDistance":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":50}},{"Type":"Combat.AI.BehaviorDesigner.EoCCheckChargeCooldown","NodeData":{"Offset":"(53.44954,155.12793)"},"ID":8,"Name":"Eo
+        C Check Charge Cooldown","Instant":true,"SharedFloatcooldownTime":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.5}},{"Type":"Combat.AI.BehaviorDesigner.EoCChargeAttack","NodeData":{"Offset":"(225.537766,159.5459)"},"ID":9,"Name":"Eo
+        C Charge Attack","Instant":true,"SharedFloatchargeSpeed":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":40},"SharedFloatchargeDuration":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.5},"SharedFloatchargeDamage":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":35},"SharedFloatknockbackForce":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":10},"LayerMaskplayerLayer":64,"SharedFloatroarDelay":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.3},"SharedFloatroarDelayPhase2":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":0.3},"SharedFloatcooldownTime":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":3}}]},{"Type":"Combat.AI.BehaviorDesigner.EoCFlyAroundPlayer","NodeData":{"Offset":"(420.600067,159.951172)"},"ID":10,"Name":"Eo
+        C Fly Around Player","Instant":true,"SharedFloatflySpeed":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":25},"SharedFloatmaintainDistance":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":8},"SharedFloatdistanceTolerance":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":1},"SharedFloatturnSpeed":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":3},"SharedFloatupdateInterval":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":1.5},"SharedBoolfacePlayer":{"Type":"BehaviorDesigner.Runtime.SharedBool","Name":null,"BooleanmValue":true},"SharedFloatflyDuration":{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":null,"SinglemValue":3}}]}]},"Variables":[{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":"MaxHealth","IsShared":true,"SinglemValue":1400},{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":"CurrentHealth","IsShared":true,"SinglemValue":1400},{"Type":"BehaviorDesigner.Runtime.SharedInt","Name":"CurrentPhase","IsShared":true,"Int32mValue":2},{"Type":"BehaviorDesigner.Runtime.SharedFloat","Name":"HealthPercentage","IsShared":true,"SinglemValue":1},{"Type":"BehaviorDesigner.Runtime.SharedString","Name":"BossName","IsShared":true,"StringmValue":"\u514b\u82cf\u9c81\u4e4b\u773c"}]}'
+      fieldSerializationData:
+        typeName: []
+        fieldNameHash: 
+        startIndex: 
+        dataPosition: 
+        unityObjects: []
+        byteData: 
+        byteDataArray: 
+      Version: 1.7.12

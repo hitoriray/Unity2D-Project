@@ -175,9 +175,9 @@ public class SlimeController : MonoBehaviour, IDamageable
     {
         CheckStateTransitions();
         
-        switch (currentState)
-        {
-            case AIState.Wandering:
+            switch (currentState)
+            {
+                case AIState.Wandering:
                 // 在闲逛状态下，每5秒更新一次活动时间，防止误触发重启
                 if (Time.time - lastActionTime > 5f)
                 {
@@ -189,14 +189,14 @@ public class SlimeController : MonoBehaviour, IDamageable
                     PerformWanderHop();
                     hopCooldownTimer = Random.Range(minWanderInterval, maxWanderInterval);
                 }
-                break;
-            case AIState.Chasing:
+                    break;
+                case AIState.Chasing:
                 if (hopCooldownTimer <= 0)
                 {
                     PerformChaseHop();
                     hopCooldownTimer = chaseHopInterval;
                 }
-                break;
+                    break;
             case AIState.Attacking:
                 // 攻击状态下，即使不在地面也要尝试攻击（修复卡住问题）
                 if (hopCooldownTimer <= 0)
@@ -370,14 +370,14 @@ public class SlimeController : MonoBehaviour, IDamageable
     private void UpdateAnimation()
     {
         if (currentAnimationCoroutine != null) return;
-        
+
         if (isGrounded)
         {
             if (currentAnimState != AnimationState.Idle)
             {
                 currentAnimState = AnimationState.Idle;
                 if (spriteRenderer != null && idleSprite != null)
-                    spriteRenderer.sprite = idleSprite;
+                spriteRenderer.sprite = idleSprite;
             }
         }
         else
@@ -649,7 +649,7 @@ public class SlimeController : MonoBehaviour, IDamageable
     }
 
     private IEnumerator DeathAnimation()
-    {
+        {
         float duration = 1f;
         Vector3 startScale = transform.localScale;
         float elapsedTime = 0f;
@@ -726,13 +726,13 @@ public class SlimeController : MonoBehaviour, IDamageable
             }
             
             currentAnimState = AnimationState.Idle;
-            if (spriteRenderer != null)
-            {
+        if (spriteRenderer != null)
+        {
                 if (idleSprite != null)
                     spriteRenderer.sprite = idleSprite;
                 // 恢复原始颜色
                 spriteRenderer.color = originalSpriteColor;
-            }
+        }
             
             hopCooldownTimer = 0f;
             lastActionTime = Time.time;
