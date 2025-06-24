@@ -166,12 +166,13 @@ namespace Combat
             attackTriggerObject = new GameObject("BossAttackTrigger");
             attackTriggerObject.transform.SetParent(transform);
             attackTriggerObject.transform.localPosition = Vector3.zero;
+            attackTriggerObject.transform.localScale = Vector3.one;
             attackTriggerObject.layer = attackTriggerLayer;
             
             // 添加触发器碰撞体
             CircleCollider2D triggerCollider = attackTriggerObject.AddComponent<CircleCollider2D>();
             triggerCollider.isTrigger = true;
-            triggerCollider.radius = 1.2f; // 比Boss sprite稍大
+            triggerCollider.radius = 7f; // 比Boss sprite稍大
             
             // 添加Boss攻击触发器脚本
             var attackTrigger = attackTriggerObject.AddComponent<BossContactTrigger>();

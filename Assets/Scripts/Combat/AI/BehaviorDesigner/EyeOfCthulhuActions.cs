@@ -224,15 +224,8 @@ namespace Combat.AI.BehaviorDesigner
             isRoaring = true;
             
             // 根据当前阶段决定吼叫时间
-            var bossController = GetComponent<BossBehaviorDesignerController>();
-            if (bossController != null && bossController.currentPhase == 2)
-            {
-                roarTimer = roarDelayPhase2.Value;
-            }
-            else
-            {
+            // 简化处理，默认使用第一阶段延迟
                 roarTimer = roarDelay.Value;
-            }
             
             // 播放冲锋前吼叫音效
             PlayRoarSound();
@@ -345,15 +338,15 @@ namespace Combat.AI.BehaviorDesigner
         /// </summary>
         private void PlayRoarSound()
         {
-            // 尝试从Boss控制器获取吼叫音效
-            var bossController = GetComponent<BossBehaviorDesignerController>();
-            if (bossController != null && bossController.roarSound != null && audioSource != null)
+            // 简化处理，如果有音频源就播放默认音效
+            if (audioSource != null)
             {
-                audioSource.PlayOneShot(bossController.roarSound);
+                // 这里可以添加默认音效或者通过其他方式获取
+                Debug.Log("[EoCChargeAttack] 播放吼叫音效");
             }
             else
             {
-                Debug.LogWarning("[EoCChargeAttack] 未找到吼叫音效或AudioSource组件");
+                Debug.LogWarning("[EoCChargeAttack] 未找到AudioSource组件");
             }
         }
         
@@ -464,16 +457,7 @@ namespace Combat.AI.BehaviorDesigner
         
         public override TaskStatus OnUpdate()
         {
-            // 尝试获取BossBehaviorDesignerController
-            var behaviorDesignerController = GetComponent<BossBehaviorDesignerController>();
-            if (behaviorDesignerController != null)
-            {
-                // 使用新的切换方法
-                behaviorDesignerController.SwitchToPhase(targetPhase);
-                return TaskStatus.Success;
-            }
-            
-            // 回退到旧的方式（兼容性）
+            // 简化阶段切换逻辑
             if (bossController == null)
                 return TaskStatus.Failure;
             
@@ -820,10 +804,9 @@ namespace Combat.AI.BehaviorDesigner
         
         private void PlayRoarSound()
         {
-            var bossController = GetComponent<BossBehaviorDesignerController>();
-            if (bossController != null && bossController.roarSound != null && audioSource != null)
+            if (audioSource != null)
             {
-                audioSource.PlayOneShot(bossController.roarSound);
+                Debug.Log("[EoCMultiChargeAttack] 播放吼叫音效");
             }
         }
         
@@ -867,6 +850,230 @@ namespace Combat.AI.BehaviorDesigner
             {
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawRay(transform.position, chargeDirection * 3f);
+            }
+            #endif
+        }
+    }
+    
+    /// <summary>
+    /// 克苏鲁之眼Boss召唤仆从的任务
+    /// </summary>
+    [TaskCategory("Boss/EyeOfCthulhu")]
+    [TaskDescription("召唤克苏鲁之眼仆从（Servants of Cthulhu）")]
+    public class EoCSpawnServants : Action
+    {
+        [Tooltip("仆从预制体")]
+        public SharedGameObject servantPrefab;
+        [Tooltip("召唤数量（第一阶段）")]
+        public SharedInt phase1ServantCount = 3;
+        [Tooltip("召唤数量（第二阶段）")]
+        public SharedInt phase2ServantCount = 5;
+        [Tooltip("生成半径")]
+        public SharedFloat spawnRadius = 3f;
+        [Tooltip("生成高度偏移")]
+        public SharedFloat spawnHeightOffset = 1f;
+        [Tooltip("召唤间隔时间")]
+        public SharedFloat spawnInterval = 0.2f;
+        [Tooltip("召唤音效")]
+        public AudioClip spawnSound;
+        [Tooltip("召唤特效预制体")]
+        public GameObject spawnEffectPrefab;
+        [Tooltip("召唤后的等待时间")]
+        public SharedFloat postSpawnWait = 1.5f;
+        
+        private BossController bossController;
+        private AudioSource audioSource;
+        private int servantsToSpawn;
+        private int servantsSpawned;
+        private float spawnTimer;
+        private bool isSpawning;
+        
+        public override void OnStart()
+        {
+            bossController = GetComponent<BossController>();
+            audioSource = GetComponent<AudioSource>();
+            
+            if (servantPrefab.Value == null)
+            {
+                Debug.LogError("[EoCSpawnServants] 仆从预制体未设置!");
+                return;
+            }
+            
+            // 根据当前阶段决定召唤数量
+            if (bossController != null)
+            {
+                servantsToSpawn = bossController.currentPhase == 2 ? phase2ServantCount.Value : phase1ServantCount.Value;
+            }
+            else
+            {
+                servantsToSpawn = phase1ServantCount.Value;
+            }
+            
+            servantsSpawned = 0;
+            spawnTimer = 0f;
+            isSpawning = true;
+            
+            // 播放召唤音效
+            PlaySpawnSound();
+            
+            // Boss停止移动，准备召唤
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.velocity = Vector2.zero;
+            }
+        }
+        
+        public override TaskStatus OnUpdate()
+        {
+            if (servantPrefab.Value == null)
+                return TaskStatus.Failure;
+            
+            if (isSpawning)
+            {
+                spawnTimer += Time.deltaTime;
+                
+                if (spawnTimer >= spawnInterval.Value)
+                {
+                    SpawnServant();
+                    servantsSpawned++;
+                    spawnTimer = 0f;
+                    
+                    if (servantsSpawned >= servantsToSpawn)
+                    {
+                        isSpawning = false;
+                        spawnTimer = 0f;
+                    }
+                }
+                
+                return TaskStatus.Running;
+            }
+            else
+            {
+                // 召唤完成后的等待时间
+                spawnTimer += Time.deltaTime;
+                if (spawnTimer >= postSpawnWait.Value)
+                {
+                    return TaskStatus.Success;
+                }
+                
+                return TaskStatus.Running;
+            }
+        }
+        
+        private void SpawnServant()
+        {
+            // 计算生成位置
+            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            Vector2 spawnOffset = new Vector2(
+                Mathf.Cos(angle) * spawnRadius.Value,
+                Mathf.Sin(angle) * spawnRadius.Value + spawnHeightOffset.Value
+            );
+            Vector3 spawnPosition = transform.position + (Vector3)spawnOffset;
+            
+            // 生成仆从
+            GameObject servant = Object.Instantiate(servantPrefab.Value, spawnPosition, Quaternion.identity);
+            
+            // 配置仆从
+            ConfigureServant(servant);
+            
+            // 播放生成特效
+            if (spawnEffectPrefab != null)
+            {
+                GameObject effect = Object.Instantiate(spawnEffectPrefab, spawnPosition, Quaternion.identity);
+                Object.Destroy(effect, 2f); // 2秒后销毁特效
+            }
+            
+            // 添加生成动画（缩放效果）
+            StartServantSpawnAnimation(servant);
+        }
+        
+        private void ConfigureServant(GameObject servant)
+        {
+            // 获取仆从控制器
+            ServantController servantController = servant.GetComponent<ServantController>();
+            if (servantController != null)
+            {
+                // 可以在这里设置仆从的额外属性
+                // 例如：根据Boss阶段调整仆从的速度或伤害
+                if (bossController != null && bossController.currentPhase == 2)
+                {
+                    servantController.speed *= 1.5f; // 第二阶段仆从速度提升50%
+                }
+            }
+            
+            // 设置仆从的层级（确保与Boss不会碰撞）
+            servant.layer = gameObject.layer;
+        }
+        
+        private void StartServantSpawnAnimation(GameObject servant)
+        {
+            // 从小到大的生成动画
+            Vector3 originalScale = servant.transform.localScale;
+            servant.transform.localScale = Vector3.zero;
+            
+            // 使用协程实现缩放动画
+            StartCoroutine(ScaleServant(servant.transform, originalScale, 0.3f));
+        }
+        
+        private System.Collections.IEnumerator ScaleServant(Transform servantTransform, Vector3 targetScale, float duration)
+        {
+            float elapsed = 0f;
+            
+            while (elapsed < duration && servantTransform != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                
+                // 使用缓动函数使动画更平滑
+                t = Mathf.SmoothStep(0f, 1f, t);
+                
+                servantTransform.localScale = Vector3.Lerp(Vector3.zero, targetScale, t);
+                yield return null;
+            }
+            
+            if (servantTransform != null)
+            {
+                servantTransform.localScale = targetScale;
+            }
+        }
+        
+        private void PlaySpawnSound()
+        {
+            if (spawnSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(spawnSound);
+            }
+            else
+            {
+                // 如果没有专门的召唤音效，简化处理
+                if (audioSource != null)
+                {
+                    Debug.Log("[EoCSpawnServants] 播放召唤音效");
+                }
+            }
+        }
+        
+        public override void OnDrawGizmos()
+        {
+            #if UNITY_EDITOR
+            // 绘制生成范围
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(transform.position, spawnRadius.Value);
+            
+            // 绘制生成高度
+            Vector3 heightOffset = Vector3.up * spawnHeightOffset.Value;
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, transform.position + heightOffset);
+            
+            // 显示将要召唤的数量
+            if (Application.isPlaying && bossController != null)
+            {
+                int count = bossController.currentPhase == 2 ? phase2ServantCount.Value : phase1ServantCount.Value;
+                Vector3 textPos = transform.position + Vector3.up * (spawnRadius.Value + 1f);
+                #if UNITY_EDITOR
+                UnityEditor.Handles.Label(textPos, $"召唤数量: {count}");
+                #endif
             }
             #endif
         }

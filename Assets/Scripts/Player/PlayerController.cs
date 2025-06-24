@@ -24,6 +24,8 @@ public class PlayerController : MonoBehaviour, IDamageable
     public AudioClip swordSwingSound;
     [Tooltip("受伤时的音效")]
     public AudioClip[] hurtSounds;
+    [Tooltip("死亡时的音效")]
+    public AudioClip[] deathSounds;
     // [Tooltip("星星开始降落时的音效")] // 下面这行将被移除，音效移至Weapon.cs
     // public AudioClip starFallSound;
 
@@ -115,10 +117,26 @@ public class PlayerController : MonoBehaviour, IDamageable
     public float blinkFrequency = 10f;
     
     private bool isInvulnerable = false;
+    private bool isDead = false;
     private SpriteRenderer playerSpriteRenderer;
     private Coroutine invulnerabilityCoroutine;
     private Coroutine playerHurtEffectCoroutine;
+    private Coroutine respawnCoroutine;
     private Color originalPlayerColor = Color.white;
+    #endregion
+
+    #region 死亡系统
+    [Header("Death System")]
+    [Tooltip("墓碑预制体")]
+    public GameObject tombstonePrefab;
+    [Tooltip("墓碑生成偏移（相对于玩家位置）")]
+    public Vector2 tombstoneOffset = Vector2.zero;
+    [Tooltip("死亡后是否自动重生")]
+    public bool autoRespawn = true;
+    [Tooltip("自动重生延迟时间（秒）")]
+    public float respawnDelay = 3f;
+    [Tooltip("重生点位置，如果未设置则使用出生点")]
+    public Transform respawnPoint;
     #endregion
 
 
@@ -145,10 +163,16 @@ public class PlayerController : MonoBehaviour, IDamageable
             // 保存玩家原始颜色
             originalPlayerColor = playerSpriteRenderer.color;
         }
+        
+        // 延迟初始化血量UI（确保UI系统已加载）
+        StartCoroutine(InitializeHealthUIDelayed());
     }
 
     private void Update()
     {
+        // 死亡状态下禁用所有输入处理
+        if (isDead) return;
+        
         mousePos.x = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).x - 0.5f);
         mousePos.y = Mathf.RoundToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition).y - 0.5f);
 
@@ -219,6 +243,9 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     private void FixedUpdate()
     {
+        // 死亡状态下禁用所有物理和移动处理
+        if (isDead) return;
+        
         // --- 最终诊断修改：直接检测按键，绕过输入轴系统 ---
         float horizontal = 0f;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
@@ -1075,12 +1102,29 @@ public class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     public void TakeDamage(DamageInfo damageInfo)
     {
-        // 无敌时间内不受伤害
-        if (isInvulnerable) return;
+        // 无敌时间内或已死亡时不受伤害
+        if (isInvulnerable || isDead) 
+        {
+            Debug.Log($"[PlayerController] TakeDamage被阻止 - 无敌状态: {isInvulnerable}, 死亡状态: {isDead}");
+            return;
+        }
+
+        Debug.Log($"[PlayerController] TakeDamage被调用 - 伤害: {damageInfo.baseDamage}, 当前血量: {currentHealth}");
 
         // 扣血
         currentHealth -= damageInfo.baseDamage;
-        Debug.Log($"玩家受到 {damageInfo.baseDamage} 点伤害，剩余血量: {currentHealth}");
+        Debug.Log($"[PlayerController] 玩家受到 {damageInfo.baseDamage} 点伤害，剩余血量: {currentHealth}/{maxHealth}");
+
+        // 更新血量UI
+        if (UI.PlayerHealthUI.Instance != null)
+        {
+            Debug.Log($"[PlayerController] 正在更新血量UI: {currentHealth}/{maxHealth}");
+            UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+        }
+        else
+        {
+            Debug.LogError("[PlayerController] PlayerHealthUI.Instance为空，无法更新血量UI！");
+        }
 
         // 显示伤害数字
         if (DamageTextManager.Instance != null)
@@ -1205,12 +1249,20 @@ public class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     private void Die()
     {
-        Debug.Log("玩家死亡！");
+        if (isDead) return; // 防止重复死亡
         
-        // 恢复颜色
-        if (playerSpriteRenderer != null)
-            playerSpriteRenderer.color = originalPlayerColor;
-            
+        Debug.Log("[PlayerController] 玩家死亡！");
+        isDead = true;
+        
+        // 播放死亡音效
+        PlayDeathSound();
+        
+        // 生成墓碑
+        SpawnTombstone();
+        
+        // 设置角色不可见
+        SetPlayerVisibility(false);
+        
         // 停止所有受伤效果
         if (playerHurtEffectCoroutine != null)
         {
@@ -1218,12 +1270,28 @@ public class PlayerController : MonoBehaviour, IDamageable
             playerHurtEffectCoroutine = null;
         }
         
-        // 这里可以添加死亡动画、重生逻辑等
-        // 暂时重置生命值作为重生机制
-        currentHealth = maxHealth;
+        // 停止无敌时间
+        if (invulnerabilityCoroutine != null)
+        {
+            StopCoroutine(invulnerabilityCoroutine);
+            invulnerabilityCoroutine = null;
+            isInvulnerable = false;
+        }
+        
+        // 完全禁用玩家控制和移动
+        DisablePlayerMovementAndControl();
+        
+        // 开始重生流程
+        if (autoRespawn)
+        {
+            if (respawnCoroutine != null)
+                StopCoroutine(respawnCoroutine);
+            respawnCoroutine = StartCoroutine(RespawnCoroutine());
+        }
         
         // 可以添加死亡惩罚，比如掉落物品、经验等
-        // TODO: 实现完整的死亡系统
+        // TODO: 实现完整的死亡系统（掉落金币等）
+        // TODO: 显示死亡UI和重生倒计时
     }
 
     /// <summary>
@@ -1233,6 +1301,12 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
         Debug.Log($"玩家恢复 {amount} 点生命值，当前血量: {currentHealth}");
+        
+        // 更新血量UI
+        if (UI.PlayerHealthUI.Instance != null)
+        {
+            UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+        }
     }
 
     /// <summary>
@@ -1241,6 +1315,336 @@ public class PlayerController : MonoBehaviour, IDamageable
     public float GetHealthPercentage()
     {
         return currentHealth / maxHealth;
+    }
+
+    /// <summary>
+    /// 增加最大生命值（比如获得生命水晶等道具）
+    /// </summary>
+    public void IncreaseMaxHealth(float amount)
+    {
+        maxHealth += amount;
+        currentHealth += amount; // 同时增加当前血量
+        Debug.Log($"玩家最大血量增加 {amount}，新的最大血量: {maxHealth}，当前血量: {currentHealth}");
+        
+        // 更新血量UI
+        if (UI.PlayerHealthUI.Instance != null)
+        {
+            UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+        }
+    }
+
+    /// <summary>
+    /// 延迟初始化血量UI
+    /// </summary>
+    private IEnumerator InitializeHealthUIDelayed()
+    {
+        // 等待一帧确保UI系统已经初始化
+        yield return null;
+        
+        // 尝试初始化血量UI
+        if (UI.PlayerHealthUI.Instance != null)
+        {
+            UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth, false);
+            Debug.Log("[PlayerController] 血量UI初始化完成");
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerController] PlayerHealthUI.Instance为空，可能UI系统未正确初始化");
+        }
+    }
+
+    /// <summary>
+    /// 播放死亡音效
+    /// </summary>
+    private void PlayDeathSound()
+    {
+        if (deathSounds != null && deathSounds.Length > 0)
+        {
+            AudioClip randomDeathSound = deathSounds[Random.Range(0, deathSounds.Length)];
+            if (SoundEffectManager.Instance != null)
+            {
+                SoundEffectManager.Instance.PlaySoundAtPoint(randomDeathSound, transform.position);
+            }
+            else
+            {
+                AudioSource.PlayClipAtPoint(randomDeathSound, transform.position);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerController] 未配置死亡音效");
+        }
+    }
+
+    /// <summary>
+    /// 生成墓碑
+    /// </summary>
+    private void SpawnTombstone()
+    {
+        if (tombstonePrefab != null)
+        {
+            Vector3 tombstonePosition = transform.position + (Vector3)tombstoneOffset;
+            GameObject tombstone = Instantiate(tombstonePrefab, tombstonePosition, Quaternion.identity);
+            
+            // 可以在墓碑上添加玩家名字或死亡时间等信息
+            // TODO: 如果有墓碑脚本，可以在这里配置墓碑信息
+            
+            Debug.Log($"[PlayerController] 墓碑已生成在位置: {tombstonePosition}");
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerController] 未配置墓碑预制体，跳过墓碑生成");
+        }
+    }
+
+    /// <summary>
+    /// 设置玩家可见性
+    /// </summary>
+    private void SetPlayerVisibility(bool visible)
+    {
+        if (playerSpriteRenderer != null)
+        {
+            if (visible)
+            {
+                // 恢复可见并设置为原始颜色
+                playerSpriteRenderer.color = originalPlayerColor;
+            }
+            else
+            {
+                // 设置为完全透明（不可见）
+                Color transparentColor = originalPlayerColor;
+                transparentColor.a = 0f;
+                playerSpriteRenderer.color = transparentColor;
+            }
+        }
+        
+        // 如果有SPUM动画系统，也可以控制其可见性
+        if (spumPrefabs != null)
+        {
+            var renderers = spumPrefabs.GetComponentsInChildren<SpriteRenderer>();
+            foreach (var renderer in renderers)
+            {
+                if (visible)
+                {
+                    Color color = renderer.color;
+                    color.a = 1f;
+                    renderer.color = color;
+                }
+                else
+                {
+                    Color color = renderer.color;
+                    color.a = 0f;
+                    renderer.color = color;
+                }
+            }
+        }
+        
+        Debug.Log($"[PlayerController] 玩家可见性设置为: {visible}");
+    }
+
+    /// <summary>
+    /// 禁用玩家移动和输入
+    /// </summary>
+    private void DisablePlayerMovement()
+    {
+        // 停止所有移动
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+        }
+        
+        // 重置所有动作状态
+        isMining = false;
+        isPlacing = false;
+        isPlacingWall = false;
+        isAttacking = false;
+        isMoving = false;
+        
+        // 播放死亡动画（如果有的话）
+        if (spumPrefabs != null)
+        {
+            // 可以播放死亡动画，例如：spumPrefabs.PlayAnimation("death");
+            // 或者保持idle状态
+            spumPrefabs.PlayAnimation("idle");
+        }
+    }
+
+    /// <summary>
+    /// 完全禁用玩家控制和移动（死亡状态）
+    /// </summary>
+    private void DisablePlayerMovementAndControl()
+    {
+        // 调用基础的移动禁用
+        DisablePlayerMovement();
+        
+        // 额外的死亡状态处理
+        // 禁用碰撞体（防止继续与怪物互动）
+        var collider = GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+        
+        // 停止所有输入处理（在Update中会检查isDead状态）
+        // 重置跳跃状态
+        isJumping = false;
+        jumpKeyPressed = false;
+        jumpKeyReleased = false;
+        jumpKeyHoldTime = 0f;
+        
+        Debug.Log("[PlayerController] 玩家控制已完全禁用（死亡状态）");
+    }
+
+    /// <summary>
+    /// 重生协程
+    /// </summary>
+    private IEnumerator RespawnCoroutine()
+    {
+        Debug.Log($"[PlayerController] 将在 {respawnDelay} 秒后重生...");
+        
+        // 等待重生延迟
+        yield return new WaitForSeconds(respawnDelay);
+        
+        // 执行重生
+        Respawn();
+        
+        respawnCoroutine = null;
+    }
+
+    /// <summary>
+    /// 重生玩家
+    /// </summary>
+    private void Respawn()
+    {
+        Debug.Log("[PlayerController] 玩家重生开始");
+        
+        // 恢复生命值
+        currentHealth = maxHealth;
+        isDead = false;
+        
+        // 移动到重生点
+        Vector3 respawnPosition;
+        if (respawnPoint != null)
+        {
+            respawnPosition = respawnPoint.position;
+            Debug.Log($"[PlayerController] 使用设定的重生点: {respawnPosition}");
+        }
+        else
+        {
+            respawnPosition = spawnPos; // 使用出生点
+            Debug.Log($"[PlayerController] 使用出生点作为重生点: {respawnPosition}");
+        }
+        
+        transform.position = respawnPosition;
+        
+        // 恢复玩家可见性
+        SetPlayerVisibility(true);
+        
+        // 重新启用碰撞体
+        var collider = GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = true;
+        }
+        
+        // 重置物理状态
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+        
+        // 重置所有状态标志
+        isInvulnerable = false;
+        isJumping = false;
+        jumpKeyPressed = false;
+        jumpKeyReleased = false;
+        jumpKeyHoldTime = 0f;
+        
+        // 重置动作状态
+        isMining = false;
+        isPlacing = false;
+        isPlacingWall = false;
+        isAttacking = false;
+        isMoving = false;
+        
+        // 更新血量UI
+        if (UI.PlayerHealthUI.Instance != null)
+        {
+            UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+        }
+        
+        // 播放重生动画
+        if (spumPrefabs != null)
+        {
+            spumPrefabs.PlayAnimation("idle");
+        }
+        
+        Debug.Log($"[PlayerController] 玩家已在位置 {respawnPosition} 重生完成");
+    }
+
+    /// <summary>
+    /// 手动重生（可以由UI按钮调用）
+    /// </summary>
+    public void ManualRespawn()
+    {
+        if (isDead)
+        {
+            if (respawnCoroutine != null)
+            {
+                StopCoroutine(respawnCoroutine);
+                respawnCoroutine = null;
+            }
+            Respawn();
+        }
+    }
+
+    /// <summary>
+    /// 检查玩家是否已死亡
+    /// </summary>
+    public bool IsDead()
+    {
+        return isDead;
+    }
+
+    [ContextMenu("调试: 手动受到伤害(-50HP)")]
+    private void DebugTakeDamage()
+    {
+        Debug.Log("[PlayerController] 手动测试受伤");
+        DamageInfo testDamage = new DamageInfo(
+            50f, // 20点伤害
+            DamageType.Physical,
+            false, // 非暴击
+            gameObject,
+            transform.position,
+            Vector2.left, // 击退方向
+            5f // 击退力
+        );
+        TakeDamage(testDamage);
+    }
+
+    [ContextMenu("调试: 检查血量状态")]
+    private void DebugHealthStatus()
+    {
+        Debug.Log($"[PlayerController] 当前血量: {currentHealth}/{maxHealth}");
+        Debug.Log($"[PlayerController] 无敌状态: {isInvulnerable}");
+        Debug.Log($"[PlayerController] 死亡状态: {isDead}");
+        Debug.Log($"[PlayerController] PlayerHealthUI.Instance状态: {(UI.PlayerHealthUI.Instance != null ? "存在" : "为空")}");
+    }
+
+    [ContextMenu("调试: 测试死亡系统")]
+    private void DebugTestDeathSystem()
+    {
+        Debug.Log("[PlayerController] 测试死亡系统 - 设置血量为0");
+        currentHealth = 0f;
+        Die();
+    }
+
+    [ContextMenu("调试: 手动重生")]
+    private void DebugManualRespawn()
+    {
+        Debug.Log("[PlayerController] 手动触发重生");
+        ManualRespawn();
     }
     #endregion
 }

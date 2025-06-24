@@ -4095,9 +4095,9 @@ MonoBehaviour:
   spumPrefabs: {fileID: 9063021166187635013}
   spawnPos: {x: 0, y: 0}
   mousePos: {x: 0, y: 0}
-  maxHealth: 10000
-  currentHealth: 10000
-  invulnerabilityTime: 1
+  maxHealth: 800
+  currentHealth: 800
+  invulnerabilityTime: 0.5
   blinkFrequency: 10
 --- !u!114 &3456888401436643649
 MonoBehaviour:

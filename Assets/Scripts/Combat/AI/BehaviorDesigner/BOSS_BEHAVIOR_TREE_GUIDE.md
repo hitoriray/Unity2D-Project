@@ -48,40 +48,7 @@ EyeOfCthulhu (Boss GameObject)
 
 ### 第一阶段行为树结构 (Phase1.asset)
 ```
-Root (Repeater)
-└── Selector
-    ├── Sequence (攻击模式)
-    │   ├── EoCCheckDistance (条件: 距离<6)
-    │   ├── EoCIdle (动作: 待机0.8秒)
-    │   ├── EoCChargeAttack (动作: 冲撞攻击)
-    │   │   ├── Charge Speed: 18
-    │   │   ├── Charge Duration: 1.5
-    │   │   └── Charge Damage: 25
-    │   └── Wait (等待3秒)
-    │
-    └── EoCFlyAroundPlayer (默认: 围绕玩家飞行)
-        ├── Fly Speed: 6
-        ├── Maintain Distance: 5
-        └── Update Interval: 2.5
-```
-
-### 第二阶段行为树结构 (Phase2.asset)
-```
-Root (Repeater)
-└── Selector
-    ├── Sequence (激进攻击模式)
-    │   ├── EoCCheckDistance (条件: 距离<8)
-    │   ├── EoCIdle (动作: 短暂待机0.3秒)
-    │   ├── EoCChargeAttack (动作: 快速冲撞)
-    │   │   ├── Charge Speed: 28
-    │   │   ├── Charge Duration: 1.0
-    │   │   └── Charge Damage: 35
-    │   └── Wait (等待1.5秒)
-    │
-    └── EoCFlyAroundPlayer (默认: 激进飞行)
-        ├── Fly Speed: 10
-        ├── Maintain Distance: 3.5
-        └── Update Interval: 1.5
+c'c'c'c'c
 ```
 
 ## 4. Behavior Designer设置步骤
