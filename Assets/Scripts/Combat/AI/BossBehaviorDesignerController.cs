@@ -3,6 +3,7 @@ using UnityEngine;
 using BehaviorDesigner.Runtime;
 using Combat.Interfaces;
 using UI;
+using AmbianceSystem;
 
 namespace Combat
 {
@@ -56,6 +57,14 @@ namespace Combat
         public AudioClip hurtSound;
         [Tooltip("死亡音效")]
         public AudioClip deathSound;
+        
+        [Header("Boss战音乐")]
+        [Tooltip("Boss战背景音乐")]
+        public AudioClip bossBattleMusic;
+        [Tooltip("Boss音乐淡入时间")]
+        public float bossMusicFadeInTime = 3f;
+        [Tooltip("Boss音乐淡出时间")]
+        public float bossMusicFadeOutTime = 2f;
         
         [Header("接触伤害")]
         [Tooltip("接触伤害值")]
@@ -154,6 +163,12 @@ namespace Combat
             if (BossHealthBarUI.Instance != null && !isDead)
             {
                 BossHealthBarUI.Instance.Hide();
+            }
+            
+            // 确保Boss音乐被停止（保险措施）
+            if (!isDead)
+            {
+                StopBossMusic();
             }
         }
         
@@ -302,6 +317,9 @@ namespace Combat
             {
                 StartSpriteAnimation();
             }
+            
+            // 启动Boss战音乐
+            StartBossMusic();
             
             spawnCoroutine = null;
         }
@@ -479,6 +497,44 @@ namespace Combat
         }
         #endregion
         
+        #region Boss音乐管理
+        /// <summary>
+        /// 启动Boss战音乐
+        /// </summary>
+        private void StartBossMusic()
+        {
+            if (bossBattleMusic == null)
+            {
+                Debug.LogWarning("[BossBehaviorDesignerController] Boss战音乐未设置，跳过音乐播放");
+                return;
+            }
+            
+            if (AmbianceManager.Instance == null)
+            {
+                Debug.LogWarning("[BossBehaviorDesignerController] AmbianceManager实例未找到，无法播放Boss音乐");
+                return;
+            }
+            
+            Debug.Log($"[BossBehaviorDesignerController] 开始播放Boss战音乐: {bossBattleMusic.name}");
+            AmbianceManager.Instance.StartBossMusic(bossBattleMusic, bossMusicFadeInTime);
+        }
+        
+        /// <summary>
+        /// 停止Boss战音乐，恢复氛围音乐
+        /// </summary>
+        private void StopBossMusic()
+        {
+            if (AmbianceManager.Instance == null)
+            {
+                Debug.LogWarning("[BossBehaviorDesignerController] AmbianceManager实例未找到，无法停止Boss音乐");
+                return;
+            }
+            
+            Debug.Log("[BossBehaviorDesignerController] 停止Boss战音乐，恢复氛围音乐");
+            AmbianceManager.Instance.StopBossMusic(bossMusicFadeOutTime);
+        }
+        #endregion
+        
         #region 伤害系统
         public void TakeDamage(DamageInfo damageInfo)
         {
@@ -580,6 +636,9 @@ namespace Combat
             {
                 rb.velocity = Vector2.zero;
             }
+            
+            // 停止Boss战音乐，恢复氛围音乐
+            StopBossMusic();
             
             // 播放死亡音效
             PlaySound(deathSound);

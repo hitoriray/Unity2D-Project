@@ -8,6 +8,7 @@ namespace AmbianceSystem
     /// 管理动态背景图片和音乐，根据玩家所处的地形和游戏时间进行切换。
     /// 现在使用 SpriteRenderer 控制背景图片，并使其跟随相机铺满屏幕。
     /// 音乐在相同时会无缝播放，仅调整音量。
+    /// 支持Boss战音乐覆盖功能。
     /// </summary>
     public class AmbianceManager : MonoBehaviour
     {
@@ -47,9 +48,24 @@ namespace AmbianceSystem
         [Tooltip("用于淡入新背景音乐")]
         public AudioSource musicAudioSource2;
 
+        [Header("Boss Music Settings")]
+        [Tooltip("Boss音乐淡入淡出持续时间")]
+        public float bossMusicFadeDuration = 2f;
+        [Tooltip("Boss音乐音量")]
+        [Range(0f, 1f)]
+        public float bossMusicVolume = 0.8f;
+
         private AmbianceProfile currentActiveProfile; // 当前实际生效的Profile
         private Coroutine activeImageFadeCoroutine;
         private Coroutine activeMusicFadeCoroutine;
+
+        // Boss音乐覆盖系统
+        private bool isBossMusicActive = false; // 是否正在播放Boss音乐
+        private AudioClip currentBossMusic; // 当前Boss音乐
+        private AmbianceProfile savedProfile; // Boss战前保存的氛围配置
+        private AudioClip savedMusic; // Boss战前的音乐
+        private float savedMusicVolume; // Boss战前的音乐音量
+        private float savedMusicTime; // Boss战前的音乐播放时间
 
         // 外部依赖
         private PlayerController playerController;
@@ -138,12 +154,20 @@ namespace AmbianceSystem
             while (true)
             {
                 yield return new WaitForSeconds(ambianceCheckInterval);
-                UpdateAmbiance();
+                
+                // 如果正在播放Boss音乐，跳过正常的氛围检查
+                if (!isBossMusicActive)
+                {
+                    UpdateAmbiance();
+                }
             }
         }
 
         void UpdateAmbiance()
         {
+            // 如果正在播放Boss音乐，不更新氛围
+            if (isBossMusicActive) return;
+
             BiomeType currentBiome = GetCurrentBiome();
             TimeOfDay currentTimeOfDay = GetCurrentTimeOfDay();
             AmbianceProfile targetProfile = FindMatchingProfile(currentBiome, currentTimeOfDay);
@@ -403,5 +427,257 @@ namespace AmbianceSystem
             sourceToFade.volume = 1f; 
             activeMusicFadeCoroutine = null;
         }
+
+        #region Boss Music System
+        
+        /// <summary>
+        /// 开始播放Boss音乐，覆盖当前氛围音乐
+        /// </summary>
+        /// <param name="bossMusic">Boss音乐AudioClip</param>
+        /// <param name="fadeInDuration">淡入时间，如果为0则使用默认值</param>
+        public void StartBossMusic(AudioClip bossMusic, float fadeInDuration = 0f)
+        {
+            if (bossMusic == null)
+            {
+                Debug.LogWarning("[AmbianceManager] Boss音乐为空，无法播放！");
+                return;
+            }
+
+            if (isBossMusicActive && currentBossMusic == bossMusic)
+            {
+                Debug.Log("[AmbianceManager] 相同的Boss音乐已在播放中，跳过");
+                return;
+            }
+
+            float finalFadeDuration = fadeInDuration > 0 ? fadeInDuration : bossMusicFadeDuration;
+            
+            Debug.Log($"[AmbianceManager] 开始播放Boss音乐: {bossMusic.name}");
+            
+            // 保存当前状态（仅在第一次进入Boss战时保存）
+            if (!isBossMusicActive)
+            {
+                SaveCurrentMusicState();
+            }
+            
+            // 设置Boss音乐状态
+            isBossMusicActive = true;
+            currentBossMusic = bossMusic;
+            
+            // 停止当前的音乐过渡
+            if (activeMusicFadeCoroutine != null)
+            {
+                StopCoroutine(activeMusicFadeCoroutine);
+                activeMusicFadeCoroutine = null;
+            }
+            
+            // 开始播放Boss音乐
+            activeMusicFadeCoroutine = StartCoroutine(FadeToBossMusicCoroutine(bossMusic, finalFadeDuration));
+        }
+        
+        /// <summary>
+        /// 停止Boss音乐，恢复之前的氛围音乐
+        /// </summary>
+        /// <param name="fadeOutDuration">淡出时间，如果为0则使用默认值</param>
+        public void StopBossMusic(float fadeOutDuration = 0f)
+        {
+            if (!isBossMusicActive)
+            {
+                Debug.Log("[AmbianceManager] 当前没有播放Boss音乐");
+                return;
+            }
+            
+            float finalFadeDuration = fadeOutDuration > 0 ? fadeOutDuration : bossMusicFadeDuration;
+            
+            Debug.Log("[AmbianceManager] 停止Boss音乐，恢复氛围音乐");
+            
+            // 停止当前的音乐过渡
+            if (activeMusicFadeCoroutine != null)
+            {
+                StopCoroutine(activeMusicFadeCoroutine);
+                activeMusicFadeCoroutine = null;
+            }
+            
+            // 恢复氛围音乐
+            activeMusicFadeCoroutine = StartCoroutine(RestoreAmbianceMusicCoroutine(finalFadeDuration));
+        }
+        
+        /// <summary>
+        /// 检查是否正在播放Boss音乐
+        /// </summary>
+        public bool IsBossMusicPlaying()
+        {
+            return isBossMusicActive;
+        }
+        
+        /// <summary>
+        /// 获取当前Boss音乐
+        /// </summary>
+        public AudioClip GetCurrentBossMusic()
+        {
+            return isBossMusicActive ? currentBossMusic : null;
+        }
+        
+        private void SaveCurrentMusicState()
+        {
+            savedProfile = currentActiveProfile;
+            
+            // 保存当前播放的音乐状态
+            if (musicAudioSource1 != null && musicAudioSource1.isPlaying)
+            {
+                savedMusic = musicAudioSource1.clip;
+                savedMusicVolume = musicAudioSource1.volume;
+                savedMusicTime = musicAudioSource1.time;
+            }
+            else if (musicAudioSource2 != null && musicAudioSource2.isPlaying)
+            {
+                savedMusic = musicAudioSource2.clip;
+                savedMusicVolume = musicAudioSource2.volume;
+                savedMusicTime = musicAudioSource2.time;
+            }
+            else
+            {
+                savedMusic = null;
+                savedMusicVolume = 1f;
+                savedMusicTime = 0f;
+            }
+            
+            Debug.Log($"[AmbianceManager] 保存音乐状态: {savedMusic?.name ?? "None"}, Volume: {savedMusicVolume}, Time: {savedMusicTime}");
+        }
+        
+        private IEnumerator FadeToBossMusicCoroutine(AudioClip bossMusic, float fadeDuration)
+        {
+            if (musicAudioSource1 == null || musicAudioSource2 == null)
+            {
+                activeMusicFadeCoroutine = null;
+                yield break;
+            }
+
+            // 使用source2播放Boss音乐
+            musicAudioSource2.clip = bossMusic;
+            musicAudioSource2.volume = 0f;
+            musicAudioSource2.loop = true;
+            musicAudioSource2.Play();
+
+            float elapsedTime = 0f;
+            float startVolume1 = musicAudioSource1.isPlaying ? musicAudioSource1.volume : 0f;
+
+            if (fadeDuration <= 0) fadeDuration = 0.01f;
+
+            // 交叉淡入淡出
+            while (elapsedTime < fadeDuration)
+            {
+                elapsedTime += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsedTime / fadeDuration);
+                
+                // 淡出当前音乐
+                if (musicAudioSource1.isPlaying)
+                {
+                    musicAudioSource1.volume = Mathf.Lerp(startVolume1, 0f, t);
+                }
+                
+                // 淡入Boss音乐
+                musicAudioSource2.volume = Mathf.Lerp(0f, bossMusicVolume, t);
+                yield return null;
+            }
+
+            // 停止原音乐
+            if (musicAudioSource1.isPlaying)
+            {
+                musicAudioSource1.Stop();
+            }
+            musicAudioSource1.volume = 0f;
+            musicAudioSource1.clip = null;
+
+            // 完成Boss音乐设置
+            musicAudioSource2.volume = bossMusicVolume;
+
+            // 交换音频源引用，保持source1为主音源的约定
+            AudioSource temp = musicAudioSource1;
+            musicAudioSource1 = musicAudioSource2;
+            musicAudioSource2 = temp;
+            
+            activeMusicFadeCoroutine = null;
+        }
+        
+        private IEnumerator RestoreAmbianceMusicCoroutine(float fadeDuration)
+        {
+            if (musicAudioSource1 == null || musicAudioSource2 == null)
+            {
+                activeMusicFadeCoroutine = null;
+                yield break;
+            }
+
+            // 重置Boss音乐状态
+            isBossMusicActive = false;
+            currentBossMusic = null;
+            
+            // 如果有保存的音乐，恢复播放
+            if (savedMusic != null)
+            {
+                musicAudioSource2.clip = savedMusic;
+                musicAudioSource2.volume = 0f;
+                musicAudioSource2.loop = true;
+                musicAudioSource2.Play();
+                
+                // 尝试恢复播放位置（如果音乐长度允许）
+                if (savedMusicTime < savedMusic.length)
+                {
+                    musicAudioSource2.time = savedMusicTime;
+                }
+
+                float elapsedTime = 0f;
+                float startVolume1 = musicAudioSource1.isPlaying ? musicAudioSource1.volume : 0f;
+
+                if (fadeDuration <= 0) fadeDuration = 0.01f;
+
+                // 交叉淡入淡出
+                while (elapsedTime < fadeDuration)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTime / fadeDuration);
+                    
+                    // 淡出Boss音乐
+                    if (musicAudioSource1.isPlaying)
+                    {
+                        musicAudioSource1.volume = Mathf.Lerp(startVolume1, 0f, t);
+                    }
+                    
+                    // 淡入氛围音乐
+                    musicAudioSource2.volume = Mathf.Lerp(0f, savedMusicVolume, t);
+                    yield return null;
+                }
+
+                // 停止Boss音乐
+                if (musicAudioSource1.isPlaying)
+                {
+                    musicAudioSource1.Stop();
+                }
+                musicAudioSource1.volume = 0f;
+                musicAudioSource1.clip = null;
+
+                // 完成氛围音乐恢复
+                musicAudioSource2.volume = savedMusicVolume;
+
+                // 交换音频源引用
+                AudioSource temp = musicAudioSource1;
+                musicAudioSource1 = musicAudioSource2;
+                musicAudioSource2 = temp;
+            }
+            else
+            {
+                // 没有保存的音乐，直接淡出Boss音乐
+                yield return StartCoroutine(FadeOutMusicOnlyCoroutine(fadeDuration, musicAudioSource1));
+            }
+            
+            // 恢复正常的氛围系统
+            currentActiveProfile = savedProfile;
+            
+            // 立即检查并更新氛围（可能环境已经改变）
+            UpdateAmbiance();
+            
+            activeMusicFadeCoroutine = null;
+        }
+        
+        #endregion
     }
 }

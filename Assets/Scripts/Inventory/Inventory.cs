@@ -171,8 +171,9 @@ public class Inventory : MonoBehaviour
             items.AddItem(new Item(zenithSword));
         if (starSword != null)
             items.AddItem(new Item(starSword));
-        if (startingPickaxe != null)
+        if (startingPickaxe != null) {
             items.AddItem(new Item(startingPickaxe));
+        }
         if (startingAxe != null)
             items.AddItem(new Item(startingAxe));
         if (startingHammer != null)

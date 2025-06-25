@@ -17,6 +17,7 @@ MonoBehaviour:
   layer: 0
   timeOfDay: 1
   backgroundImage: {fileID: 21300000, guid: 37e1d981971761547a693b695b4cb9f0, type: 3}
-  backgroundMusic: {fileID: 8300000, guid: 8fc3b622fa01cf74a968d928cc3b9263, type: 3}
+  backgroundMusic: {fileID: 8300000, guid: 65760aab4b0d48c48a0c1840a3660e3a, type: 3}
   imageFadeDuration: 1
   musicFadeDuration: 2
+  musicVolume: 1

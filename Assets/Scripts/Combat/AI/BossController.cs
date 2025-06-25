@@ -2,6 +2,7 @@ using System.Collections;
 using Combat.Interfaces;
 using UI;
 using UnityEngine;
+using AmbianceSystem;
 
 namespace Combat
 {
@@ -80,6 +81,14 @@ namespace Combat
         public AudioClip hurtSound;
         [Tooltip("死亡音效")]
         public AudioClip deathSound;
+        
+        [Header("Boss战音乐")]
+        [Tooltip("Boss战背景音乐（覆盖氛围音乐）")]
+        public AudioClip bossBattleMusic;
+        [Tooltip("Boss音乐淡入时间")]
+        public float bossMusicFadeInTime = 3f;
+        [Tooltip("Boss音乐淡出时间")]
+        public float bossMusicFadeOutTime = 2f;
 
         [Header("调试选项")]
         [Tooltip("启用调试信息")]
@@ -293,6 +302,9 @@ namespace Combat
             attackTimer = phase1AttackInterval;
             
             Debug.Log($"[BossController] 进入第一阶段");
+            
+            // 启动Boss战音乐
+            StartBossMusic();
             
             // 更新血条阶段
             if (BossHealthBarUI.Instance != null)
@@ -656,6 +668,9 @@ namespace Combat
             // 停止所有移动
             rb.velocity = Vector2.zero;
             
+            // 停止Boss战音乐，恢复氛围音乐
+            StopBossMusic();
+            
             // 播放死亡音效
             PlaySound(deathSound);
             
@@ -756,6 +771,42 @@ namespace Combat
                 audioSource.loop = true;
                 audioSource.Play();
             }
+        }
+        
+        /// <summary>
+        /// 启动Boss战音乐
+        /// </summary>
+        private void StartBossMusic()
+        {
+            if (bossBattleMusic == null)
+            {
+                Debug.LogWarning("[BossController] Boss战音乐未设置，跳过音乐播放");
+                return;
+            }
+            
+            if (AmbianceManager.Instance == null)
+            {
+                Debug.LogWarning("[BossController] AmbianceManager实例未找到，无法播放Boss音乐");
+                return;
+            }
+            
+            Debug.Log($"[BossController] 开始播放Boss战音乐: {bossBattleMusic.name}");
+            AmbianceManager.Instance.StartBossMusic(bossBattleMusic, bossMusicFadeInTime);
+        }
+        
+        /// <summary>
+        /// 停止Boss战音乐，恢复氛围音乐
+        /// </summary>
+        private void StopBossMusic()
+        {
+            if (AmbianceManager.Instance == null)
+            {
+                Debug.LogWarning("[BossController] AmbianceManager实例未找到，无法停止Boss音乐");
+                return;
+            }
+            
+            Debug.Log("[BossController] 停止Boss战音乐，恢复氛围音乐");
+            AmbianceManager.Instance.StopBossMusic(bossMusicFadeOutTime);
         }
 
         private void PrintDebugInfo()

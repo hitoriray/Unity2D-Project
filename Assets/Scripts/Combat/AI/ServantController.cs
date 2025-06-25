@@ -218,7 +218,7 @@ public class ServantController : MonoBehaviour, IDamageable
         PlaySound(hurtSound);
         
         // 受伤闪烁
-        StartHurtFlash();
+        // StartHurtFlash();
         
         // 受击击退
         if (_rb != null && damageInfo.knockbackForce > 0)
