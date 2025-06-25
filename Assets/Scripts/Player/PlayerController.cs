@@ -1105,20 +1105,15 @@ public class PlayerController : MonoBehaviour, IDamageable
         // 无敌时间内或已死亡时不受伤害
         if (isInvulnerable || isDead) 
         {
-            Debug.Log($"[PlayerController] TakeDamage被阻止 - 无敌状态: {isInvulnerable}, 死亡状态: {isDead}");
             return;
         }
 
-        Debug.Log($"[PlayerController] TakeDamage被调用 - 伤害: {damageInfo.baseDamage}, 当前血量: {currentHealth}");
-
         // 扣血
         currentHealth -= damageInfo.baseDamage;
-        Debug.Log($"[PlayerController] 玩家受到 {damageInfo.baseDamage} 点伤害，剩余血量: {currentHealth}/{maxHealth}");
 
         // 更新血量UI
         if (UI.PlayerHealthUI.Instance != null)
         {
-            Debug.Log($"[PlayerController] 正在更新血量UI: {currentHealth}/{maxHealth}");
             UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
         }
         else
@@ -1300,7 +1295,6 @@ public class PlayerController : MonoBehaviour, IDamageable
     public void Heal(float amount)
     {
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
-        Debug.Log($"玩家恢复 {amount} 点生命值，当前血量: {currentHealth}");
         
         // 更新血量UI
         if (UI.PlayerHealthUI.Instance != null)
@@ -1324,7 +1318,6 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         maxHealth += amount;
         currentHealth += amount; // 同时增加当前血量
-        Debug.Log($"玩家最大血量增加 {amount}，新的最大血量: {maxHealth}，当前血量: {currentHealth}");
         
         // 更新血量UI
         if (UI.PlayerHealthUI.Instance != null)
@@ -1345,7 +1338,6 @@ public class PlayerController : MonoBehaviour, IDamageable
         if (UI.PlayerHealthUI.Instance != null)
         {
             UI.PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth, false);
-            Debug.Log("[PlayerController] 血量UI初始化完成");
         }
         else
         {
@@ -1389,7 +1381,6 @@ public class PlayerController : MonoBehaviour, IDamageable
             // 可以在墓碑上添加玩家名字或死亡时间等信息
             // TODO: 如果有墓碑脚本，可以在这里配置墓碑信息
             
-            Debug.Log($"[PlayerController] 墓碑已生成在位置: {tombstonePosition}");
         }
         else
         {
@@ -1438,8 +1429,6 @@ public class PlayerController : MonoBehaviour, IDamageable
                 }
             }
         }
-        
-        Debug.Log($"[PlayerController] 玩家可见性设置为: {visible}");
     }
 
     /// <summary>
@@ -1492,7 +1481,6 @@ public class PlayerController : MonoBehaviour, IDamageable
         jumpKeyReleased = false;
         jumpKeyHoldTime = 0f;
         
-        Debug.Log("[PlayerController] 玩家控制已完全禁用（死亡状态）");
     }
 
     /// <summary>
@@ -1500,7 +1488,6 @@ public class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     private IEnumerator RespawnCoroutine()
     {
-        Debug.Log($"[PlayerController] 将在 {respawnDelay} 秒后重生...");
         
         // 等待重生延迟
         yield return new WaitForSeconds(respawnDelay);
@@ -1516,7 +1503,6 @@ public class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     private void Respawn()
     {
-        Debug.Log("[PlayerController] 玩家重生开始");
         
         // 恢复生命值
         currentHealth = maxHealth;
@@ -1527,12 +1513,10 @@ public class PlayerController : MonoBehaviour, IDamageable
         if (respawnPoint != null)
         {
             respawnPosition = respawnPoint.position;
-            Debug.Log($"[PlayerController] 使用设定的重生点: {respawnPosition}");
         }
         else
         {
             respawnPosition = spawnPos; // 使用出生点
-            Debug.Log($"[PlayerController] 使用出生点作为重生点: {respawnPosition}");
         }
         
         transform.position = respawnPosition;
@@ -1579,8 +1563,6 @@ public class PlayerController : MonoBehaviour, IDamageable
         {
             spumPrefabs.PlayAnimation("idle");
         }
-        
-        Debug.Log($"[PlayerController] 玩家已在位置 {respawnPosition} 重生完成");
     }
 
     /// <summary>

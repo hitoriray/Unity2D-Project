@@ -199,8 +199,6 @@ namespace UI
                         case HeartState.Half: targetSprite = crystalHalfHeartSprite; break;
                         case HeartState.Full: targetSprite = crystalFullHeartSprite; break;
                     }
-                    // 添加水晶心的调试信息
-                    Debug.Log($"[HealthHeartUI] 水晶心更新显示: 状态={currentState}, 目标Sprite={targetSprite?.name ?? "null"}");
                     break;
             }
 
@@ -209,7 +207,6 @@ namespace UI
                 heartImage.sprite = targetSprite;
                 heartImage.color = Color.white; // 使用正确Sprite时重置颜色
                 heartImage.enabled = true;
-                Debug.Log($"[HealthHeartUI] 心形显示更新成功: {currentType}/{currentState} -> {targetSprite.name}");
             }
             else
             {
@@ -244,7 +241,6 @@ namespace UI
                         break;
                     case HeartType.Crystal:
                         heartImage.color = Color.cyan; // 水晶心使用青色调
-                        Debug.Log($"[HealthHeartUI] 水晶心使用青色显示作为临时方案");
                         break;
                 }
                 

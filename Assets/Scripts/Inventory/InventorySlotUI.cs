@@ -157,21 +157,47 @@ public class InventorySlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExit
         {
             if (slot.item.quantity > 1)
             {
+                // 检查ItemSplitUI是否可用
+                if (ItemSplitUI.Instance == null)
+                {
+                    Debug.LogError("ItemSplitUI.Instance 为 null！请确保场景中的 ItemSplitUI GameObject 处于激活状态！");
+                    return;
+                }
+                
                 ItemSplitUI.Instance.ShowSplitUI(slot.item, this, Input.mousePosition, (splitAmount) => {
-                    // This is the callback action when split is confirmed
+                    // 减少原物品数量
+                    slot.item.quantity -= splitAmount;
+                    
+                    // 创建分割出的新物品
                     Item newItem = new Item(slot.item);
                     newItem.quantity = splitAmount;
                     
-                    slot.item.quantity -= splitAmount;
-                    
-                    // Manually start dragging the new split stack
-                    DragManager.Instance.StartDrag(newItem, transform.position);
-                    
-                    // We need a way to handle this dragged item. For now, we just log it.
-                    // A proper implementation would require a temporary "hand" slot.
-                    Debug.Log($"Started dragging a new stack of {newItem.itemName} with quantity {newItem.quantity}");
+                    // 尝试将新物品添加到背包的空槽位
+                    Vector2Int? emptySlot = itemContainer.FindEmptySlot();
+                    if (emptySlot.HasValue)
+                    {
+                        // 将新物品放入空槽位
+                        InventorySlot newSlot = new InventorySlot 
+                        { 
+                            position = emptySlot.Value, 
+                            item = newItem 
+                        };
+                        itemContainer.SetSlot(emptySlot.Value, newSlot);
+                        
+                        Debug.Log($"物品分割成功: {newItem.itemName} x{newItem.quantity} 已放入槽位 ({emptySlot.Value.x}, {emptySlot.Value.y})");
+                    }
+                    else
+                    {
+                        // 如果没有空槽位，将物品掉落到地面
+                        Debug.Log("背包已满，分割的物品将掉落到地面");
+                        Inventory playerInventory = FindObjectOfType<Inventory>();
+                        if (playerInventory != null)
+                        {
+                            playerInventory.DropItem(newItem);
+                        }
+                    }
 
-                    // Manually update the source slot display
+                    // 更新原槽位显示
                     UpdateSlotDisplay(slot);
                 });
             }

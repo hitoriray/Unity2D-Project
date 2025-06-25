@@ -18,6 +18,10 @@ public class Inventory : MonoBehaviour
     [Header("拖拽设置")]
     public GameObject itemDropPrefab;
 
+    [Header("仓库同步")]
+    [SerializeField] private WarehouseManager warehouseManager;
+    [SerializeField] private bool syncToWarehouse = true; // 是否同步到仓库
+
     [Header("初始物品")]
     public Weapon zenithSword;
     public Weapon starSword;
@@ -28,6 +32,12 @@ public class Inventory : MonoBehaviour
     void Awake()
     {
         items = new ItemContainer(inventoryWidth, inventoryHeight);
+
+        // 自动查找WarehouseManager（如果没有手动分配的话）
+        if (warehouseManager == null)
+        {
+            warehouseManager = FindObjectOfType<WarehouseManager>();
+        }
 
         if (inventoryUI != null)
         {
@@ -109,7 +119,27 @@ public class Inventory : MonoBehaviour
 
     public bool TryAddItem(Item item)
     {
-        return items.AddItem(item);
+        // 先尝试添加到背包
+        bool addedToInventory = items.AddItem(item);
+        
+        // 如果成功添加到背包，并且启用了仓库同步
+        if (addedToInventory && syncToWarehouse && warehouseManager != null)
+        {
+            // 创建物品的副本添加到仓库，避免引用问题
+            Item warehouseItem = new Item(item);
+            warehouseItem.quantity = Mathf.Max(item.quantity, 1); // 确保数量正确
+            
+            try
+            {
+                warehouseManager.AddItemToWarehouse(warehouseItem);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"同步物品到仓库失败: {item.itemName}, 错误: {e.Message}");
+            }
+        }
+        
+        return addedToInventory;
     }
 
     public void DropItem(Item item, Vector3 position)

@@ -29,9 +29,11 @@ public class Item
 
     public Item(Tile _tile)
     {
-        itemName = tile.itemName;
-        itemSprite = tile.itemSprite;
         tile = _tile;
+        itemName = tile.itemName;
+        description = tile.description;
+        specificDescription = tile.specificDescription;
+        itemSprite = tile.itemSprite;
         itemType = ItemType.Block;
         maxStackSize = 64;
         quantity = 1;
@@ -41,8 +43,8 @@ public class Item
     {
         tool = _tool;
         itemName = _tool.toolName;
-        itemSprite = _tool.toolSprite;
         description = _tool.description;
+        itemSprite = _tool.toolSprite;
         specificDescription = _tool.specificDescription;
         itemType = ItemType.Tool;
         toolType = _tool.toolType;
@@ -111,12 +113,12 @@ public class Item
 
 public enum ItemType
 {
-    Block = 3,      // 可放置的块
-    Wall = 4,       // 可放置的墙
+    Block = 2,      // 可放置的块
+    Wall = 3,       // 可放置的墙
     Tool = 1,       // 工具
     Weapon = 0,     // 武器
-    Consumable = 2, // 消耗品
-    Material = 5    // 材料
+    Consumable = 4, // 消耗品
+    Material = 5,    // 材料
 }
 
 public enum ToolType

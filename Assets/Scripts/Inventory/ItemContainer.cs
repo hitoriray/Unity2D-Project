@@ -54,6 +54,7 @@ public class ItemContainer
             };
             item.quantity = 0;
             OnItemsChanged?.Invoke();
+            
             return true;
         }
 
@@ -102,8 +103,8 @@ public class ItemContainer
         var slotA = GetSlot(posA);
         var slotB = GetSlot(posB);
 
-        SetSlot(posA, slotB);
-        SetSlot(posB, slotA);
+        SetSlotInternal(posA, slotB);
+        SetSlotInternal(posB, slotA);
 
         OnItemsChanged?.Invoke();
     }
@@ -114,7 +115,7 @@ public class ItemContainer
         if (slot != null)
         {
             Item itemToDrop = new Item(slot.item);
-            SetSlot(pos, null);
+            SetSlotInternal(pos, null);
             OnItemsChanged?.Invoke();
             return itemToDrop;
         }
@@ -133,7 +134,7 @@ public class ItemContainer
                 newItem.quantity = splitAmount;
                 originalSlot.item.quantity -= splitAmount;
 
-                SetSlot(emptySlotPos.Value, new InventorySlot { position = emptySlotPos.Value, item = newItem });
+                SetSlotInternal(emptySlotPos.Value, new InventorySlot { position = emptySlotPos.Value, item = newItem });
                 OnItemsChanged?.Invoke();
             }
         }
@@ -147,6 +148,12 @@ public class ItemContainer
     }
 
     public void SetSlot(Vector2Int pos, InventorySlot slot)
+    {
+        SetSlotInternal(pos, slot);
+        OnItemsChanged?.Invoke();
+    }
+    
+    private void SetSlotInternal(Vector2Int pos, InventorySlot slot)
     {
         if (!IsValid(pos)) return;
         
@@ -288,7 +295,7 @@ public class ItemContainer
             slot.item.quantity -= amount;
             if (slot.item.quantity <= 0)
             {
-                SetSlot(pos, null);
+                SetSlotInternal(pos, null);
             }
             OnItemsChanged?.Invoke();
         }

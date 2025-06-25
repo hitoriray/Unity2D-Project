@@ -5,6 +5,8 @@ public class Tile : ScriptableObject
 {
     public string tileName;
     public string itemName;
+    public string description = "Hello";
+    public string specificDescription = "World";
 
     // 图集名
     public string atlasName = "Tiles_";

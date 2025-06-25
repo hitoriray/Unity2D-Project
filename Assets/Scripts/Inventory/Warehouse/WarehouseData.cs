@@ -11,11 +11,13 @@ public class WarehouseData
     public bool AddItem(Item item)
     {
         if (item == null) return false;
+        
         if (warehouseItems.Count == 0)
         {
             warehouseItems.Add(item);
             return true;
         }
+        
         for (int i = 0; i < warehouseItems.Count; ++i)
         {
             if (item.itemName == warehouseItems[i].itemName)
@@ -29,13 +31,19 @@ public class WarehouseData
                 {
                     warehouseItems[i].quantity = warehouseItems[i].maxStackSize;
                     if (warehouseItems.Count + 1 > capacity) return false;
-                    warehouseItems.Add(item);
+                    
+                    // 创建新物品存储剩余数量
+                    Item remainItem = new Item(item);
+                    remainItem.quantity = remain;
+                    warehouseItems.Add(remainItem);
                 }
                 return true;
             }
         }
+        
+        // 没有找到相同物品，作为新物品添加
         if (warehouseItems.Count + 1 > capacity) return false;
         warehouseItems.Add(item);
-        return false;
+        return true;
     }
 }

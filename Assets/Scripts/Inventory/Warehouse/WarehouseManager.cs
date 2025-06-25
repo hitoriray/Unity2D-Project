@@ -67,6 +67,41 @@ public class WarehouseManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 添加物品到仓库
+    /// </summary>
+    /// <param name="item">要添加的物品</param>
+    /// <returns>是否成功添加</returns>
+    public bool AddItemToWarehouse(Item item)
+    {
+        if (item == null)
+        {
+            Debug.LogWarning("尝试添加空物品到仓库");
+            return false;
+        }
+
+        if (warehouseData == null)
+        {
+            Debug.LogError("仓库数据未初始化！");
+            return false;
+        }
+
+        // 创建物品副本，避免引用问题
+        Item itemCopy = new Item(item);
+        bool success = warehouseData.AddItem(itemCopy);
+        
+        if (success)
+        {
+            Debug.Log($"物品成功添加到仓库: {item.itemName} x{item.quantity}");
+        }
+        else
+        {
+            Debug.LogWarning($"仓库已满，无法添加物品: {item.itemName}");
+        }
+        
+        return success;
+    }
+
+    /// <summary>
     /// 获取指定分类下的所有配方
     /// </summary>
     public List<Item> GetAllItemsForCategory(ItemType itemType)

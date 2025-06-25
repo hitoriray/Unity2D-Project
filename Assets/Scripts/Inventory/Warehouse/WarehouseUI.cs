@@ -147,7 +147,6 @@ public class WarehouseUI : MonoBehaviour
         detailItemName.text = item.itemName;
         detailItemIcon.sprite = item.itemSprite;
         detailItemDescription.text = item.description;
-        Debug.Log("desc: " + detailItemDescription.text);
         detailItemSpecificDescription.text = item.specificDescription;
         moreDetailButton.interactable = true;
     }
@@ -165,9 +164,8 @@ public class WarehouseUI : MonoBehaviour
     {
         selectedItem = null;
         selectedSlotUI = null;
-        detailItemName.text = "";
-        detailItemIcon.sprite = null;
-        detailItemDescription.text = "请选择一个物品";
+        detailItemName.text = "请选择一个物品";
+        detailItemDescription.text = "";
         detailItemSpecificDescription.text = "";
         moreDetailButton.interactable = false;
     }

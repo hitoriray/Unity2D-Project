@@ -4067,6 +4067,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 080f942f64daa9c49be208122375c0ac, type: 3}
   - {fileID: 8300000, guid: 3699f532fc46d4d47a426ef99febae65, type: 3}
   - {fileID: 8300000, guid: f62142ba5edbb1d468c6ed281a585f33, type: 3}
+  deathSounds:
+  - {fileID: 8300000, guid: 62e95b9bf62f17e4ca7a87ebe84e5e66, type: 3}
   inventory: {fileID: 3456888401436643649}
   hotbarSelector: {fileID: 0}
   selectedItem:
@@ -4095,10 +4097,15 @@ MonoBehaviour:
   spumPrefabs: {fileID: 9063021166187635013}
   spawnPos: {x: 0, y: 0}
   mousePos: {x: 0, y: 0}
-  maxHealth: 800
-  currentHealth: 800
+  maxHealth: 1200
+  currentHealth: 0
   invulnerabilityTime: 0.5
   blinkFrequency: 10
+  tombstonePrefab: {fileID: 754224492447959216, guid: 5a2b3075e6ab67c4ba9a62da67dcf883, type: 3}
+  tombstoneOffset: {x: 0, y: 0}
+  autoRespawn: 1
+  respawnDelay: 5
+  respawnPoint: {fileID: 0}
 --- !u!114 &3456888401436643649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4121,6 +4128,8 @@ MonoBehaviour:
   inventoryHeight: 5
   hotbarWidth: 8
   itemDropPrefab: {fileID: 1160021901173022310, guid: 556138c2fcd6b0f41924d40df0598871, type: 3}
+  warehouseManager: {fileID: 0}
+  syncToWarehouse: 1
   zenithSword: {fileID: 11400000, guid: 71fc5c6d72c0f734aa3865b32bc8c3f1, type: 2}
   starSword: {fileID: 11400000, guid: 6865400b4b794944c80aa92a03af89ed, type: 2}
   startingAxe: {fileID: 11400000, guid: 77ee080855c43f24c9aef233a59276a3, type: 2}
