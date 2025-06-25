@@ -21,6 +21,10 @@ public class WarehouseUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailItemSpecificDescription;
     [SerializeField] private Button moreDetailButton; // 更多详情
 
+    [Header("UI组件 - 取出功能")]
+    [SerializeField] private Button takeOutSelectedButton; // 取出选中物品按钮
+    [SerializeField] private Button clearSelectionButton; // 清除选择按钮
+
     [Header("分类按钮")]
     [SerializeField] private List<CategoryButtonUI> categoryButtons;
     [SerializeField] private Button leftButton;
@@ -37,6 +41,8 @@ public class WarehouseUI : MonoBehaviour
     private ItemType selectedCategory;
     private int currentCatagoryIndex;
 
+    // 选择管理
+    private HashSet<WarehouseSlotUI> selectedItemSlots = new HashSet<WarehouseSlotUI>();
 
     private void Start()
     {
@@ -54,6 +60,12 @@ public class WarehouseUI : MonoBehaviour
         // 绑定左右切换按钮事件
         leftButton.onClick.AddListener(() => ChangeCategory(-1));
         rightButton.onClick.AddListener(() => ChangeCategory(1));
+
+        // 绑定取出功能按钮
+        if (takeOutSelectedButton != null)
+            takeOutSelectedButton.onClick.AddListener(TakeOutSelectedItems);
+        if (clearSelectionButton != null)
+            clearSelectionButton.onClick.AddListener(ClearSelection);
 
         // 默认显示第一个分类
         ShowItemsForCategory(ItemType.Weapon);
@@ -80,6 +92,9 @@ public class WarehouseUI : MonoBehaviour
                 categoryButtons[i].Deselect();
             }
         }
+
+        // 清除之前的选择（因为要切换分类了）
+        ClearSelection();
 
         foreach (GameObject slot in itemSlots)
         {
@@ -128,13 +143,15 @@ public class WarehouseUI : MonoBehaviour
 
     public void OnItemSelected(WarehouseSlotUI slotUI, Item item, ItemType itemType)
     {
+        // 清除之前的详情选中状态
         if (selectedSlotUI != null)
         {
-            selectedSlotUI.Deselect();
+            selectedSlotUI.SetDetailSelected(false);
         }
 
+        // 设置新的详情选中状态
         selectedSlotUI = slotUI;
-        selectedSlotUI.Select();
+        selectedSlotUI.SetDetailSelected(true);
 
         selectedItem = item;
         if (itemType == ItemType.Tool && item.tool != null)
@@ -149,6 +166,119 @@ public class WarehouseUI : MonoBehaviour
         detailItemDescription.text = item.description;
         detailItemSpecificDescription.text = item.specificDescription;
         moreDetailButton.interactable = true;
+    }
+
+    /// <summary>
+    /// 切换物品的选择状态（用于批量取出）
+    /// </summary>
+    public void ToggleItemSelection(WarehouseSlotUI slotUI, Item item)
+    {
+        if (selectedItemSlots.Contains(slotUI))
+        {
+            selectedItemSlots.Remove(slotUI);
+            slotUI.SetBatchSelected(false);
+            Debug.Log($"取消选择批量取出: {item.itemName}");
+        }
+        else
+        {
+            selectedItemSlots.Add(slotUI);
+            slotUI.SetBatchSelected(true);
+            Debug.Log($"选择批量取出: {item.itemName}");
+        }
+
+        Debug.Log($"当前选中物品数量: {selectedItemSlots.Count}");
+    }
+
+    /// <summary>
+    /// 清除所有批量取出选择（不影响详情选中）
+    /// </summary>
+    public void ClearSelection()
+    {
+        foreach (var slotUI in selectedItemSlots)
+        {
+            if (slotUI != null)
+            {
+                slotUI.SetBatchSelected(false);
+            }
+        }
+        selectedItemSlots.Clear();
+        Debug.Log("已清除所有批量取出选择");
+    }
+
+    /// <summary>
+    /// 取出选中的物品到背包
+    /// </summary>
+    public void TakeOutSelectedItems()
+    {
+        if (selectedItemSlots.Count == 0)
+        {
+            Debug.Log("没有选中任何物品");
+            return;
+        }
+
+        // 获取玩家背包
+        Inventory playerInventory = warehouseManager.GetInventory();
+        if (playerInventory == null)
+        {
+            Debug.LogError("找不到玩家背包！");
+            return;
+        }
+
+        int successCount = 0;
+        int totalSelected = selectedItemSlots.Count;
+        var selectedSlotsList = new List<WarehouseSlotUI>(selectedItemSlots);
+
+        foreach (var slotUI in selectedSlotsList)
+        {
+            if (slotUI == null) continue;
+
+            Item item = slotUI.GetCurrentItem();
+            if (item == null) continue;
+
+            // 检查背包是否有空间
+            if (playerInventory.CanAddItem(item))
+            {
+                // 创建物品副本
+                Item itemCopy = new Item(item);
+
+                // 添加到背包
+                if (playerInventory.TryAddItem(itemCopy))
+                {
+                    // 从仓库中移除物品
+                    if (warehouseManager.RemoveItemFromWarehouse(item))
+                    {
+                        successCount++;
+                        selectedItemSlots.Remove(slotUI);
+                        Debug.Log($"✓ {item.itemName} x{item.quantity} → 背包");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"从仓库移除 {item.itemName} 失败");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"添加 {item.itemName} 到背包失败");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"背包空间不足，无法取出 {item.itemName}");
+            }
+        }
+
+        // 输出结果
+        if (successCount == totalSelected)
+        {
+            Debug.Log($"🎉 全部取出成功！{successCount}/{totalSelected} 个物品已取出到背包");
+        }
+        else
+        {
+            Debug.Log($"⚠️ 部分取出成功：{successCount}/{totalSelected} 个物品取出成功");
+        }
+
+        // 刷新当前分类显示
+        ShowItemsForCategory(selectedCategory);
     }
 
     private void OnMoreDetailButtonClicked()

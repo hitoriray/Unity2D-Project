@@ -7,12 +7,16 @@ public class InventorySlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExit
 {
     public Image icon;
     public TextMeshProUGUI quantityText;
+    
+    [Header("选择状态")]
+    public Image selectionHighlight;
+    
     private CanvasGroup canvasGroup;
-
     private ItemContainer itemContainer;
     private Vector2Int positionInContainer;
+    private ItemContainerUI containerUI;
+    private bool isSelected = false;
 
-    // Static variables to track drag state across all slots
     public static InventorySlotUI draggedSlot;
 
     void Awake()
@@ -28,6 +32,42 @@ public class InventorySlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         itemContainer = container;
         positionInContainer = position;
+    }
+    
+    /// <summary>
+    /// 设置ItemContainerUI引用
+    /// </summary>
+    public void SetContainerUI(ItemContainerUI containerUI)
+    {
+        this.containerUI = containerUI;
+    }
+    
+    /// <summary>
+    /// 设置选择状态
+    /// </summary>
+    public void SetSelected(bool selected)
+    {
+        isSelected = selected;
+        if (selectionHighlight != null)
+        {
+            selectionHighlight.gameObject.SetActive(selected);
+        }
+        
+        // 选中状态下的视觉反馈：稍微调整透明度暗示不可拖拽
+        if (selected)
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0.8f; // 稍微半透明，暗示特殊状态
+            }
+        }
+        else
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1.0f; // 恢复完全不透明
+            }
+        }
     }
 
     public void AssignContainer(ItemContainer container, Vector2Int position)
@@ -55,9 +95,17 @@ public class InventorySlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // 如果物品被选中，则不允许拖拽
+        if (isSelected)
+        {
+            Debug.Log("选中的物品无法拖拽，请先取消选择");
+            return;
+        }
+
         InventorySlot slot = itemContainer.GetSlot(positionInContainer);
         if (itemContainer == null || slot == null || eventData.button != PointerEventData.InputButton.Left)
             return;
+
 
         draggedSlot = this;
         DragManager.Instance.StartDrag(slot.item, transform.position);
@@ -151,10 +199,25 @@ public class InventorySlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExit
         if (itemContainer == null) return;
         
         InventorySlot slot = itemContainer.GetSlot(positionInContainer);
-        if (slot == null || slot.item == null) return;
-
+        
+        // Ctrl+左键点击 - 选择/取消选择物品
+        if (eventData.button == PointerEventData.InputButton.Left && eventData.clickCount == 1)
+        {
+            // 检查是否按住了Ctrl键
+            bool ctrlPressed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            
+            if (ctrlPressed && containerUI != null && slot != null && slot.item != null)
+            {
+                containerUI.ToggleSlotSelection(positionInContainer);
+            }
+            return;
+        }
+        
+        // 右键点击 - 分割物品
         if (eventData.button == PointerEventData.InputButton.Right)
         {
+            if (slot == null || slot.item == null) return;
+            
             if (slot.item.quantity > 1)
             {
                 // 检查ItemSplitUI是否可用

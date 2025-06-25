@@ -50,7 +50,7 @@ public class ItemContainer
             slots[pos.x, pos.y] = new InventorySlot
             {
                 position = pos,
-                item = item
+                item = new Item(item)
             };
             item.quantity = 0;
             OnItemsChanged?.Invoke();

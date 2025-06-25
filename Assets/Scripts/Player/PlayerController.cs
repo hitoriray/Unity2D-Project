@@ -33,6 +33,7 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     [Header("Inventory")]
     public Inventory inventory;
+    public GameObject inventoryButtonMenu;
     private bool inventoryShowing = false;
     private bool hotbarShowing = true;
     private int selectedSlotIndex = 0;
@@ -238,6 +239,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         }
 
         inventory.inventoryUI.gameObject.SetActive(inventoryShowing);
+        inventoryButtonMenu.SetActive(inventoryShowing);
         inventory.hotbarUI.gameObject.SetActive(hotbarShowing);
     }
 
@@ -1077,6 +1079,7 @@ public class PlayerController : MonoBehaviour, IDamageable
             if (swordGO.TryGetComponent<Terraira.Combat.PhantomSword>(out var phantomSword))
             {
                 // 创建一个 DamageInfo 实例
+                if (selectedItem == null) yield break;
                 DamageInfo damageInfo = selectedItem.weapon.CreateDamageInfo(gameObject, targetPos, Vector2.zero);
                 if (damageInfo.baseDamage != 0)
                 {

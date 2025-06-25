@@ -16,7 +16,7 @@ public class WarehouseManager : MonoBehaviour
     void Start()
     {
         warehouseData = new WarehouseData();
-        GetAllItemsFromInventory();
+        // GetAllItemsFromInventory();
     }
 
     public int GetWarehouseSizeForCategory(ItemType itemType)
@@ -96,6 +96,39 @@ public class WarehouseManager : MonoBehaviour
         else
         {
             Debug.LogWarning($"仓库已满，无法添加物品: {item.itemName}");
+        }
+        
+        return success;
+    }
+
+    /// <summary>
+    /// 从仓库中移除物品
+    /// </summary>
+    /// <param name="item">要移除的物品</param>
+    /// <returns>是否成功移除</returns>
+    public bool RemoveItemFromWarehouse(Item item)
+    {
+        if (item == null)
+        {
+            Debug.LogWarning("尝试移除空物品");
+            return false;
+        }
+
+        if (warehouseData == null)
+        {
+            Debug.LogError("仓库数据未初始化！");
+            return false;
+        }
+
+        bool success = warehouseData.RemoveItem(item);
+        
+        if (success)
+        {
+            Debug.Log($"物品成功从仓库移除: {item.itemName} x{item.quantity}");
+        }
+        else
+        {
+            Debug.LogWarning($"从仓库移除物品失败: {item.itemName}");
         }
         
         return success;

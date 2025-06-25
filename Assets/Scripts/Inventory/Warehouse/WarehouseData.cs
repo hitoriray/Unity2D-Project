@@ -46,4 +46,28 @@ public class WarehouseData
         warehouseItems.Add(item);
         return true;
     }
+
+    /// <summary>
+    /// 从仓库中移除指定物品
+    /// </summary>
+    /// <param name="item">要移除的物品</param>
+    /// <returns>是否成功移除</returns>
+    public bool RemoveItem(Item item)
+    {
+        if (item == null) return false;
+
+        for (int i = 0; i < warehouseItems.Count; ++i)
+        {
+            if (warehouseItems[i] != null && warehouseItems[i].itemName == item.itemName)
+            {
+                // 找到了匹配的物品，直接移除整个物品条目
+                warehouseItems.RemoveAt(i);
+                Debug.Log($"从仓库移除物品: {item.itemName} x{item.quantity}");
+                return true;
+            }
+        }
+
+        Debug.LogWarning($"仓库中未找到物品: {item.itemName}");
+        return false;
+    }
 }
