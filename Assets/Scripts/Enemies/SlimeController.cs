@@ -459,23 +459,9 @@ public class SlimeController : MonoBehaviour, IDamageable
     #region 攻击系统
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log($"触发器检测到: {other.gameObject.name}");
-        // 只对可能是玩家的对象输出详细调试信息
-        bool isPotentialPlayer = other.gameObject.layer == 3 || other.GetComponent<PlayerController>() != null || other.GetComponent<IDamageable>() != null;
-        
-        // if (isPotentialPlayer)
-        // {
-        //     Debug.Log($"[史莱姆攻击调试] {gameObject.name} 触发器检测到玩家: {other.gameObject.name}" +
-        //              $"\n  - 目标Layer: {other.gameObject.layer}" +
-        //              $"\n  - 史莱姆playerLayer设置: {playerLayer.value}" +
-        //              $"\n  - Layer匹配: {((1 << other.gameObject.layer) & playerLayer) != 0}" +
-        //              $"\n  - 当前状态: {currentState}" +
-        //              $"\n  - 攻击冷却: {attackCooldownTimer:F2}" +
-        //              $"\n  - 可以攻击: {currentState == AIState.Attacking && attackCooldownTimer <= 0}");
-        // }
-        
+        // Debug.Log($"触发器检测到: {other.gameObject.name}");
         // 使用触发器检测，避免物理碰撞
-        if (currentState == AIState.Attacking && attackCooldownTimer <= 0)
+        if (attackCooldownTimer <= 0)
         {
             // 优先检查是否有PlayerController组件（更可靠的玩家识别）
             PlayerController playerController = other.GetComponent<PlayerController>();
@@ -495,10 +481,6 @@ public class SlimeController : MonoBehaviour, IDamageable
                     // Debug.Log($"[史莱姆攻击调试] 通过Layer匹配识别到玩家：{other.gameObject.name}");
                     PerformAttackOnPlayer(other);
                 }
-                // else if (isPotentialPlayer)
-                // {
-                //     Debug.LogWarning($"❌ 玩家 {other.gameObject.name} 没有IDamageable组件！");
-                // }
             }
         }
     }
@@ -566,8 +548,6 @@ public class SlimeController : MonoBehaviour, IDamageable
     public void TakeDamage(DamageInfo damageInfo)
     {
         currentHealth -= damageInfo.baseDamage;
-        Debug.Log($"{gameObject.name} 受到 {damageInfo.baseDamage} 点伤害，剩余血量: {currentHealth}");
-
         // 显示伤害数字
         if (DamageTextManager.Instance != null)
         {
@@ -637,7 +617,7 @@ public class SlimeController : MonoBehaviour, IDamageable
 
     private void Die()
     {
-        Debug.Log($"{gameObject.name} 已被击败！");
+        // Debug.Log($"{gameObject.name} 已被击败！");
         PlaySound(deathSound);
         
         // 确保死亡前恢复颜色

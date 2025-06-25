@@ -156,7 +156,7 @@ MonoBehaviour:
   idleSprite: {fileID: -382238951, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
   preparingJumpSprite: {fileID: -969017740, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
   inAirSprite: {fileID: -32631532, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
-  landingSprite: {fileID: -1876987117, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
+  landingSprite: {fileID: -382238951, guid: 2c3d1913de31502409c4ac9aefa4c830, type: 3}
   prepareJumpDuration: 0.3
   landingSquashIntensity: 0.8
   jumpStretchIntensity: 1.3
