@@ -515,7 +515,7 @@ namespace Combat
                 return;
             }
             
-            Debug.Log($"[BossBehaviorDesignerController] 开始播放Boss战音乐: {bossBattleMusic.name}");
+            // Debug.Log($"[BossBehaviorDesignerController] 开始播放Boss战音乐: {bossBattleMusic.name}");
             AmbianceManager.Instance.StartBossMusic(bossBattleMusic, bossMusicFadeInTime);
         }
         
@@ -530,7 +530,7 @@ namespace Combat
                 return;
             }
             
-            Debug.Log("[BossBehaviorDesignerController] 停止Boss战音乐，恢复氛围音乐");
+            // Debug.Log("[BossBehaviorDesignerController] 停止Boss战音乐，恢复氛围音乐");
             AmbianceManager.Instance.StopBossMusic(bossMusicFadeOutTime);
         }
         #endregion
@@ -686,7 +686,7 @@ namespace Combat
         
         private void OnBossDefeated()
         {
-            Debug.Log($"[BossBehaviorDesignerController] {bossName} 被击败！");
+            // Debug.Log($"[BossBehaviorDesignerController] {bossName} 被击败！");
             // 这里可以添加：
             // - 掉落物品
             // - 经验奖励
@@ -701,6 +701,18 @@ namespace Combat
             if (audioSource != null && clip != null)
             {
                 audioSource.PlayOneShot(clip);
+            }
+        }
+        
+        /// <summary>
+        /// 播放咆哮音效（供行为树调用）
+        /// </summary>
+        public void PlayRoarSound()
+        {
+            PlaySound(roarSound);
+            if (enableDebugInfo && roarSound != null)
+            {
+                // Debug.Log($"[BossBehaviorDesignerController] 播放咆哮音效: {roarSound.name}");
             }
         }
         

@@ -55,6 +55,15 @@ namespace AmbianceSystem
         [Range(0f, 1f)]
         public float bossMusicVolume = 0.8f;
 
+        [Header("Night Darkening Settings")]
+        [Tooltip("夜间背景变暗程度 (0-1, 0为完全透明，1为完全黑暗)")]
+        [Range(0f, 1f)]
+        public float nightDarknessLevel = 0.4f;
+        [Tooltip("夜间变暗过渡时间")]
+        public float darknessTransitionDuration = 2f;
+        [Tooltip("夜间变暗覆盖层 (黑色SpriteRenderer)")]
+        public SpriteRenderer nightDarknessOverlay;
+
         private AmbianceProfile currentActiveProfile; // 当前实际生效的Profile
         private Coroutine activeImageFadeCoroutine;
         private Coroutine activeMusicFadeCoroutine;
@@ -66,6 +75,10 @@ namespace AmbianceSystem
         private AudioClip savedMusic; // Boss战前的音乐
         private float savedMusicVolume; // Boss战前的音乐音量
         private float savedMusicTime; // Boss战前的音乐播放时间
+        
+        // 夜间变暗系统
+        private bool isNightTime = false; // 当前是否为夜晚
+        private Coroutine darknessTransitionCoroutine; // 变暗过渡协程
 
         // 外部依赖
         private PlayerController playerController;
@@ -116,6 +129,9 @@ namespace AmbianceSystem
             if(musicAudioSource1 != null) musicAudioSource1.playOnAwake = false;
             if(musicAudioSource2 != null) musicAudioSource2.playOnAwake = false;
 
+            // 初始化夜间变暗系统
+            InitializeNightDarkness();
+            
             UpdateAmbiance();
             StartCoroutine(CheckAmbianceLoop());
         }
@@ -127,6 +143,12 @@ namespace AmbianceSystem
             if (backgroundSpriteRenderer1 != null && backgroundSpriteRenderer1.gameObject.activeInHierarchy && backgroundSpriteRenderer1.sprite != null)
             {
                 AdjustSpriteRendererToCamera(backgroundSpriteRenderer1);
+            }
+            
+            // 调整夜间变暗覆盖层跟随相机
+            if (nightDarknessOverlay != null && nightDarknessOverlay.gameObject.activeInHierarchy)
+            {
+                AdjustSpriteRendererToCamera(nightDarknessOverlay);
             }
         }
 
@@ -171,6 +193,14 @@ namespace AmbianceSystem
             BiomeType currentBiome = GetCurrentBiome();
             TimeOfDay currentTimeOfDay = GetCurrentTimeOfDay();
             AmbianceProfile targetProfile = FindMatchingProfile(currentBiome, currentTimeOfDay);
+
+            // 检查白天夜晚变化
+            bool newIsNightTime = (currentTimeOfDay == TimeOfDay.Night);
+            if (newIsNightTime != isNightTime)
+            {
+                isNightTime = newIsNightTime;
+                UpdateNightDarkness(isNightTime);
+            }
 
             if (targetProfile != currentActiveProfile) 
             {
@@ -427,6 +457,159 @@ namespace AmbianceSystem
             sourceToFade.volume = 1f; 
             activeMusicFadeCoroutine = null;
         }
+
+        #region Night Darkness System
+        
+        /// <summary>
+        /// 初始化夜间变暗系统
+        /// </summary>
+        private void InitializeNightDarkness()
+        {
+            if (nightDarknessOverlay == null)
+            {
+                Debug.LogWarning("[AmbianceManager] 夜间变暗覆盖层未设置，将自动创建");
+                CreateNightDarknessOverlay();
+            }
+            
+            if (nightDarknessOverlay != null)
+            {
+                // 初始化覆盖层
+                Color overlayColor = Color.black;
+                overlayColor.a = 0f; // 初始完全透明
+                nightDarknessOverlay.color = overlayColor;
+                nightDarknessOverlay.gameObject.SetActive(true);
+                
+                // 确保覆盖层在背景之上
+                nightDarknessOverlay.sortingOrder = 100;
+                
+                // 初始化当前时间状态
+                isNightTime = (GetCurrentTimeOfDay() == TimeOfDay.Night);
+                if (isNightTime)
+                {
+                    // 如果游戏开始时是夜晚，立即应用变暗效果
+                    overlayColor.a = nightDarknessLevel;
+                    nightDarknessOverlay.color = overlayColor;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 自动创建夜间变暗覆盖层
+        /// </summary>
+        private void CreateNightDarknessOverlay()
+        {
+            // 创建新的GameObject
+            GameObject overlayObject = new GameObject("NightDarknessOverlay");
+            overlayObject.transform.SetParent(transform);
+            
+            // 添加SpriteRenderer组件
+            nightDarknessOverlay = overlayObject.AddComponent<SpriteRenderer>();
+            
+            // 创建一个简单的白色像素纹理作为覆盖层
+            Texture2D overlayTexture = new Texture2D(1, 1);
+            overlayTexture.SetPixel(0, 0, Color.white);
+            overlayTexture.Apply();
+            
+            // 创建Sprite
+            Sprite overlaySprite = Sprite.Create(overlayTexture, new Rect(0, 0, 1, 1), Vector2.one * 0.5f, 1f);
+            nightDarknessOverlay.sprite = overlaySprite;
+            
+            // 设置为黑色
+            nightDarknessOverlay.color = Color.black;
+            
+            Debug.Log("[AmbianceManager] 自动创建夜间变暗覆盖层完成");
+        }
+        
+        /// <summary>
+        /// 更新夜间变暗效果
+        /// </summary>
+        /// <param name="shouldBeDark">是否应该变暗</param>
+        private void UpdateNightDarkness(bool shouldBeDark)
+        {
+            if (nightDarknessOverlay == null) return;
+            
+            // 停止当前的变暗过渡
+            if (darknessTransitionCoroutine != null)
+            {
+                StopCoroutine(darknessTransitionCoroutine);
+                darknessTransitionCoroutine = null;
+            }
+            
+            // 开始新的变暗过渡
+            darknessTransitionCoroutine = StartCoroutine(TransitionDarknessCoroutine(shouldBeDark));
+        }
+        
+        /// <summary>
+        /// 变暗过渡协程
+        /// </summary>
+        /// <param name="shouldBeDark">是否应该变暗</param>
+        private IEnumerator TransitionDarknessCoroutine(bool shouldBeDark)
+        {
+            if (nightDarknessOverlay == null)
+            {
+                darknessTransitionCoroutine = null;
+                yield break;
+            }
+            
+            Color currentColor = nightDarknessOverlay.color;
+            float startAlpha = currentColor.a;
+            float targetAlpha = shouldBeDark ? nightDarknessLevel : 0f;
+            
+            float elapsedTime = 0f;
+            float duration = darknessTransitionDuration;
+            
+            if (duration <= 0) duration = 0.01f;
+            
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsedTime / duration);
+                
+                // 使用平滑过渡
+                float smoothT = Mathf.SmoothStep(0f, 1f, t);
+                
+                currentColor.a = Mathf.Lerp(startAlpha, targetAlpha, smoothT);
+                nightDarknessOverlay.color = currentColor;
+                
+                yield return null;
+            }
+            
+            // 确保最终值准确
+            currentColor.a = targetAlpha;
+            nightDarknessOverlay.color = currentColor;
+            
+            darknessTransitionCoroutine = null;
+            
+            // 调试信息
+            Debug.Log($"[AmbianceManager] 夜间变暗过渡完成 - 目标透明度: {targetAlpha:F2}");
+        }
+        
+        /// <summary>
+        /// 手动设置夜间变暗程度
+        /// </summary>
+        /// <param name="darknessLevel">变暗程度 (0-1)</param>
+        public void SetNightDarknessLevel(float darknessLevel)
+        {
+            nightDarknessLevel = Mathf.Clamp01(darknessLevel);
+            
+            // 如果当前是夜晚，立即应用新的变暗程度
+            if (isNightTime && nightDarknessOverlay != null)
+            {
+                Color currentColor = nightDarknessOverlay.color;
+                currentColor.a = nightDarknessLevel;
+                nightDarknessOverlay.color = currentColor;
+            }
+        }
+        
+        /// <summary>
+        /// 获取当前是否为夜晚
+        /// </summary>
+        public bool IsNightTime()
+        {
+            return isNightTime;
+        }
+        
+        #endregion
 
         #region Boss Music System
         

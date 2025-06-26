@@ -59,6 +59,20 @@ namespace UI
             {
                 Instance = this;
                 InitializeComponents();
+                
+                // 确保GameObject是激活的，但UI是隐藏的
+                if (!gameObject.activeInHierarchy)
+                {
+                    gameObject.SetActive(true);
+                }
+                
+                // 初始时隐藏血条
+                if (healthBarPanel != null)
+                    healthBarPanel.SetActive(false);
+                
+                // 设置初始透明度为0，避免闪烁
+                if (canvasGroup != null)
+                    canvasGroup.alpha = 0f;
             }
             else if (Instance != this)
             {
@@ -68,11 +82,8 @@ namespace UI
 
         void Start()
         {
-            // 初始时隐藏血条
-            if (healthBarPanel != null)
-                healthBarPanel.SetActive(false);
-
-            Show();
+            // 不在Start中调用Show()，避免游戏开始时显示
+            // Show()将由外部系统（如NightBossSpawner）调用
         }
 
         /// <summary>
@@ -130,6 +141,12 @@ namespace UI
         /// <param name="maxHealth">最大血量</param>
         public void Show(string bossName = "克苏鲁之眼", float maxHealth = 100f)
         {
+            // 确保GameObject是激活的
+            if (!gameObject.activeInHierarchy)
+            {
+                gameObject.SetActive(true);
+            }
+            
             if (healthBarPanel != null)
                 healthBarPanel.SetActive(true);
 
@@ -153,6 +170,8 @@ namespace UI
             if (fadeAnimationCoroutine != null)
                 StopCoroutine(fadeAnimationCoroutine);
             fadeAnimationCoroutine = StartCoroutine(FadeIn());
+            
+            Debug.Log($"[BossHealthBarUI] 显示Boss血条 - Boss: {bossName}, 血量: {maxHealth}");
         }
 
         /// <summary>

@@ -112,7 +112,6 @@ namespace Box
             {
                 playerInRange = true;
                 playerInventory = other.GetComponent<Inventory>();
-                Debug.Log("玩家进入宝箱交互范围");
             }
         }
 
@@ -121,7 +120,6 @@ namespace Box
             if (other.CompareTag("Player"))
             {
                 playerInRange = false;
-                Debug.Log("玩家离开宝箱交互范围");
                 if (BoxController.IsOpen)
                 {
                     boxUI.gameObject.SetActive(false);

@@ -338,15 +338,29 @@ namespace Combat.AI.BehaviorDesigner
         /// </summary>
         private void PlayRoarSound()
         {
-            // 简化处理，如果有音频源就播放默认音效
-            if (audioSource != null)
+            // 尝试使用BossBehaviorDesignerController的公共方法
+            var bossController = GetComponent<BossBehaviorDesignerController>();
+            if (bossController != null)
             {
-                // 这里可以添加默认音效或者通过其他方式获取
-                Debug.Log("[EoCChargeAttack] 播放吼叫音效");
+                bossController.PlayRoarSound();
+                // Debug.Log("[EoCChargeAttack] 通过Boss控制器播放吼叫音效");
+            }
+            else if (audioSource != null)
+            {
+                // 回退方案：直接通过AudioSource播放
+                if (bossController != null && bossController.roarSound != null)
+                {
+                    audioSource.PlayOneShot(bossController.roarSound);
+                    // Debug.Log("[EoCChargeAttack] 直接播放吼叫音效: " + bossController.roarSound.name);
+                }
+                else
+                {
+                    Debug.LogWarning("[EoCChargeAttack] 未找到BossBehaviorDesignerController或roarSound音效");
+                }
             }
             else
             {
-                Debug.LogWarning("[EoCChargeAttack] 未找到AudioSource组件");
+                Debug.LogWarning("[EoCChargeAttack] 未找到BossBehaviorDesignerController和AudioSource组件");
             }
         }
         
@@ -804,9 +818,29 @@ namespace Combat.AI.BehaviorDesigner
         
         private void PlayRoarSound()
         {
-            if (audioSource != null)
+            // 尝试使用BossBehaviorDesignerController的公共方法
+            var bossController = GetComponent<BossBehaviorDesignerController>();
+            if (bossController != null)
             {
-                Debug.Log("[EoCMultiChargeAttack] 播放吼叫音效");
+                bossController.PlayRoarSound();
+                Debug.Log("[EoCMultiChargeAttack] 通过Boss控制器播放吼叫音效");
+            }
+            else if (audioSource != null)
+            {
+                // 回退方案：直接通过AudioSource播放
+                if (bossController != null && bossController.roarSound != null)
+                {
+                    audioSource.PlayOneShot(bossController.roarSound);
+                    Debug.Log("[EoCMultiChargeAttack] 直接播放吼叫音效: " + bossController.roarSound.name);
+                }
+                else
+                {
+                    Debug.LogWarning("[EoCMultiChargeAttack] 未找到BossBehaviorDesignerController或roarSound音效");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[EoCMultiChargeAttack] 未找到BossBehaviorDesignerController和AudioSource组件");
             }
         }
         

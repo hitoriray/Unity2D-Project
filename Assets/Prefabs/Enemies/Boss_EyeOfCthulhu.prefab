@@ -183,6 +183,9 @@ MonoBehaviour:
   roarSound: {fileID: 8300000, guid: c26f4b11d46bff749bb129f2ffe888c8, type: 3}
   hurtSound: {fileID: 8300000, guid: 56bfad258e06548439b69433cc73b634, type: 3}
   deathSound: {fileID: 8300000, guid: f336a39cc74f0f241aeccee3eee99521, type: 3}
+  bossBattleMusic: {fileID: 8300000, guid: c1a24ae4b16ed3b4c8dc547838246465, type: 3}
+  bossMusicFadeInTime: 3
+  bossMusicFadeOutTime: 2
   contactDamage: 15
   contactDamageInterval: 1
   contactKnockback: 8
@@ -230,7 +233,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 5.1104965
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
