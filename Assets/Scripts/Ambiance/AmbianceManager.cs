@@ -109,25 +109,18 @@ namespace AmbianceSystem
                 return;
             }
 
-            if (backgroundSpriteRenderer2 != null)
-            {
-                Color tempColor = backgroundSpriteRenderer2.color;
-                tempColor.a = 0f;
-                backgroundSpriteRenderer2.color = tempColor;
-                backgroundSpriteRenderer2.gameObject.SetActive(false);
-            }
-            
-            if (backgroundSpriteRenderer1 != null && backgroundSpriteRenderer1.sprite != null)
-            {
-                Color tempColor = backgroundSpriteRenderer1.color;
-                tempColor.a = 1f;
-                backgroundSpriteRenderer1.color = tempColor;
-                backgroundSpriteRenderer1.gameObject.SetActive(true);
-                AdjustSpriteRendererToCamera(backgroundSpriteRenderer1);
-            }
+            Color tempColor = backgroundSpriteRenderer2.color;
+            tempColor.a = 0f;
+            backgroundSpriteRenderer2.color = tempColor;
+            backgroundSpriteRenderer2.gameObject.SetActive(false);
+            tempColor = backgroundSpriteRenderer1.color;
+            tempColor.a = 1f;
+            backgroundSpriteRenderer1.color = tempColor;
+            backgroundSpriteRenderer1.gameObject.SetActive(true);
+            AdjustSpriteRendererToCamera(backgroundSpriteRenderer1);
 
-            if(musicAudioSource1 != null) musicAudioSource1.playOnAwake = false;
-            if(musicAudioSource2 != null) musicAudioSource2.playOnAwake = false;
+            musicAudioSource1.playOnAwake = false;
+            musicAudioSource2.playOnAwake = false;
 
             // 初始化夜间变暗系统
             InitializeNightDarkness();
@@ -155,11 +148,6 @@ namespace AmbianceSystem
         void AdjustSpriteRendererToCamera(SpriteRenderer spriteRenderer)
         {
             if (mainCamera == null || spriteRenderer == null || spriteRenderer.sprite == null) return;
-            if (!mainCamera.orthographic)
-            {
-                // Debug.LogWarning("[AmbianceManager] AdjustSpriteRendererToCamera: 主相机不是正交相机。"); 
-                return;
-            }
             
             spriteRenderer.transform.position = new Vector3(mainCamera.transform.position.x, mainCamera.transform.position.y, spriteRenderer.transform.position.z);
             float camHeight = mainCamera.orthographicSize * 2f;
@@ -388,7 +376,8 @@ namespace AmbianceSystem
         {
             if (musicAudioSource1 == null || musicAudioSource2 == null || newClip == null)
             {
-                activeMusicFadeCoroutine = null; yield break;
+                activeMusicFadeCoroutine = null;
+                yield break;
             }
 
             musicAudioSource2.clip = newClip;
@@ -438,7 +427,8 @@ namespace AmbianceSystem
 
             if (sourceToFade == null || !sourceToFade.isPlaying)
             {
-                activeMusicFadeCoroutine = null; yield break;
+                activeMusicFadeCoroutine = null;
+                yield break;
             }
 
             float elapsedTime = 0f;
@@ -483,8 +473,7 @@ namespace AmbianceSystem
                 nightDarknessOverlay.sortingOrder = 100;
                 
                 // 初始化当前时间状态
-                isNightTime = (GetCurrentTimeOfDay() == TimeOfDay.Night);
-                if (isNightTime)
+                if (GetCurrentTimeOfDay() == TimeOfDay.Night)
                 {
                     // 如果游戏开始时是夜晚，立即应用变暗效果
                     overlayColor.a = nightDarknessLevel;
@@ -579,9 +568,6 @@ namespace AmbianceSystem
             nightDarknessOverlay.color = currentColor;
             
             darknessTransitionCoroutine = null;
-            
-            // 调试信息
-            Debug.Log($"[AmbianceManager] 夜间变暗过渡完成 - 目标透明度: {targetAlpha:F2}");
         }
         
         /// <summary>

@@ -171,7 +171,7 @@ public class ItemContainer
             return; 
         }
         slots[x, y] = null;
-        OnItemsChanged?.Invoke(); // 使用你更正后的小写 'o'
+        OnItemsChanged?.Invoke();
     }
 
     public Vector2Int? FindEmptySlot()

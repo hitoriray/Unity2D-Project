@@ -2532,7 +2532,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dayDurationSeconds: 30
-  nightDurationSeconds: 60
+  nightDurationSeconds: 180
 --- !u!114 &1275623507 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 29737931287419473, guid: 3e26212da0e610943b9892bed1e22ce0, type: 3}

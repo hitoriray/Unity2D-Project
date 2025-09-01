@@ -35,15 +35,12 @@ public static class LightingManager
         // 等待一帧，让更多的光照更新加入队列
         yield return null;
 
-        int processedCount = 0;
-
         // 处理队列中的所有光照更新
         while (lightUpdateQueue.Count > 0)
         {
             Vector3 lightData = lightUpdateQueue.Dequeue();
             // 队列处理的光照通常使用地形的默认光照半径
             LightBlockInternal(terrainGen, (int)lightData.x, (int)lightData.y, lightData.z, 0, (int)terrainGen.lightRadius, true); // 显式传递 applyWallBoost = true
-            processedCount++;
 
             // 队列大小监控
             // if (lightUpdateQueue.Count % 10 == 0 && lightUpdateQueue.Count > 0)
@@ -103,49 +100,9 @@ public static class LightingManager
 
         // 最后，移除当前位置可能存在的旧光照，并重新计算周围
         RemoveLightSource(terrainGen, x, y);
-        // terrainGen.worldTilesMap.Apply(); // 确保这行被注释或删除
     }
 
-    /// <summary>
-    /// UpdateBlockLighting的无Apply版本，用于批量处理。
-    /// </summary>
-    public static void UpdateBlockLighting_NoApply(TerrainGeneration terrainGen, int x, int y)
-    {
-        // 首先，根据天空光设置方块的基础亮度
-        if (SkyLightManager.IsPositionSkyLit(x, y))
-        {
-            terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
-        }
-        else
-        {
-            terrainGen.worldTilesMap.SetPixel(x, y, Color.black);
-        }
-
-        // 然后，从邻近的更亮的方块传播光线到这个方块
-        for (int dx = -1; dx <= 1; ++dx)
-        {
-            for (int dy = -1; dy <= 1; ++dy)
-            {
-                if (dx == 0 && dy == 0) continue;
-
-                int nx = x + dx;
-                int ny = y + dy;
-
-                if (nx < 0 || nx >= terrainGen.worldSize || ny < 0 || ny >= terrainGen.worldSize) continue;
-
-                // 如果邻居比当前方块亮，就从邻居那里开始重新传播光
-                if (terrainGen.worldTilesMap.GetPixel(nx, ny).r > terrainGen.worldTilesMap.GetPixel(x, y).r)
-                {
-                    float neighborIntensity = terrainGen.worldTilesMap.GetPixel(nx, ny).r;
-                    LightBlockInternal(terrainGen, nx, ny, neighborIntensity, 0, (int)terrainGen.lightRadius, true);
-                }
-            }
-        }
-
-        // 最后，移除当前位置可能存在的旧光照，并重新计算周围
-        RemoveLightSource(terrainGen, x, y);
-        // terrainGen.worldTilesMap.Apply(); // 确保这行被注释或删除
-    }
+    
 
     /// <summary>
     /// 立即更新光照（用于初始化等场景），使用地形的默认光照半径。
@@ -159,8 +116,6 @@ public static class LightingManager
     /// <summary>
     /// 内部光照计算方法，不调用Apply()
     /// </summary>
-    /// <param name="maxIterationDepth">光照传播的最大迭代深度 (实际半径效果)</param>
-    /// <param name="applyWallBoost">是否应用墙壁光照增强</param>
     private static void LightBlockInternal(TerrainGeneration terrainGen, int x, int y, float intensity, int iteration, int maxIterationDepth, bool applyWallBoost = true)
     {
         if (terrainGen == null) return; // 安全检查
@@ -207,137 +162,80 @@ public static class LightingManager
     }
 
     /// <summary>
-    /// 移除光源并重新计算周围光照
+    /// 移除光源并重新计算周围光照，能够正确处理天光的横向传播。
     /// </summary>
     /// <param name="specificRadiusToClear">如果提供，则使用此半径进行反照，否则使用terrainGen.lightRadius</param>
     public static void RemoveLightSource(TerrainGeneration terrainGen, int x, int y, int? specificRadiusToClear = null)
     {
-        int radiusToUse = specificRadiusToClear ?? (int)terrainGen.lightRadius;
-        int effectiveClearRadius = radiusToUse + 1; // 稍微扩大清除半径以确保覆盖
-        // Debug.Log($"[LightingManager] RemoveLightSource: Called for ({x},{y}). Nominal radius: {radiusToUse}, Effective clear radius: {effectiveClearRadius}.");
+        int radius = specificRadiusToClear ?? (int)terrainGen.lightRadius;
+        // 搜索半径需要比清除半径大1，以确保能找到边界上的所有光源。
+        int searchRadius = radius + 1;
 
         if (terrainGen == null)
         {
-            Debug.LogError($"[LightingManager] RemoveLightSource: terrainGen is null for ({x},{y}). Cannot remove light.");
+            Debug.LogError($"[LightingManager] RemoveLightSource: terrainGen is null for ({x},{y}).");
             return;
         }
-        terrainGen.unlitBlocks.Clear();
-        // 直接迭代受影响的区域并将其设置为基础未照亮状态，使用 effectiveClearRadius
-        for (int ix = x - effectiveClearRadius; ix <= x + effectiveClearRadius; ix++)
+
+        // 步骤 1: 确定所有受影响的方块。
+        // 我们需要更新一个比光照半径稍大的区域，以正确地重新计算边界。
+        HashSet<Vector2Int> affectedBlocks = new HashSet<Vector2Int>();
+        for (int ix = x - searchRadius; ix <= x + searchRadius; ix++)
         {
-            for (int iy = y - effectiveClearRadius; iy <= y + effectiveClearRadius; iy++)
+            for (int iy = y - searchRadius; iy <= y + searchRadius; iy++)
             {
                 if (ix < 0 || ix >= terrainGen.worldSize || iy < 0 || iy >= terrainGen.worldSize) continue;
-
-                if (Vector2.Distance(new Vector2(x, y), new Vector2(ix, iy)) <= effectiveClearRadius)
+                
+                if (Vector2.Distance(new Vector2(x, y), new Vector2(ix, iy)) <= searchRadius)
                 {
-                    Vector2Int currentPos = new Vector2Int(ix, iy);
-
-                    // 核心修改：在决定方块的"自然"光照状态时，优先考虑天空光
-                    if (SkyLightManager.IsPositionSkyLit(ix, iy))
-                    {
-                        // 如果方块暴露在天空下，无论它是什么类型（空气、实体、背景墙），
-                        // 在移除人造光源后，它都应该恢复到最亮的白色。
-                        terrainGen.worldTilesMap.SetPixel(ix, iy, Color.white);
-                    }
-                    else
-                    {
-                        // 对于地下（不被天空光照射）的方块，使用旧的逻辑
-                        // 注意：即使是地下的纯空气，也应该先变黑，然后由周围的光源重新照亮
-                        terrainGen.worldTilesMap.SetPixel(ix, iy, Color.black);
-                    }
-
-                    // 确保添加到 unlitBlocks 列表中，以便后续的 relight 逻辑可以处理边界
-                    if (!terrainGen.unlitBlocks.Contains(currentPos))
-                    {
-                        terrainGen.unlitBlocks.Add(currentPos);
-                    }
+                    affectedBlocks.Add(new Vector2Int(ix, iy));
                 }
             }
         }
 
-        List<Vector2Int> toRelight = new List<Vector2Int>();
-        foreach (Vector2Int block in terrainGen.unlitBlocks)
+        // 步骤 2: 将所有受影响的方块重置为其基础光照（天光或全黑）。
+        // 这是为了给重新传播创造一个干净的环境。
+        foreach (var pos in affectedBlocks)
+        {
+            if (SkyLightManager.IsPositionSkyLit(pos.x, pos.y))
+            {
+                terrainGen.worldTilesMap.SetPixel(pos.x, pos.y, Color.white);
+            }
+            else
+            {
+                terrainGen.worldTilesMap.SetPixel(pos.x, pos.y, Color.black);
+            }
+        }
+
+        // 步骤 3: 对每个受影响的方块，检查其邻居。如果邻居更亮，就从邻居那里重新传播光。
+        // 这个过程将有效地将光线（包括天光）从边界传播回被清除的区域。
+        foreach (var pos in affectedBlocks)
         {
             for (int dx = -1; dx <= 1; ++dx)
+            {
                 for (int dy = -1; dy <= 1; ++dy)
                 {
-                    int nx = block.x + dx, ny = block.y + dy;
-                    if (nx == block.x && ny == block.y) continue;
+                    if (dx == 0 && dy == 0) continue;
+
+                    int nx = pos.x + dx;
+                    int ny = pos.y + dy;
+
                     if (nx < 0 || nx >= terrainGen.worldSize || ny < 0 || ny >= terrainGen.worldSize) continue;
-                    if (terrainGen.worldTilesMap.GetPixel(nx, ny) != null &&
-                        terrainGen.worldTilesMap.GetPixel(nx, ny).r > terrainGen.worldTilesMap.GetPixel(block.x, block.y).r)
+
+                    float neighborIntensity = terrainGen.worldTilesMap.GetPixel(nx, ny).r;
+                    // 如果邻居比当前方块亮，它就是一个光源。
+                    if (neighborIntensity > terrainGen.worldTilesMap.GetPixel(pos.x, pos.y).r)
                     {
-                        Vector2Int relightPos = new Vector2Int(nx, ny);
-                        if (!toRelight.Contains(relightPos))
-                            toRelight.Add(relightPos);
+                        // 从这个更亮的邻居开始，使用地形的默认光照半径重新传播光线，
+                        // 以确保光线可以完全填充需要照亮的区域。
+                        LightBlockInternal(terrainGen, nx, ny, neighborIntensity, 0, (int)terrainGen.lightRadius, true);
                     }
                 }
-        }
-
-        // 批量重新照亮区域
-        foreach (Vector2Int source in toRelight)
-        {
-            float sourceIntensity = terrainGen.worldTilesMap.GetPixel(source.x, source.y).r;
-            // 仅当邻近的源光照强度足够高时（表明它可能是一个持久光源），才进行重新光照。
-            if (sourceIntensity > 0.25f)
-            {
-                // 【修正】使用地形的默认光照半径进行重新传播，而不是硬编码的 1。
-                // 这允许光线从侧面完全填充被遮挡的列。
-                LightBlockInternal(terrainGen, source.x, source.y, sourceIntensity, 0, (int)terrainGen.lightRadius, false);
             }
         }
 
-        // 批量应用纹理更新
+        // 步骤 4: 应用所有光照更改。
         terrainGen.worldTilesMap.Apply();
-    }
-
-    /// <summary>
-    /// 内部方法：移除指定位置的光照
-    /// </summary>
-    /// <param name="maxUnlightRadius">从此光源原点开始取消光照的最大迭代深度/半径</param>
-    private static void UnlightBlockInternal(TerrainGeneration terrainGen, int x, int y, int originX, int originY, int maxUnlightRadius)
-    {
-        if (terrainGen == null) return; // 安全检查
-        Vector2Int currentPos = new Vector2Int(x, y);
-
-        // 使用 maxUnlightRadius 进行边界检查
-        if (Mathf.Abs(x - originX) > maxUnlightRadius ||
-            Mathf.Abs(y - originY) > maxUnlightRadius ||
-            terrainGen.unlitBlocks.Contains(currentPos))
-            return;
-
-        for (int dx = -1; dx <= 1; ++dx)
-            for (int dy = -1; dy <= 1; ++dy)
-            {
-                int nx = x + dx, ny = y + dy;
-                if (nx == x && ny == y) continue;
-                if (nx < 0 || nx >= terrainGen.worldSize || ny < 0 || ny >= terrainGen.worldSize) continue;
-                if (terrainGen.worldTilesMap.GetPixel(nx, ny) != null &&
-                    terrainGen.worldTilesMap.GetPixel(nx, ny).r < terrainGen.worldTilesMap.GetPixel(x, y).r)
-                    UnlightBlockInternal(terrainGen, nx, ny, originX, originY, maxUnlightRadius); // 传递 maxUnlightRadius
-            }
-        
-        // 核心修改：同样，在这里应用天空光逻辑
-        if (SkyLightManager.IsPositionSkyLit(x, y))
-        {
-            // 天空光下的方块总是亮的
-            terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
-        }
-        else
-        {
-            // 地下逻辑保持不变
-            TileType currentTileType = terrainGen.GetTileType(x,y);
-            if (currentTileType == TileType.Air && !terrainGen.IsWallAt(x, y))
-            {
-                terrainGen.worldTilesMap.SetPixel(x, y, Color.white);
-            }
-            else 
-            {
-                terrainGen.worldTilesMap.SetPixel(x, y, Color.black);
-            }
-        }
-        terrainGen.unlitBlocks.Add(currentPos);
     }
 
     /// <summary>

@@ -1,16 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Combat.Weapons; // 新增：为了能引用 StarProjectile
-using Utility;        // 新增：为了能引用 ObjectPool
-using Combat.Interfaces; // 新增：为了使用IDamageable接口
-using UI; // 新增：为了使用DamageTextManager
-// SoundEffectManager 在全局命名空间，不需要额外 using
+using Combat.Weapons;
+using Utility;
+using Combat.Interfaces;
+using UI;
 
 public class PlayerController : MonoBehaviour, IDamageable
 {
     [Header("依赖")]
-    [SerializeField] private CraftingUI craftingUI; // 引用UI控制器
+    [SerializeField] private CraftingUI craftingUI;
 
     public LayerMask layerMask;
 
@@ -18,7 +17,7 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     public GameObject weapon;
 
-    public AudioClip[] digAudios; // 已有的挖掘音效数组
+    public AudioClip[] digAudios;
     [Header("Audio")]
     [Tooltip("角色挥剑或攻击时的音效")]
     public AudioClip swordSwingSound;
@@ -26,8 +25,6 @@ public class PlayerController : MonoBehaviour, IDamageable
     public AudioClip[] hurtSounds;
     [Tooltip("死亡时的音效")]
     public AudioClip[] deathSounds;
-    // [Tooltip("星星开始降落时的音效")] // 下面这行将被移除，音效移至Weapon.cs
-    // public AudioClip starFallSound;
 
     #region 背包相关的变量
 
@@ -42,7 +39,7 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     [Header("Object Pools")]
     [Tooltip("星星投射物的对象池")]
-    public ObjectPool starProjectilePool; // 新增星星对象池的引用
+    public ObjectPool starProjectilePool;
 
     // 公共属性用于外部访问库存状态
     public bool IsInventoryShowing => inventoryShowing;
@@ -222,7 +219,6 @@ public class PlayerController : MonoBehaviour, IDamageable
         {
             hotbarSelector.transform.position = inventory.hotbarUI.uiSlots[selectedSlotIndex, 0].transform.position;
         }
-        // set selected item from the last row of the main inventory
         selectedItem = inventory.items?.GetSlot(new Vector2Int(selectedSlotIndex, inventory.items.height - 1))?.item;
         weapon.GetComponent<SpriteRenderer>().sprite = selectedItem?.itemSprite;
 
@@ -245,10 +241,8 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     private void FixedUpdate()
     {
-        // 死亡状态下禁用所有物理和移动处理
         if (isDead) return;
         
-        // --- 最终诊断修改：直接检测按键，绕过输入轴系统 ---
         float horizontal = 0f;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
         {
@@ -258,7 +252,6 @@ public class PlayerController : MonoBehaviour, IDamageable
         {
             horizontal = -1f;
         }
-        // --- 修改结束 ---
 
         Vector3 currentPos = transform.position;
         Vector2 movement = new Vector2(horizontal * moveSpeed, rb.velocity.y);
@@ -382,9 +375,7 @@ public class PlayerController : MonoBehaviour, IDamageable
                 SkyLightManager.OnBlockChanged(x, terrainGen);
                 LightingManager.UpdateBlockLighting(terrainGen, x, y);
 
-                // Use the new method to decrease item quantity from the last row of the inventory
                 inventory.items.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.items.height - 1), 1);
-                // Update selectedItem reference as it might have been removed
                 selectedItem = inventory.items.GetSlot(new Vector2Int(selectedSlotIndex, inventory.items.height - 1))?.item;
             }
         }
@@ -418,9 +409,7 @@ public class PlayerController : MonoBehaviour, IDamageable
                 SkyLightManager.OnBlockChanged(x, terrainGen);
                 LightingManager.UpdateBlockLighting(terrainGen, x, y);
 
-                // Use the new method to decrease item quantity from the last row of the inventory
                 inventory.items.DecreaseItemQuantity(new Vector2Int(selectedSlotIndex, inventory.items.height - 1), 1);
-                // Update selectedItem reference as it might have been removed
                 selectedItem = inventory.items.GetSlot(new Vector2Int(selectedSlotIndex, inventory.items.height - 1))?.item;
             }
         }
@@ -447,8 +436,7 @@ public class PlayerController : MonoBehaviour, IDamageable
             // 移除墙
             else if (selectedItem.toolType == ToolType.Hammer)
             {
-                succesed = terrainGen.RemoveTile(pos.x, pos.y, TileType.Wall); // Hammer removal might not need 'succesed' check if it always works
-                // Hammer sound is played regardless of RemoveTile success for walls, as it's an action sound.
+                succesed = terrainGen.RemoveTile(pos.x, pos.y, TileType.Wall);
                 if (SoundEffectManager.Instance != null && digAudios != null && digAudios.Length > 0)
                     SoundEffectManager.Instance.PlaySoundAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position);
                 else if (digAudios != null && digAudios.Length > 0) AudioSource.PlayClipAtPoint(digAudios[Random.Range(0, digAudios.Length)], transform.position); // Fallback
@@ -537,11 +525,11 @@ public class PlayerController : MonoBehaviour, IDamageable
                         }
                         else if (selectedItem == null)
                         {
-                             isAttacking = true; // Or handle as an error/no action
+                             isAttacking = true;
                         }
-                        else // selectedItem is not null, but not a weapon, or some other case
+                        else
                         {
-                             isAttacking = true; // Default behavior if not handled by other cases like Block/Wall/Tool
+                             isAttacking = true;
                         }
                         break;
                     case ItemType.Tool:
@@ -552,7 +540,6 @@ public class PlayerController : MonoBehaviour, IDamageable
             }
             else
             {
-                // no item selected, default to mining
                 isMining = true;
             }
         }
@@ -908,23 +895,18 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         if (DragManager.Instance != null && DragManager.Instance.IsDragging())
         {
-            // Reset the visual state of the dragged slot
             if (InventorySlotUI.draggedSlot != null)
             {
                 InventorySlotUI.draggedSlot.ResetSlotVisual();
             }
-
-            // End the drag operation via the manager
             DragManager.Instance.EndDrag();
-            
-            // Clear the static reference
             InventorySlotUI.draggedSlot = null;
         }
     }
 
     #endregion
 
-    #region 星怒攻击实现
+    #region 星怒、天顶剑的攻击实现
     void PerformStarfuryAttack()
     {
         if (selectedItem == null) { Debug.LogError("[PlayerController] PerformStarfuryAttack: selectedItem is NULL. Aborting."); return; }
@@ -1013,20 +995,6 @@ public class PlayerController : MonoBehaviour, IDamageable
                     Destroy(starInstance);
             }
         }
-
-        // 播放星怒武器自身的攻击动画和音效 (如果星怒武器有挥舞动作)
-        // if (!string.IsNullOrEmpty(starfuryWeapon.attackAnimationName))
-        // {
-        //     spumPrefabs?.PlayAnimation(starfuryWeapon.attackAnimationName);
-        // }
-        // if (starfuryWeapon.attackSound != null)
-        // {
-        //     AudioSource.PlayClipAtPoint(starfuryWeapon.attackSound, transform.position);
-        // }
-        
-        // 消耗魔法或弹药 (如果星怒武器需要)
-        // if (starfuryWeapon.RequiresMana) { /* 扣除魔法值 */ }
-        // if (starfuryWeapon.RequiresAmmo) { /* 扣除弹药 */ }
     }
 
     private IEnumerator PerformZenithAttack()
@@ -1040,7 +1008,7 @@ public class PlayerController : MonoBehaviour, IDamageable
             yield break;
         }
 
-        // --- 全新的幻影剑列表生成逻辑 ---
+        // --- 幻影剑列表生成逻辑 ---
         List<SwordAppearance> swordsToSpawn = new List<SwordAppearance>();
         
         // 1. 创建本体剑的外观实例 (假设本体剑的sprite就是武器图标)

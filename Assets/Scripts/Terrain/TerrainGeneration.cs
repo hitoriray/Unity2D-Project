@@ -916,12 +916,12 @@ public class TerrainGeneration : MonoBehaviour
                 return global::AmbianceSystem.BiomeType.Forest;
             case "desert":
                 return global::AmbianceSystem.BiomeType.Desert;
-            case "snow": // 新增雪原生物群系判断
+            case "snow":
                 return global::AmbianceSystem.BiomeType.Snow;
             case "grassland":
-                return global::AmbianceSystem.BiomeType.Generic; // 之前是 Surface
+                return global::AmbianceSystem.BiomeType.Generic;
             default:
-                return global::AmbianceSystem.BiomeType.Generic; // 之前是 Surface
+                return global::AmbianceSystem.BiomeType.Generic;
         }
     }
 
@@ -942,7 +942,6 @@ public class TerrainGeneration : MonoBehaviour
         if (worldTileInfo.ContainsKey(tilePos))
         {
             TileInfo info = worldTileInfo[tilePos];
-            // TODO:如果墙壁在方块后面，则会爆方块的itemDrop
             sourceTile = info.sourceTile;
             sourceBiome = info.sourceBiome;
         }
